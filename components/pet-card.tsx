@@ -1,13 +1,13 @@
-import Link from "next/link"
-import Image from "next/image"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import type { Pet } from "@/lib/mock-data"
-import type { MatchScore } from "@/lib/matching-algorithm"
+import Link from "next/link";
+import Image from "next/image";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import type { Pet } from "@/lib/mock-data";
+import type { MatchScore } from "@/lib/matching-algorithm";
 
 interface PetCardProps {
-  pet: Pet
-  matchScore: MatchScore
+  pet: Pet;
+  matchScore: MatchScore;
 }
 
 export function PetCard({ pet, matchScore }: PetCardProps) {
@@ -15,21 +15,33 @@ export function PetCard({ pet, matchScore }: PetCardProps) {
     <Link href={`/pet/${pet.id}`}>
       <div className="bg-card rounded-lg border overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
         <div className="relative h-48 bg-muted">
-          <Image src={pet.imageUrl || "/placeholder.svg"} alt={pet.name} fill className="object-cover" />
+          <Image
+            src={pet.imageUrl || "/placeholder.svg"}
+            alt={pet.name}
+            fill
+            className="object-cover"
+          />
           <div className="absolute top-3 right-3">
-            <Badge className="bg-primary text-primary-foreground font-bold">{matchScore.score}% Match</Badge>
+            <Badge className="bg-primary text-primary-foreground font-bold">
+              {matchScore.score}% Match
+            </Badge>
           </div>
         </div>
 
         <div className="p-4">
           <h3 className="text-xl font-bold mb-1">{pet.name}</h3>
           <p className="text-sm text-muted-foreground mb-3">
-            {pet.breed} • {pet.age} {pet.age === 1 ? "yr" : "yrs"} • {pet.gender}
+            {pet.breed} • {pet.age} {pet.age === 1 ? "yr" : "yrs"} •{" "}
+            {pet.gender}
           </p>
 
           <div className="flex flex-wrap gap-1.5 mb-4">
             {pet.temperament.slice(0, 3).map((trait) => (
-              <Badge key={trait} variant="secondary" className="text-xs capitalize">
+              <Badge
+                key={trait}
+                variant="secondary"
+                className="text-xs capitalize"
+              >
                 {trait}
               </Badge>
             ))}
@@ -57,5 +69,5 @@ export function PetCard({ pet, matchScore }: PetCardProps) {
         </div>
       </div>
     </Link>
-  )
+  );
 }

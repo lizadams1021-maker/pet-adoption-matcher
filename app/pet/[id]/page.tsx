@@ -25,8 +25,7 @@ export default function PetDetailPage() {
 
     const fetchPet = async () => {
       try {
-        console.log("Heyyyy", params.id);
-
+        console.log("params.id", params.id);
         const response = await fetch(`/api/pets/${params.id}`);
 
         if (response.ok) {
