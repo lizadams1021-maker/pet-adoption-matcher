@@ -1,48 +1,55 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import { useAuth } from "@/lib/auth-context"
-import { AppLayout } from "@/components/app-layout"
-import Image from "next/image"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Pencil, Trash2, X } from "lucide-react"
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth-context";
+import { AppLayout } from "@/components/app-layout";
+import Image from "next/image";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Pencil, Trash2, X } from "lucide-react";
 
 export default function MyPetsPage() {
-  const { user, getUserPets, deletePet, updatePet } = useAuth()
-  const router = useRouter()
-  const [userPets, setUserPets] = useState<any[]>([])
-  const [editingPet, setEditingPet] = useState<any | null>(null)
-  const [editFormData, setEditFormData] = useState<any>({})
+  const { user, getUserPets, deletePet, updatePet } = useAuth();
+  const router = useRouter();
+  const [userPets, setUserPets] = useState<any[]>([]);
+  const [editingPet, setEditingPet] = useState<any | null>(null);
+  const [editFormData, setEditFormData] = useState<any>({});
 
   useEffect(() => {
     if (!user) {
-      router.push("/login")
-      return
+      router.push("/login");
+      return;
     }
 
     const fetchPets = async () => {
-      const pets = await getUserPets()
-      setUserPets(pets || [])
-    }
-    fetchPets()
-  }, [user, router, getUserPets])
+      const pets = await getUserPets();
+      console.log("Pets", pets);
+      setUserPets(pets || []);
+    };
+    fetchPets();
+  }, [user, router, getUserPets]);
 
   const handleDelete = async (petId: string) => {
     if (confirm("Are you sure you want to delete this pet?")) {
-      await deletePet(petId)
-      const pets = await getUserPets()
-      setUserPets(pets || [])
+      await deletePet(petId);
+      const pets = await getUserPets();
+      setUserPets(pets || []);
     }
-  }
+  };
 
   const handleEdit = (pet: any) => {
-    setEditingPet(pet)
+    setEditingPet(pet);
     setEditFormData({
       name: pet.name || "",
       type: pet.type || "dog",
@@ -58,8 +65,8 @@ export default function MyPetsPage() {
       specialNeeds: pet.special_needs || "",
       description: pet.description || "",
       imageUrl: pet.image_url || "",
-    })
-  }
+    });
+  };
 
   const handleSaveEdit = async () => {
     if (editingPet) {
@@ -78,26 +85,26 @@ export default function MyPetsPage() {
         specialNeeds: editFormData.specialNeeds || null,
         description: editFormData.description || null,
         imageUrl: editFormData.imageUrl || null,
-      }
+      };
 
-      await updatePet(editingPet.id, updates)
-      const pets = await getUserPets()
-      setUserPets(pets || [])
-      setEditingPet(null)
+      await updatePet(editingPet.id, updates);
+      const pets = await getUserPets();
+      setUserPets(pets || []);
+      setEditingPet(null);
     }
-  }
+  };
 
   const handleCancelEdit = () => {
-    setEditingPet(null)
-    setEditFormData({})
-  }
+    setEditingPet(null);
+    setEditFormData({});
+  };
 
   const handleChange = (field: string, value: any) => {
-    setEditFormData((prev: any) => ({ ...prev, [field]: value }))
-  }
+    setEditFormData((prev: any) => ({ ...prev, [field]: value }));
+  };
 
   if (!user) {
-    return null
+    return null;
   }
 
   return (
@@ -106,13 +113,19 @@ export default function MyPetsPage() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">My Pets</h1>
-          <p className="text-muted-foreground">Manage your pets and their adoption status</p>
+          <p className="text-muted-foreground">
+            Manage your pets and their adoption status
+          </p>
         </div>
 
         {userPets.length === 0 ? (
           <div className="text-center py-12 bg-card rounded-lg border">
-            <p className="text-muted-foreground mb-4">You don't have any pets yet.</p>
-            <Button onClick={() => router.push("/add-pet")}>Add Your First Pet</Button>
+            <p className="text-muted-foreground mb-4">
+              You don't have any pets yet.
+            </p>
+            <Button onClick={() => router.push("/add-pet")}>
+              Add Your First Pet
+            </Button>
           </div>
         ) : (
           <div className="space-y-6">
@@ -122,7 +135,11 @@ export default function MyPetsPage() {
                   <div className="bg-card rounded-lg border p-6">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-xl font-bold">Edit Pet</h3>
-                      <Button variant="ghost" size="icon" onClick={handleCancelEdit}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={handleCancelEdit}
+                      >
                         <X className="h-5 w-5" />
                       </Button>
                     </div>
@@ -134,14 +151,21 @@ export default function MyPetsPage() {
                           <Input
                             id="edit-name"
                             value={editFormData.name}
-                            onChange={(e) => handleChange("name", e.target.value)}
+                            onChange={(e) =>
+                              handleChange("name", e.target.value)
+                            }
                             required
                           />
                         </div>
 
                         <div className="space-y-2">
                           <Label htmlFor="edit-type">Type *</Label>
-                          <Select value={editFormData.type} onValueChange={(value) => handleChange("type", value)}>
+                          <Select
+                            value={editFormData.type}
+                            onValueChange={(value) =>
+                              handleChange("type", value)
+                            }
+                          >
                             <SelectTrigger>
                               <SelectValue />
                             </SelectTrigger>
@@ -158,7 +182,9 @@ export default function MyPetsPage() {
                           <Input
                             id="edit-breed"
                             value={editFormData.breed}
-                            onChange={(e) => handleChange("breed", e.target.value)}
+                            onChange={(e) =>
+                              handleChange("breed", e.target.value)
+                            }
                             required
                           />
                         </div>
@@ -167,40 +193,65 @@ export default function MyPetsPage() {
                           <Label htmlFor="edit-ageGroup">Age Group *</Label>
                           <Select
                             value={editFormData.ageGroup}
-                            onValueChange={(value) => handleChange("ageGroup", value)}
+                            onValueChange={(value) =>
+                              handleChange("ageGroup", value)
+                            }
                           >
                             <SelectTrigger>
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="puppy">Puppy/Kitten (0-1 year)</SelectItem>
-                              <SelectItem value="young">Young (1-3 years)</SelectItem>
-                              <SelectItem value="adult">Adult (3-7 years)</SelectItem>
-                              <SelectItem value="senior">Senior (7+ years)</SelectItem>
+                              <SelectItem value="puppy">
+                                Puppy/Kitten (0-1 year)
+                              </SelectItem>
+                              <SelectItem value="young">
+                                Young (1-3 years)
+                              </SelectItem>
+                              <SelectItem value="adult">
+                                Adult (3-7 years)
+                              </SelectItem>
+                              <SelectItem value="senior">
+                                Senior (7+ years)
+                              </SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="edit-weightRange">Weight Range *</Label>
+                          <Label htmlFor="edit-weightRange">
+                            Weight Range *
+                          </Label>
                           <Select
                             value={editFormData.weightRange}
-                            onValueChange={(value) => handleChange("weightRange", value)}
+                            onValueChange={(value) =>
+                              handleChange("weightRange", value)
+                            }
                           >
                             <SelectTrigger>
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="small">Small (0-25 lbs)</SelectItem>
-                              <SelectItem value="medium">Medium (25-60 lbs)</SelectItem>
-                              <SelectItem value="large">Large (60+ lbs)</SelectItem>
+                              <SelectItem value="small">
+                                Small (0-25 lbs)
+                              </SelectItem>
+                              <SelectItem value="medium">
+                                Medium (25-60 lbs)
+                              </SelectItem>
+                              <SelectItem value="large">
+                                Large (60+ lbs)
+                              </SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
 
                         <div className="space-y-2">
                           <Label htmlFor="edit-size">Size *</Label>
-                          <Select value={editFormData.size} onValueChange={(value) => handleChange("size", value)}>
+                          <Select
+                            value={editFormData.size}
+                            onValueChange={(value) =>
+                              handleChange("size", value)
+                            }
+                          >
                             <SelectTrigger>
                               <SelectValue />
                             </SelectTrigger>
@@ -213,10 +264,14 @@ export default function MyPetsPage() {
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="edit-energyLevel">Energy Level *</Label>
+                          <Label htmlFor="edit-energyLevel">
+                            Energy Level *
+                          </Label>
                           <Select
                             value={editFormData.energyLevel}
-                            onValueChange={(value) => handleChange("energyLevel", value)}
+                            onValueChange={(value) =>
+                              handleChange("energyLevel", value)
+                            }
                           >
                             <SelectTrigger>
                               <SelectValue />
@@ -236,7 +291,9 @@ export default function MyPetsPage() {
                             type="url"
                             placeholder="https://..."
                             value={editFormData.imageUrl}
-                            onChange={(e) => handleChange("imageUrl", e.target.value)}
+                            onChange={(e) =>
+                              handleChange("imageUrl", e.target.value)
+                            }
                           />
                         </div>
                       </div>
@@ -248,9 +305,14 @@ export default function MyPetsPage() {
                             <Checkbox
                               id="edit-goodWithKids"
                               checked={editFormData.goodWithKids}
-                              onCheckedChange={(checked) => handleChange("goodWithKids", checked)}
+                              onCheckedChange={(checked) =>
+                                handleChange("goodWithKids", checked)
+                              }
                             />
-                            <label htmlFor="edit-goodWithKids" className="text-sm cursor-pointer">
+                            <label
+                              htmlFor="edit-goodWithKids"
+                              className="text-sm cursor-pointer"
+                            >
                               Good with kids
                             </label>
                           </div>
@@ -258,9 +320,14 @@ export default function MyPetsPage() {
                             <Checkbox
                               id="edit-goodWithCats"
                               checked={editFormData.goodWithCats}
-                              onCheckedChange={(checked) => handleChange("goodWithCats", checked)}
+                              onCheckedChange={(checked) =>
+                                handleChange("goodWithCats", checked)
+                              }
                             />
-                            <label htmlFor="edit-goodWithCats" className="text-sm cursor-pointer">
+                            <label
+                              htmlFor="edit-goodWithCats"
+                              className="text-sm cursor-pointer"
+                            >
                               Good with cats
                             </label>
                           </div>
@@ -268,9 +335,14 @@ export default function MyPetsPage() {
                             <Checkbox
                               id="edit-goodWithDogs"
                               checked={editFormData.goodWithDogs}
-                              onCheckedChange={(checked) => handleChange("goodWithDogs", checked)}
+                              onCheckedChange={(checked) =>
+                                handleChange("goodWithDogs", checked)
+                              }
                             />
-                            <label htmlFor="edit-goodWithDogs" className="text-sm cursor-pointer">
+                            <label
+                              htmlFor="edit-goodWithDogs"
+                              className="text-sm cursor-pointer"
+                            >
                               Good with dogs
                             </label>
                           </div>
@@ -278,9 +350,14 @@ export default function MyPetsPage() {
                             <Checkbox
                               id="edit-houseTrained"
                               checked={editFormData.houseTrained}
-                              onCheckedChange={(checked) => handleChange("houseTrained", checked)}
+                              onCheckedChange={(checked) =>
+                                handleChange("houseTrained", checked)
+                              }
                             />
-                            <label htmlFor="edit-houseTrained" className="text-sm cursor-pointer">
+                            <label
+                              htmlFor="edit-houseTrained"
+                              className="text-sm cursor-pointer"
+                            >
                               House trained
                             </label>
                           </div>
@@ -293,7 +370,9 @@ export default function MyPetsPage() {
                           id="edit-specialNeeds"
                           placeholder="Any medical conditions or special requirements"
                           value={editFormData.specialNeeds}
-                          onChange={(e) => handleChange("specialNeeds", e.target.value)}
+                          onChange={(e) =>
+                            handleChange("specialNeeds", e.target.value)
+                          }
                         />
                       </div>
 
@@ -303,7 +382,9 @@ export default function MyPetsPage() {
                           id="edit-description"
                           className="w-full min-h-[120px] px-3 py-2 rounded-md border border-input bg-background"
                           value={editFormData.description}
-                          onChange={(e) => handleChange("description", e.target.value)}
+                          onChange={(e) =>
+                            handleChange("description", e.target.value)
+                          }
                           placeholder="Tell us about this pet's personality, habits, and special needs..."
                         />
                       </div>
@@ -319,23 +400,36 @@ export default function MyPetsPage() {
                 ) : (
                   <div className="bg-card rounded-lg border p-6 flex gap-6">
                     <div className="relative h-32 w-32 rounded-lg overflow-hidden flex-shrink-0">
-                      <Image src={pet.image_url || "/placeholder.svg"} alt={pet.name} fill className="object-cover" />
+                      <Image
+                        src={pet.image_url || "/placeholder.svg"}
+                        alt={pet.name}
+                        fill
+                        className="object-cover"
+                      />
                     </div>
 
                     <div className="flex-1">
                       <div className="flex items-start justify-between mb-3">
                         <div>
-                          <h3 className="text-2xl font-bold mb-1">{pet.name}</h3>
+                          <h3 className="text-2xl font-bold mb-1">
+                            {pet.name}
+                          </h3>
                           <p className="text-muted-foreground">
                             {pet.breed} • {pet.age_group} • {pet.type}
                           </p>
                         </div>
-                        <Badge className="bg-green-100 text-green-700 border-green-200 capitalize">{pet.status}</Badge>
+                        <Badge className="bg-green-100 text-green-700 border-green-200 capitalize">
+                          {pet.status}
+                        </Badge>
                       </div>
 
                       <div className="flex flex-wrap gap-2 mb-4">
                         {pet.temperament?.map((trait: string) => (
-                          <Badge key={trait} variant="secondary" className="capitalize">
+                          <Badge
+                            key={trait}
+                            variant="secondary"
+                            className="capitalize"
+                          >
                             {trait}
                           </Badge>
                         ))}
@@ -344,29 +438,49 @@ export default function MyPetsPage() {
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
                         <div>
                           <span className="text-muted-foreground">Energy:</span>
-                          <span className="ml-2 font-medium capitalize">{pet.energy_level}</span>
+                          <span className="ml-2 font-medium capitalize">
+                            {pet.energy_level}
+                          </span>
                         </div>
                         <div>
                           <span className="text-muted-foreground">Size:</span>
-                          <span className="ml-2 font-medium capitalize">{pet.size}</span>
+                          <span className="ml-2 font-medium capitalize">
+                            {pet.size}
+                          </span>
                         </div>
                         <div>
-                          <span className="text-muted-foreground">Good with kids:</span>
-                          <span className="ml-2 font-medium">{pet.good_with_children ? "Yes" : "No"}</span>
+                          <span className="text-muted-foreground">
+                            Good with kids:
+                          </span>
+                          <span className="ml-2 font-medium">
+                            {pet.good_with_children ? "Yes" : "No"}
+                          </span>
                         </div>
                         <div>
-                          <span className="text-muted-foreground">Good with pets:</span>
-                          <span className="ml-2 font-medium">{pet.good_with_pets ? "Yes" : "No"}</span>
+                          <span className="text-muted-foreground">
+                            Good with pets:
+                          </span>
+                          <span className="ml-2 font-medium">
+                            {pet.good_with_pets ? "Yes" : "No"}
+                          </span>
                         </div>
                       </div>
 
                       <div className="flex gap-3">
-                        <Button onClick={() => router.push(`/pet/${pet.id}`)}>View Details</Button>
-                        <Button variant="outline" onClick={() => handleEdit(pet)}>
+                        <Button onClick={() => router.push(`/pet/${pet.id}`)}>
+                          View Details
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => handleEdit(pet)}
+                        >
                           <Pencil className="h-4 w-4 mr-2" />
                           Edit Pet
                         </Button>
-                        <Button variant="outline" onClick={() => handleDelete(pet.id)}>
+                        <Button
+                          variant="outline"
+                          onClick={() => handleDelete(pet.id)}
+                        >
                           <Trash2 className="h-4 w-4 mr-2" />
                           Delete
                         </Button>
@@ -380,5 +494,5 @@ export default function MyPetsPage() {
         )}
       </div>
     </AppLayout>
-  )
+  );
 }

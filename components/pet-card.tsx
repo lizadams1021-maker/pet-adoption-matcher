@@ -16,7 +16,7 @@ export function PetCard({ pet, matchScore }: PetCardProps) {
       <div className="bg-card rounded-lg border overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
         <div className="relative h-48 bg-muted">
           <Image
-            src={pet.imageUrl || "/placeholder.svg"}
+            src={pet.image_url || "/placeholder.svg"}
             alt={pet.name}
             fill
             className="object-cover"
