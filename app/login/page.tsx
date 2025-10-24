@@ -1,40 +1,44 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { useAuth } from "@/lib/auth-context"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import Link from "next/link"
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth-context";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import Link from "next/link";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
-  const { login } = useAuth()
-  const router = useRouter()
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const { login } = useAuth();
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
+    e.preventDefault();
+    setError("");
 
-    const success = await login(email, password)
+    const success = await login(email, password);
     if (success) {
-      router.push("/matches")
+      router.push("/matches");
     } else {
-      setError("Invalid email or password")
+      setError("Invalid email or password");
     }
-  }
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30">
       <div className="w-full max-w-md p-8 bg-card rounded-lg border">
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-primary mb-2">Pet Protect & Connect</h1>
-          <p className="text-muted-foreground">Sign in to find your perfect pet match</p>
+          <h1 className="text-3xl font-bold text-primary mb-2">
+            Pet Protect & Connect
+          </h1>
+          <p className="text-muted-foreground">
+            Sign in to find your perfect pet match
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -75,13 +79,7 @@ export default function LoginPage() {
             Sign up
           </Link>
         </div>
-
-        <div className="mt-4 p-4 bg-muted/50 rounded text-sm">
-          <p className="font-semibold mb-2">Demo accounts:</p>
-          <p>laura@example.com / password123</p>
-          <p>daniel@example.com / password123</p>
-        </div>
       </div>
     </div>
-  )
+  );
 }

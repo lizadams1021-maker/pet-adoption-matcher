@@ -3,23 +3,30 @@ import { sql } from "@/lib/db"
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const ownerId = searchParams.get("ownerId")
+    const { searchParams } = new URL(request.url);
+    const ownerId = searchParams.get("ownerId");
 
-    if (!ownerId) {
-      return NextResponse.json({ error: "Owner ID required" }, { status: 400 })
+    let pets;
+
+    if (ownerId) {
+      // Devuelve solo las mascotas del usuario
+      pets = await sql`
+        SELECT * FROM pets 
+        WHERE owner_id = ${ownerId}
+        ORDER BY created_at DESC
+      `;
+    } else {
+      // Devuelve todas las mascotas
+      pets = await sql`
+        SELECT * FROM pets
+        ORDER BY created_at DESC
+      `;
     }
 
-    const pets = await sql`
-      SELECT * FROM pets 
-      WHERE owner_id = ${ownerId}
-      ORDER BY created_at DESC
-    `
-
-    return NextResponse.json({ pets })
+    return NextResponse.json({ pets });
   } catch (error) {
-    console.error("[v0] Fetch pets error:", error)
-    return NextResponse.json({ error: "Failed to fetch pets" }, { status: 500 })
+    console.error("[v0] Fetch pets error:", error);
+    return NextResponse.json({ error: "Failed to fetch pets" }, { status: 500 });
   }
 }
 
