@@ -4,27 +4,22 @@ import { sql } from "@/lib/db"
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
+    const userId = searchParams.get("userId")
     const petId = searchParams.get("petId")
 
-    if (!petId) {
-      return NextResponse.json({ error: "Pet ID required" }, { status: 400 })
+    if (!userId || !petId) {
+      return NextResponse.json({ error: "User ID and Pet ID required" }, { status: 400 })
     }
 
-    const applications = await sql`
-      SELECT 
-        a.id, a.match_rank, a.compatibility_score, a.status, a.applied_at,
-        ad.id as adopter_id, ad.name, ad.email, ad.location, ad.distance_miles,
-        ad.housing_type, ad.has_yard, ad.experience_level, ad.experience_description,
-        ad.family_adults, ad.family_children, ad.verified, ad.image_url
-      FROM applications a
-      JOIN adopters ad ON a.adopter_id = ad.id
-      WHERE a.pet_id = ${petId}
-      ORDER BY a.match_rank ASC
+    const result = await sql`
+      SELECT id FROM user_pet_applications
+      WHERE user_id = ${userId} AND pet_id = ${petId}
+      LIMIT 1
     `
 
-    return NextResponse.json({ applications })
+    return NextResponse.json({ hasApplied: result.length > 0 })
   } catch (error) {
-    console.error("[v0] Fetch applications error:", error)
-    return NextResponse.json({ error: "Failed to fetch applications" }, { status: 500 })
+    console.error("[v0] Check application error:", error)
+    return NextResponse.json({ error: "Failed to check application" }, { status: 500 })
   }
 }
