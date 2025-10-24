@@ -27,7 +27,7 @@ export interface Pet {
   requiresExperience: boolean
   spaceNeeds: "apartment-ok" | "house-preferred" | "yard-required"
   description: string
-  imageUrl: string
+  image_url: string
   adoptionFee: number
 }
 
@@ -95,7 +95,7 @@ export const mockPets: Pet[] = [
     requiresExperience: false,
     spaceNeeds: "yard-required",
     description: "Luna is a smart and energetic Border Collie mix who loves to play fetch and learn new tricks.",
-    imageUrl: "/border-collie.png",
+    image_url: "/border-collie.png",
     adoptionFee: 250,
   },
   {
@@ -112,7 +112,7 @@ export const mockPets: Pet[] = [
     requiresExperience: false,
     spaceNeeds: "apartment-ok",
     description: "Milo is a laid-back cat who enjoys lounging in sunny spots and gentle pets.",
-    imageUrl: "/orange-tabby-cat.png",
+    image_url: "/orange-tabby-cat.png",
     adoptionFee: 150,
   },
   {
@@ -129,7 +129,7 @@ export const mockPets: Pet[] = [
     requiresExperience: true,
     spaceNeeds: "yard-required",
     description: "Max is a loyal German Shepherd who needs an experienced owner and plenty of space to run.",
-    imageUrl: "/german-shepherd.png",
+    image_url: "/german-shepherd.png",
     adoptionFee: 300,
   },
   {
@@ -146,7 +146,7 @@ export const mockPets: Pet[] = [
     requiresExperience: false,
     spaceNeeds: "house-preferred",
     description: "Bella is a sweet and playful Lab puppy who loves everyone she meets.",
-    imageUrl: "/yellow-labrador-retriever.jpg",
+    image_url: "/yellow-labrador-retriever.jpg",
     adoptionFee: 275,
   },
   {
@@ -163,7 +163,7 @@ export const mockPets: Pet[] = [
     requiresExperience: false,
     spaceNeeds: "house-preferred",
     description: "Whiskers is a gentle giant who loves attention and playing with feather toys.",
-    imageUrl: "/maine-coon-cat.png",
+    image_url: "/maine-coon-cat.png",
     adoptionFee: 200,
   },
 ]
