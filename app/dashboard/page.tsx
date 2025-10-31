@@ -1,14 +1,26 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {
+  JSXElementConstructor,
+  Key,
+  ReactElement,
+  ReactNode,
+  ReactPortal,
+  useEffect,
+  useState,
+} from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { AppLayout } from "@/components/app-layout";
-import { Users, Heart, TrendingUp } from "lucide-react";
+import { Users, Heart, TrendingUp, X } from "lucide-react";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { MapPin, Home, Briefcase, UsersIcon, Check } from "lucide-react";
+import { MapPin, Home, Briefcase, Check, Phone, Mail } from "lucide-react";
+import {
+  calculateApplicationMatches,
+  calculateCompatibility,
+} from "@/lib/matching-algorithm";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -68,8 +80,28 @@ export default function DashboardPage() {
         const res = await fetch(`/api/applications?petId=${selectedPet.id}`);
         const data = await res.json();
 
+        const applicationsWithPet = data.applications.map((app: any) => ({
+          user: app,
+          pet: selectedPet,
+        }));
+
+        const matchedApplications =
+          calculateApplicationMatches(applicationsWithPet);
+
+        console.log("Matched Applications", matchedApplications);
+
+        const applicationsWithMatches = data.applications.map((app: any) => {
+          const match = matchedApplications.find((m) => m.userId === app.id);
+          return {
+            ...app,
+            score: match?.score ?? 0,
+            reasons: match?.reasons ?? [],
+            negativeReasons: match?.negativeReasons ?? [],
+          };
+        });
+
         if (res.ok) {
-          setAdopters(data.applications);
+          setAdopters(applicationsWithMatches);
         }
       } catch (error) {
         console.error("[v0] Fetch adopters error:", error);
@@ -256,9 +288,20 @@ export default function DashboardPage() {
                           <div className="flex items-start justify-between mb-6">
                             <div className="flex items-center gap-4">
                               <div className="relative w-16 h-16 rounded-full overflow-hidden flex-shrink-0 bg-muted">
-                                <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-muted-foreground">
-                                  {adopter.name.charAt(0)}
-                                </div>
+                                {adopter.image_url ? (
+                                  <Image
+                                    src={
+                                      adopter.image_url || "/placeholder.svg"
+                                    }
+                                    alt={adopter.name}
+                                    fill
+                                    className="object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-muted-foreground">
+                                    {adopter.name.charAt(0)}
+                                  </div>
+                                )}
                               </div>
                               <div>
                                 <div className="flex items-center gap-2 mb-1">
@@ -277,13 +320,52 @@ export default function DashboardPage() {
                           <div className="grid grid-cols-2 gap-6 mb-6">
                             <div>
                               <div className="flex items-start gap-2 text-sm">
+                                <Phone className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                                <div>
+                                  <p className="text-muted-foreground text-xs mb-1">
+                                    Phone
+                                  </p>
+                                  <p className="font-medium">
+                                    {adopter.cell_phone ||
+                                      adopter.home_phone ||
+                                      "Not provided"}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                            <div>
+                              <div className="flex items-start gap-2 text-sm">
+                                <Mail className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                                <div>
+                                  <p className="text-muted-foreground text-xs mb-1">
+                                    Email
+                                  </p>
+                                  <p className="font-medium break-all">
+                                    {adopter.email || "Not provided"}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="col-span-2">
+                              <div className="flex items-start gap-2 text-sm">
                                 <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                                 <div>
                                   <p className="text-muted-foreground text-xs mb-1">
-                                    Location
+                                    Address
                                   </p>
                                   <p className="font-medium">
-                                    {adopter.location || "Not specified"}
+                                    {adopter.address_line &&
+                                    adopter.city &&
+                                    adopter.state
+                                      ? `${
+                                          adopter.address_line.length > 40
+                                            ? adopter.address_line.substring(
+                                                0,
+                                                40
+                                              ) + "..."
+                                            : adopter.address_line
+                                        }, ${adopter.city}, ${adopter.state}`
+                                      : adopter.location || "Not provided"}
                                   </p>
                                 </div>
                               </div>
@@ -296,7 +378,9 @@ export default function DashboardPage() {
                                     Housing
                                   </p>
                                   <p className="font-medium capitalize">
-                                    {adopter.housing_type || "Not specified"}
+                                    {adopter.home_type ||
+                                      adopter.housing_type ||
+                                      "Not specified"}
                                   </p>
                                 </div>
                               </div>
@@ -315,21 +399,6 @@ export default function DashboardPage() {
                                 </div>
                               </div>
                             </div>
-                            <div>
-                              <div className="flex items-start gap-2 text-sm">
-                                <UsersIcon className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                                <div>
-                                  <p className="text-muted-foreground text-xs mb-1">
-                                    Family
-                                  </p>
-                                  <p className="font-medium">
-                                    {adopter.has_children
-                                      ? "Has children"
-                                      : "No children"}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
                           </div>
 
                           {/* Why This Match Works */}
@@ -338,18 +407,103 @@ export default function DashboardPage() {
                               ✨ Why This Match Works
                             </h4>
                             <div className="space-y-2">
-                              {staticMatchReasons.map((reason, idx) => (
-                                <div
-                                  key={idx}
-                                  className="flex items-start gap-2 text-sm"
-                                >
-                                  <Check className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                                  <span className="text-muted-foreground">
-                                    {reason}
-                                  </span>
-                                </div>
-                              ))}
+                              {adopter.reasons.map(
+                                (
+                                  reason:
+                                    | string
+                                    | number
+                                    | bigint
+                                    | boolean
+                                    | ReactElement<
+                                        unknown,
+                                        string | JSXElementConstructor<any>
+                                      >
+                                    | Iterable<ReactNode>
+                                    | ReactPortal
+                                    | Promise<
+                                        | string
+                                        | number
+                                        | bigint
+                                        | boolean
+                                        | ReactPortal
+                                        | ReactElement<
+                                            unknown,
+                                            string | JSXElementConstructor<any>
+                                          >
+                                        | Iterable<ReactNode>
+                                        | null
+                                        | undefined
+                                      >
+                                    | null
+                                    | undefined,
+                                  idx: Key | null | undefined
+                                ) => (
+                                  <div
+                                    key={idx}
+                                    className="flex items-start gap-2 text-sm"
+                                  >
+                                    <Check className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                                    <span className="text-muted-foreground">
+                                      {reason}
+                                    </span>
+                                  </div>
+                                )
+                              )}
                             </div>
+
+                            {/* ---------------- Negatives ---------------- */}
+                            {adopter.negativeReasons.length > 0 && (
+                              <>
+                                <h4 className="font-semibold text-sm mt-4 mb-3 flex items-center gap-2 text-red-600">
+                                  ❌ Potential Concerns
+                                </h4>
+                                <div className="space-y-2">
+                                  {adopter.negativeReasons.map(
+                                    (
+                                      reason:
+                                        | string
+                                        | number
+                                        | bigint
+                                        | boolean
+                                        | ReactElement<
+                                            unknown,
+                                            string | JSXElementConstructor<any>
+                                          >
+                                        | Iterable<ReactNode>
+                                        | ReactPortal
+                                        | Promise<
+                                            | string
+                                            | number
+                                            | bigint
+                                            | boolean
+                                            | ReactPortal
+                                            | ReactElement<
+                                                unknown,
+                                                | string
+                                                | JSXElementConstructor<any>
+                                              >
+                                            | Iterable<ReactNode>
+                                            | null
+                                            | undefined
+                                          >
+                                        | null
+                                        | undefined,
+                                      idx: Key | null | undefined
+                                    ) => (
+                                      <div
+                                        key={idx}
+                                        className="flex items-start gap-2 text-sm"
+                                      >
+                                        <X className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" />
+                                        <span className="text-muted-foreground">
+                                          {reason}
+                                        </span>
+                                      </div>
+                                    )
+                                  )}
+                                </div>
+                              </>
+                            )}
                           </div>
 
                           {/* Application Info */}

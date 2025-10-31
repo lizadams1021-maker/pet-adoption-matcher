@@ -13,9 +13,7 @@ export async function GET(request: NextRequest) {
     const applications = await sql`
       SELECT 
         upa.id, upa.created_at as applied_at,
-        u.id as user_id, u.name, u.email, u.location, 
-        u.housing_type, u.has_children, u.experience_level,
-        u.activity_level, u.preferred_pet_size, u.preferred_temperament
+        u.*
       FROM user_pet_applications upa
       JOIN users u ON upa.user_id = u.id
       WHERE upa.pet_id = ${petId}

@@ -26,6 +26,7 @@ export async function POST(request: NextRequest) {
       id: userId,
       email,
       name,
+      imageUrl: null, // Added imageUrl field
       preferences: {
         location: null,
         housingType: null,

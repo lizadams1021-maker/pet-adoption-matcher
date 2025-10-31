@@ -6,6 +6,7 @@ interface User {
   id: string
   email: string
   name: string
+  imageUrl?: string // Added imageUrl to User interface
   preferences: {
     location: string | null
     housingType: string | null
@@ -23,6 +24,7 @@ interface AuthContextType {
   logout: () => void
   register: (email: string, password: string, name: string) => Promise<boolean>
   updatePreferences: (preferences: User["preferences"]) => Promise<void>
+  updateProfileImage: (imageUrl: string) => Promise<void> // Added updateProfileImage function
   addPet: (pet: any) => Promise<void>
   getUserPets: () => Promise<any[]>
   deletePet: (petId: string) => Promise<void>
@@ -108,6 +110,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const updateProfileImage = async (imageUrl: string) => {
+    if (!user) return
+
+    try {
+      const response = await fetch("/api/user/profile", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id, imageUrl }),
+      })
+
+      if (response.ok) {
+        const updatedUser = { ...user, imageUrl }
+        setUser(updatedUser)
+        sessionStorage.setItem("currentUser", JSON.stringify(updatedUser))
+      }
+    } catch (error) {
+      console.error("[v0] Update profile image error:", error)
+    }
+  }
+
   const addPet = async (petData: any) => {
     if (!user) return
 
@@ -162,7 +184,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, login, logout, register, updatePreferences, addPet, getUserPets, deletePet, updatePet }}
+      value={{
+        user,
+        login,
+        logout,
+        register,
+        updatePreferences,
+        updateProfileImage,
+        addPet,
+        getUserPets,
+        deletePet,
+        updatePet,
+      }}
     >
       {children}
     </AuthContext.Provider>

@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth-context";
 import { getMatchesForUser } from "@/lib/matching-algorithm";
 import { AppLayout } from "@/components/app-layout";
 import { PetCard } from "@/components/pet-card";
+import Swal from "sweetalert2";
 
 export default function MatchesPage() {
   const { user } = useAuth();
@@ -29,6 +30,8 @@ export default function MatchesPage() {
 
         if (res.ok) {
           const matchedPets = getMatchesForUser(user, data.pets);
+          console.log("user", user);
+          console.log("matchedPets", matchedPets);
           setMatches(matchedPets);
 
           const petIds = matchedPets.map((p) => p.id);
@@ -60,7 +63,11 @@ export default function MatchesPage() {
     fetchPets();
   }, [user, router]);
 
-  const handleApply = async (petId: string) => {
+  const handleApply = async (
+    petId: string,
+    petName: string,
+    owner_name: string
+  ) => {
     if (!user) return;
 
     try {
@@ -72,6 +79,23 @@ export default function MatchesPage() {
 
       if (res.ok) {
         setAppliedPets((prev) => new Set(prev).add(petId));
+
+        // SweetAlert message when application is successful
+        Swal.fire({
+          title: "Application Submitted!",
+          html: `
+            Thanks for showing interest in <strong>${petName}</strong>. 
+            We shared your interest, details, and match criteria with <strong>${owner_name}</strong>. 
+            We hope it’s a perfect match.<br><br>
+            There are still so many pets that are looking for good homes. 
+            We encourage you to keep looking while you wait to hear from <strong>${owner_name}</strong>
+            in case there’s an even better pet out there for you!
+          `,
+          icon: "success",
+          confirmButtonText: "OK",
+          width: 600,
+          padding: "2em",
+        });
       }
     } catch (error) {
       console.error("[v0] Apply error:", error);
@@ -131,7 +155,7 @@ export default function MatchesPage() {
                 pet={pet}
                 matchScore={pet.matchScore}
                 hasApplied={appliedPets.has(pet.id)}
-                onApply={() => handleApply(pet.id)}
+                onApply={() => handleApply(pet.id, pet.name, pet.owner_name)}
               />
             ))}
           </div>

@@ -11,15 +11,19 @@ export async function GET(request: NextRequest) {
     if (ownerId) {
       // Devuelve solo las mascotas del usuario
       pets = await sql`
-        SELECT * FROM pets 
-        WHERE owner_id = ${ownerId}
-        ORDER BY created_at DESC
+        SELECT p.*, u.name AS owner_name
+        FROM pets p
+        JOIN users u ON p.owner_id = u.id
+        WHERE p.owner_id = ${ownerId}
+        ORDER BY p.created_at DESC
       `;
     } else {
       // Devuelve todas las mascotas
       pets = await sql`
-        SELECT * FROM pets
-        ORDER BY created_at DESC
+        SELECT p.*, u.name AS owner_name
+        FROM pets p
+        JOIN users u ON p.owner_id = u.id
+        ORDER BY p.created_at DESC
       `;
     }
 
