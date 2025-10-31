@@ -1,14 +1,26 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import {
+  JSXElementConstructor,
+  Key,
+  ReactElement,
+  ReactNode,
+  ReactPortal,
+  useEffect,
+  useState,
+} from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { AppLayout } from "@/components/app-layout";
-import { Users, Heart, TrendingUp } from "lucide-react";
+import { Users, Heart, TrendingUp, X } from "lucide-react";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MapPin, Home, Briefcase, Check, Phone, Mail } from "lucide-react";
+import {
+  calculateApplicationMatches,
+  calculateCompatibility,
+} from "@/lib/matching-algorithm";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -68,10 +80,28 @@ export default function DashboardPage() {
         const res = await fetch(`/api/applications?petId=${selectedPet.id}`);
         const data = await res.json();
 
-        console.log("Adpters data", data.applications);
+        const applicationsWithPet = data.applications.map((app: any) => ({
+          user: app,
+          pet: selectedPet,
+        }));
+
+        const matchedApplications =
+          calculateApplicationMatches(applicationsWithPet);
+
+        console.log("Matched Applications", matchedApplications);
+
+        const applicationsWithMatches = data.applications.map((app: any) => {
+          const match = matchedApplications.find((m) => m.userId === app.id);
+          return {
+            ...app,
+            score: match?.score ?? 0,
+            reasons: match?.reasons ?? [],
+            negativeReasons: match?.negativeReasons ?? [],
+          };
+        });
 
         if (res.ok) {
-          setAdopters(data.applications);
+          setAdopters(applicationsWithMatches);
         }
       } catch (error) {
         console.error("[v0] Fetch adopters error:", error);
@@ -377,18 +407,103 @@ export default function DashboardPage() {
                               ✨ Why This Match Works
                             </h4>
                             <div className="space-y-2">
-                              {staticMatchReasons.map((reason, idx) => (
-                                <div
-                                  key={idx}
-                                  className="flex items-start gap-2 text-sm"
-                                >
-                                  <Check className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                                  <span className="text-muted-foreground">
-                                    {reason}
-                                  </span>
-                                </div>
-                              ))}
+                              {adopter.reasons.map(
+                                (
+                                  reason:
+                                    | string
+                                    | number
+                                    | bigint
+                                    | boolean
+                                    | ReactElement<
+                                        unknown,
+                                        string | JSXElementConstructor<any>
+                                      >
+                                    | Iterable<ReactNode>
+                                    | ReactPortal
+                                    | Promise<
+                                        | string
+                                        | number
+                                        | bigint
+                                        | boolean
+                                        | ReactPortal
+                                        | ReactElement<
+                                            unknown,
+                                            string | JSXElementConstructor<any>
+                                          >
+                                        | Iterable<ReactNode>
+                                        | null
+                                        | undefined
+                                      >
+                                    | null
+                                    | undefined,
+                                  idx: Key | null | undefined
+                                ) => (
+                                  <div
+                                    key={idx}
+                                    className="flex items-start gap-2 text-sm"
+                                  >
+                                    <Check className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                                    <span className="text-muted-foreground">
+                                      {reason}
+                                    </span>
+                                  </div>
+                                )
+                              )}
                             </div>
+
+                            {/* ---------------- Negatives ---------------- */}
+                            {adopter.negativeReasons.length > 0 && (
+                              <>
+                                <h4 className="font-semibold text-sm mt-4 mb-3 flex items-center gap-2 text-red-600">
+                                  ❌ Potential Concerns
+                                </h4>
+                                <div className="space-y-2">
+                                  {adopter.negativeReasons.map(
+                                    (
+                                      reason:
+                                        | string
+                                        | number
+                                        | bigint
+                                        | boolean
+                                        | ReactElement<
+                                            unknown,
+                                            string | JSXElementConstructor<any>
+                                          >
+                                        | Iterable<ReactNode>
+                                        | ReactPortal
+                                        | Promise<
+                                            | string
+                                            | number
+                                            | bigint
+                                            | boolean
+                                            | ReactPortal
+                                            | ReactElement<
+                                                unknown,
+                                                | string
+                                                | JSXElementConstructor<any>
+                                              >
+                                            | Iterable<ReactNode>
+                                            | null
+                                            | undefined
+                                          >
+                                        | null
+                                        | undefined,
+                                      idx: Key | null | undefined
+                                    ) => (
+                                      <div
+                                        key={idx}
+                                        className="flex items-start gap-2 text-sm"
+                                      >
+                                        <X className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" />
+                                        <span className="text-muted-foreground">
+                                          {reason}
+                                        </span>
+                                      </div>
+                                    )
+                                  )}
+                                </div>
+                              </>
+                            )}
                           </div>
 
                           {/* Application Info */}

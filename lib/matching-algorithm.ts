@@ -6,6 +6,156 @@ export interface MatchScore {
   reasons: string[]
 }
 
+type Application = {
+  user: any; // usuario con los campos que compartiste
+  pet: any;  // mascota con los campos que compartiste
+};
+
+type MatchResult = {
+  petId: string;
+  userId: string;
+  score: number;
+  reasons: string[];
+  negativeReasons: string[];
+};
+
+export function calculateApplicationMatches(applications: Application[]): MatchResult[] {
+  return applications.map(({ user, pet }) => {
+    let score = 0;
+    const reasons: string[] = [];
+    const negativeReasons: string[] = [];
+    const maxScore = 100;
+
+    // --------------------
+    // Children compatibility
+    // --------------------
+    if (pet.good_with_children) {
+      if (user.children_count > 0) {
+        score += 10;
+        reasons.push("Pet is good with children, matching user's household.");
+      } else {
+        score += 5;
+        reasons.push("Pet is good with children, user has no children.");
+      }
+    } else if (user.children_count > 0) {
+      score += 0;
+      negativeReasons.push("Pet may not be suitable for homes with children.");
+    } else {
+      score += 5;
+      reasons.push("No children in home, suitable for pet.");
+    }
+
+    // --------------------
+    // Compatibility with other pets
+    // --------------------
+    if (!pet.good_with_pets) {
+      if (user.has_pets && !user.pets_good_with_others) {
+        score += 0;
+        negativeReasons.push("Pet may not be compatible with user's other pets.");
+      } else {
+        score += 5;
+        reasons.push("User either has no pets or pets are good with others.");
+      }
+    } else {
+      score += 10;
+      reasons.push("Pet is good with other pets.");
+    }
+
+    // --------------------
+    // House-trained
+    // --------------------
+    if (pet.house_trained) {
+      score += 5;
+      reasons.push("Pet is house-trained.");
+    }
+
+    // --------------------
+    // Fenced yard requirement (if pet is high energy)
+    // --------------------
+    if (pet.energy_level === "high") {
+      if (user.has_fenced_yard) {
+        score += 10;
+        reasons.push("User has a fenced yard, suitable for this high-energy pet.");
+      } else {
+        score += 2;
+        negativeReasons.push("High-energy pet may prefer a fenced yard.");
+      }
+    } else {
+      score += 5;
+      reasons.push("Pet's energy level matches user's living situation.");
+    }
+
+    // --------------------
+    // Special needs
+    // --------------------
+    if (pet.special_needs) {
+      if (user.willing_behavior_training) {
+        score += 10;
+        reasons.push("User is willing to handle special needs of the pet.");
+      } else {
+        score += 0;
+        negativeReasons.push("User may not be prepared for this pet's special needs.");
+      }
+    }
+
+    // --------------------
+    // Out of state adoption
+    // --------------------
+    if (user.willing_out_of_state) {
+      score += 5;
+      reasons.push("User is willing to adopt out of state.");
+    }
+
+    // --------------------
+    // Age / breed / size preference (if user has any)
+    // --------------------
+    if (user.preferred_age && user.preferred_age === pet.age_group) {
+      score += 5;
+      reasons.push("Pet's age matches user's preference.");
+    }
+    if (user.preferred_dog_breed && user.preferred_dog_breed === pet.breed) {
+      score += 5;
+      reasons.push("Pet's breed matches user's preference.");
+    }
+    if (user.preferred_weight && user.preferred_weight === pet.weight_range) {
+      score += 5;
+      reasons.push("Pet's weight matches user's preference.");
+    }
+
+    // --------------------
+    // Temperament
+    // --------------------
+    const temperamentMatches = pet.temperament.filter((t: string) =>
+      (user.preferred_temperament || []).includes(t)
+    ).length;
+    const temperamentScore = Math.min(10, temperamentMatches * 3);
+    score += temperamentScore;
+    if (temperamentScore >= 6) {
+      reasons.push("Pet temperament aligns well with user's preference.");
+    } else if (temperamentScore > 0) {
+      reasons.push("Pet temperament partially matches user's preference.");
+    } else {
+      negativeReasons.push("Pet temperament may not match user's preference.");
+    }
+
+    // --------------------
+    // Cap max score
+    // --------------------
+    score = Math.max(0, Math.min(maxScore, score));
+
+    return {
+      petId: pet.id,
+      userId: user.id,
+      score,
+      reasons,
+      negativeReasons,
+    };
+  });
+}
+
+
+
+
 export function calculateCompatibility(user: User, pet: Pet): MatchScore {
   let score = 0
   const reasons: string[] = []

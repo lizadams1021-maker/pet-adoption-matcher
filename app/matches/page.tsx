@@ -30,6 +30,8 @@ export default function MatchesPage() {
 
         if (res.ok) {
           const matchedPets = getMatchesForUser(user, data.pets);
+          console.log("user", user);
+          console.log("matchedPets", matchedPets);
           setMatches(matchedPets);
 
           const petIds = matchedPets.map((p) => p.id);
