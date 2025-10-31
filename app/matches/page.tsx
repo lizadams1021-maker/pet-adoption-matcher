@@ -61,7 +61,11 @@ export default function MatchesPage() {
     fetchPets();
   }, [user, router]);
 
-  const handleApply = async (petId: string, petName: string) => {
+  const handleApply = async (
+    petId: string,
+    petName: string,
+    owner_name: string
+  ) => {
     if (!user) return;
 
     try {
@@ -79,10 +83,10 @@ export default function MatchesPage() {
           title: "Application Submitted!",
           html: `
             Thanks for showing interest in <strong>${petName}</strong>. 
-            We shared your interest, details, and match criteria. 
+            We shared your interest, details, and match criteria with <strong>${owner_name}</strong>. 
             We hope it’s a perfect match.<br><br>
             There are still so many pets that are looking for good homes. 
-            We encourage you to keep looking while you wait to hear a response
+            We encourage you to keep looking while you wait to hear from <strong>${owner_name}</strong>
             in case there’s an even better pet out there for you!
           `,
           icon: "success",
@@ -149,7 +153,7 @@ export default function MatchesPage() {
                 pet={pet}
                 matchScore={pet.matchScore}
                 hasApplied={appliedPets.has(pet.id)}
-                onApply={() => handleApply(pet.id, pet.name)}
+                onApply={() => handleApply(pet.id, pet.name, pet.owner_name)}
               />
             ))}
           </div>
