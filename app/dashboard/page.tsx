@@ -1,86 +1,81 @@
-"use client";
+"use client"
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/auth-context";
-import { AppLayout } from "@/components/app-layout";
-import { Users, Heart, TrendingUp } from "lucide-react";
-import Image from "next/image";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { MapPin, Home, Briefcase, UsersIcon, Check } from "lucide-react";
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/lib/auth-context"
+import { AppLayout } from "@/components/app-layout"
+import { Users, Heart, TrendingUp } from "lucide-react"
+import Image from "next/image"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { MapPin, Home, Briefcase, Check, Phone, Mail } from "lucide-react"
 
 export default function DashboardPage() {
-  const { user } = useAuth();
-  const router = useRouter();
-  const [selectedPet, setSelectedPet] = useState<any>(null);
-  const [pets, setPets] = useState<any[]>([]);
-  const [adopters, setAdopters] = useState<any[]>([]);
-  const [stats, setStats] = useState({
-    activePets: 0,
-    newMatches: 0,
-    pendingApps: 0,
-    thisWeek: 0,
-  });
-  const [loading, setLoading] = useState(true);
+  const { user } = useAuth()
+  const router = useRouter()
+  const [selectedPet, setSelectedPet] = useState<any>(null)
+  const [pets, setPets] = useState<any[]>([])
+  const [adopters, setAdopters] = useState<any[]>([])
+  const [stats, setStats] = useState({ activePets: 0, newMatches: 0, pendingApps: 0, thisWeek: 0 })
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     if (!user) {
-      router.push("/login");
-      return;
+      router.push("/login")
+      return
     }
 
     const fetchData = async () => {
       try {
-        setLoading(true);
+        setLoading(true)
 
         // Fetch user's pets
-        const petsRes = await fetch(`/api/pets?ownerId=${user.id}`);
-        const petsData = await petsRes.json();
+        const petsRes = await fetch(`/api/pets?ownerId=${user.id}`)
+        const petsData = await petsRes.json()
 
         if (petsRes.ok && petsData.pets.length > 0) {
-          setPets(petsData.pets);
-          setSelectedPet(petsData.pets[0]);
+          setPets(petsData.pets)
+          setSelectedPet(petsData.pets[0])
         }
 
         // Fetch stats
-        const statsRes = await fetch(`/api/stats?ownerId=${user.id}`);
-        const statsData = await statsRes.json();
+        const statsRes = await fetch(`/api/stats?ownerId=${user.id}`)
+        const statsData = await statsRes.json()
 
         if (statsRes.ok) {
-          setStats(statsData);
+          setStats(statsData)
         }
       } catch (error) {
-        console.error("[v0] Fetch dashboard data error:", error);
+        console.error("[v0] Fetch dashboard data error:", error)
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
+    }
 
-    fetchData();
-  }, [user, router]);
+    fetchData()
+  }, [user, router])
 
   useEffect(() => {
-    if (!selectedPet) return;
+    if (!selectedPet) return
 
     const fetchAdopters = async () => {
       try {
-        const res = await fetch(`/api/applications?petId=${selectedPet.id}`);
-        const data = await res.json();
+        const res = await fetch(`/api/applications?petId=${selectedPet.id}`)
+        const data = await res.json()
 
         if (res.ok) {
-          setAdopters(data.applications);
+          setAdopters(data.applications)
         }
       } catch (error) {
-        console.error("[v0] Fetch adopters error:", error);
+        console.error("[v0] Fetch adopters error:", error)
       }
-    };
+    }
 
-    fetchAdopters();
-  }, [selectedPet]);
+    fetchAdopters()
+  }, [selectedPet])
 
   if (!user) {
-    return null;
+    return null
   }
 
   if (loading) {
@@ -90,7 +85,7 @@ export default function DashboardPage() {
           <p className="text-muted-foreground">Loading dashboard...</p>
         </div>
       </AppLayout>
-    );
+    )
   }
 
   const staticMatchReasons = [
@@ -98,19 +93,15 @@ export default function DashboardPage() {
     "Housing situation is ideal for this pet",
     "Activity level matches pet's energy requirements",
     "Family composition is compatible with pet's temperament",
-  ];
+  ]
 
   return (
     <AppLayout>
       <div className="max-w-7xl">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">
-            Welcome back, {user.name}! 👋
-          </h1>
-          <p className="text-muted-foreground">
-            Manage your pets and review adoption applications
-          </p>
+          <h1 className="text-3xl font-bold mb-2">Welcome back, {user.name}! 👋</h1>
+          <p className="text-muted-foreground">Manage your pets and review adoption applications</p>
         </div>
 
         {/* Stat Cards */}
@@ -167,9 +158,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-[400px_1fr] gap-6">
           {/* Left Column - My Pets */}
           <div>
-            <h2 className="text-lg font-semibold mb-4 text-muted-foreground">
-              MY PETS
-            </h2>
+            <h2 className="text-lg font-semibold mb-4 text-muted-foreground">MY PETS</h2>
             {pets.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <p>No pets added yet.</p>
@@ -177,7 +166,7 @@ export default function DashboardPage() {
             ) : (
               <div className="space-y-4">
                 {pets.map((pet) => {
-                  const isSelected = selectedPet?.id === pet.id;
+                  const isSelected = selectedPet?.id === pet.id
                   return (
                     <button
                       key={pet.id}
@@ -187,24 +176,15 @@ export default function DashboardPage() {
                       }`}
                     >
                       <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
-                        <Image
-                          src={pet.image_url || "/placeholder.svg"}
-                          alt={pet.name}
-                          fill
-                          className="object-cover"
-                        />
+                        <Image src={pet.image_url || "/placeholder.svg"} alt={pet.name} fill className="object-cover" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="font-semibold text-lg">{pet.name}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {pet.breed}
-                        </p>
-                        <p className="text-sm text-muted-foreground mt-1">
-                          {pet.status}
-                        </p>
+                        <p className="text-sm text-muted-foreground">{pet.breed}</p>
+                        <p className="text-sm text-muted-foreground mt-1">{pet.status}</p>
                       </div>
                     </button>
-                  );
+                  )
                 })}
               </div>
             )}
@@ -216,49 +196,43 @@ export default function DashboardPage() {
               <>
                 <div className="flex items-center gap-2 mb-6">
                   <Heart className="h-5 w-5 text-primary" />
-                  <h2 className="text-xl font-semibold">
-                    Matched Adopters for {selectedPet.name}
-                  </h2>
+                  <h2 className="text-xl font-semibold">Matched Adopters for {selectedPet.name}</h2>
                 </div>
                 <div className="mb-4 text-sm text-muted-foreground">
-                  <span className="font-medium">{selectedPet.breed}</span> •{" "}
-                  {selectedPet.age_group} •{" "}
-                  <span className="text-green-600 font-medium capitalize">
-                    {selectedPet.status}
-                  </span>{" "}
-                  •{" "}
+                  <span className="font-medium">{selectedPet.breed}</span> • {selectedPet.age_group} •{" "}
+                  <span className="text-green-600 font-medium capitalize">{selectedPet.status}</span> •{" "}
                   <span className="font-medium">{adopters.length} matches</span>
                 </div>
 
                 {adopters.length > 0 ? (
                   <div className="space-y-6">
                     {adopters.map((adopter, index) => {
-                      const appliedDate = new Date(adopter.applied_at);
-                      const daysAgo = Math.floor(
-                        (Date.now() - appliedDate.getTime()) /
-                          (1000 * 60 * 60 * 24)
-                      );
-                      const formattedDate = appliedDate.toLocaleDateString(
-                        "en-US",
-                        {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric",
-                        }
-                      );
+                      const appliedDate = new Date(adopter.applied_at)
+                      const daysAgo = Math.floor((Date.now() - appliedDate.getTime()) / (1000 * 60 * 60 * 24))
+                      const formattedDate = appliedDate.toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })
 
                       return (
-                        <div
-                          key={adopter.id}
-                          className="bg-card rounded-lg border p-6"
-                        >
+                        <div key={adopter.id} className="bg-card rounded-lg border p-6">
                           {/* Adopter Header */}
                           <div className="flex items-start justify-between mb-6">
                             <div className="flex items-center gap-4">
                               <div className="relative w-16 h-16 rounded-full overflow-hidden flex-shrink-0 bg-muted">
-                                <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-muted-foreground">
-                                  {adopter.name.charAt(0)}
-                                </div>
+                                {adopter.image_url ? (
+                                  <Image
+                                    src={adopter.image_url || "/placeholder.svg"}
+                                    alt={adopter.name}
+                                    fill
+                                    className="object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center text-2xl font-bold text-muted-foreground">
+                                    {adopter.name.charAt(0)}
+                                  </div>
+                                )}
                               </div>
                               <div>
                                 <div className="flex items-center gap-2 mb-1">
@@ -266,9 +240,7 @@ export default function DashboardPage() {
                                     #{index + 1} Match
                                   </Badge>
                                 </div>
-                                <h3 className="font-semibold text-lg">
-                                  {adopter.name}
-                                </h3>
+                                <h3 className="font-semibold text-lg">{adopter.name}</h3>
                               </div>
                             </div>
                           </div>
@@ -277,13 +249,33 @@ export default function DashboardPage() {
                           <div className="grid grid-cols-2 gap-6 mb-6">
                             <div>
                               <div className="flex items-start gap-2 text-sm">
+                                <Phone className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                                <div>
+                                  <p className="text-muted-foreground text-xs mb-1">Phone</p>
+                                  <p className="font-medium">
+                                    {adopter.cell_phone || adopter.home_phone || "Not provided"}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                            <div>
+                              <div className="flex items-start gap-2 text-sm">
+                                <Mail className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                                <div>
+                                  <p className="text-muted-foreground text-xs mb-1">Email</p>
+                                  <p className="font-medium break-all">{adopter.email || "Not provided"}</p>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="col-span-2">
+                              <div className="flex items-start gap-2 text-sm">
                                 <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                                 <div>
-                                  <p className="text-muted-foreground text-xs mb-1">
-                                    Location
-                                  </p>
+                                  <p className="text-muted-foreground text-xs mb-1">Address</p>
                                   <p className="font-medium">
-                                    {adopter.location || "Not specified"}
+                                    {adopter.address_line && adopter.city && adopter.state
+                                      ? `${adopter.address_line.length > 40 ? adopter.address_line.substring(0, 40) + "..." : adopter.address_line}, ${adopter.city}, ${adopter.state}`
+                                      : adopter.location || "Not provided"}
                                   </p>
                                 </div>
                               </div>
@@ -292,11 +284,9 @@ export default function DashboardPage() {
                               <div className="flex items-start gap-2 text-sm">
                                 <Home className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                                 <div>
-                                  <p className="text-muted-foreground text-xs mb-1">
-                                    Housing
-                                  </p>
+                                  <p className="text-muted-foreground text-xs mb-1">Housing</p>
                                   <p className="font-medium capitalize">
-                                    {adopter.housing_type || "Not specified"}
+                                    {adopter.home_type || adopter.housing_type || "Not specified"}
                                   </p>
                                 </div>
                               </div>
@@ -305,27 +295,9 @@ export default function DashboardPage() {
                               <div className="flex items-start gap-2 text-sm">
                                 <Briefcase className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
                                 <div>
-                                  <p className="text-muted-foreground text-xs mb-1">
-                                    Experience
-                                  </p>
+                                  <p className="text-muted-foreground text-xs mb-1">Experience</p>
                                   <p className="font-medium capitalize">
-                                    {adopter.experience_level ||
-                                      "Not specified"}
-                                  </p>
-                                </div>
-                              </div>
-                            </div>
-                            <div>
-                              <div className="flex items-start gap-2 text-sm">
-                                <UsersIcon className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
-                                <div>
-                                  <p className="text-muted-foreground text-xs mb-1">
-                                    Family
-                                  </p>
-                                  <p className="font-medium">
-                                    {adopter.has_children
-                                      ? "Has children"
-                                      : "No children"}
+                                    {adopter.experience_level || "Not specified"}
                                   </p>
                                 </div>
                               </div>
@@ -339,14 +311,9 @@ export default function DashboardPage() {
                             </h4>
                             <div className="space-y-2">
                               {staticMatchReasons.map((reason, idx) => (
-                                <div
-                                  key={idx}
-                                  className="flex items-start gap-2 text-sm"
-                                >
+                                <div key={idx} className="flex items-start gap-2 text-sm">
                                   <Check className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
-                                  <span className="text-muted-foreground">
-                                    {reason}
-                                  </span>
+                                  <span className="text-muted-foreground">{reason}</span>
                                 </div>
                               ))}
                             </div>
@@ -355,38 +322,26 @@ export default function DashboardPage() {
                           {/* Application Info */}
                           <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4 pb-4 border-b">
                             <span>
-                              Applied {formattedDate} • {daysAgo}{" "}
-                              {daysAgo === 1 ? "day" : "days"} ago
+                              Applied {formattedDate} • {daysAgo} {daysAgo === 1 ? "day" : "days"} ago
                             </span>
                             <Badge variant="outline">Pending</Badge>
                           </div>
 
                           {/* Action Buttons */}
                           <div className="grid grid-cols-2 gap-3">
-                            <Button className="w-full bg-primary hover:bg-primary/90">
-                              Review Full Application
-                            </Button>
-                            <Button
-                              variant="outline"
-                              className="w-full bg-transparent"
-                            >
+                            <Button className="w-full bg-primary hover:bg-primary/90">Review Full Application</Button>
+                            <Button variant="outline" className="w-full bg-transparent">
                               Contact Adopter
                             </Button>
-                            <Button
-                              variant="outline"
-                              className="w-full bg-transparent"
-                            >
+                            <Button variant="outline" className="w-full bg-transparent">
                               Schedule Visit
                             </Button>
-                            <Button
-                              variant="outline"
-                              className="w-full text-red-600 hover:text-red-700 bg-transparent"
-                            >
+                            <Button variant="outline" className="w-full text-red-600 hover:text-red-700 bg-transparent">
                               Reject
                             </Button>
                           </div>
                         </div>
-                      );
+                      )
                     })}
                   </div>
                 ) : (
@@ -400,5 +355,5 @@ export default function DashboardPage() {
         </div>
       </div>
     </AppLayout>
-  );
+  )
 }

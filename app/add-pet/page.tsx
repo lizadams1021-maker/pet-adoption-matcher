@@ -11,26 +11,73 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
+import Image from "next/image"
+import { Upload } from "lucide-react"
 
 export default function AddPetPage() {
   const { user, addPet } = useAuth()
   const router = useRouter()
+  const [uploading, setUploading] = useState(false)
   const [formData, setFormData] = useState({
     name: "",
     type: "dog",
     breed: "",
-    ageGroup: "adult", // Changed from age to ageGroup
-    weightRange: "medium", // Changed from weight to weightRange
+    ageGroup: "adult",
+    weightRange: "medium",
     energyLevel: "moderate",
     size: "medium",
     goodWithKids: false,
     goodWithCats: false,
     goodWithDogs: false,
-    houseTrained: false, // Added houseTrained field
-    specialNeeds: "", // Added specialNeeds field
+    houseTrained: false,
+    specialNeeds: "",
     description: "",
     imageUrl: "",
   })
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploading(true)
+    try {
+      console.log("[v0] Starting image upload:", file.name)
+      const formDataObj = new FormData()
+      formDataObj.append("file", file)
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formDataObj,
+      })
+
+      console.log("[v0] Upload response status:", response.status)
+
+      if (!response.ok) {
+        let errorMessage = "Failed to upload image"
+        try {
+          const error = await response.json()
+          errorMessage = error.error || errorMessage
+          console.log("[v0] Upload error:", error)
+        } catch (e) {
+          // Response is not JSON, try to get text
+          const text = await response.text()
+          console.log("[v0] Non-JSON error response:", text)
+          errorMessage = text || errorMessage
+        }
+        alert(errorMessage)
+        return
+      }
+
+      const data = await response.json()
+      console.log("[v0] Upload successful, imageUrl length:", data.imageUrl?.length)
+      setFormData((prev) => ({ ...prev, imageUrl: data.imageUrl }))
+    } catch (error) {
+      console.error("[v0] Image upload error:", error)
+      alert("Failed to upload image: " + String(error))
+    } finally {
+      setUploading(false)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -43,7 +90,7 @@ export default function AddPetPage() {
       weightRange: formData.weightRange,
       energyLevel: formData.energyLevel,
       size: formData.size,
-      temperament: [], // Default empty array
+      temperament: [],
       goodWithChildren: formData.goodWithKids,
       goodWithPets: formData.goodWithCats || formData.goodWithDogs,
       houseTrained: formData.houseTrained,
@@ -74,6 +121,43 @@ export default function AddPetPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6 bg-card rounded-lg border p-6">
+          <div className="space-y-4">
+            <Label>Pet Photo</Label>
+            <div className="flex items-center gap-6">
+              <div className="relative h-32 w-32 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                {formData.imageUrl ? (
+                  <Image
+                    src={formData.imageUrl || "/placeholder.svg"}
+                    alt="Pet preview"
+                    fill
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm text-center p-2">
+                    No photo
+                  </div>
+                )}
+              </div>
+              <div className="flex-1">
+                <Label htmlFor="pet-image" className="cursor-pointer">
+                  <div className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 w-fit">
+                    <Upload className="h-4 w-4" />
+                    {uploading ? "Uploading..." : "Upload Photo"}
+                  </div>
+                  <input
+                    id="pet-image"
+                    type="file"
+                    accept="image/jpeg,image/png"
+                    onChange={handleImageUpload}
+                    className="hidden"
+                    disabled={uploading}
+                  />
+                </Label>
+                <p className="text-sm text-muted-foreground mt-2">JPEG or PNG, max 5MB</p>
+              </div>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label htmlFor="name">Pet Name *</Label>

@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
     // In production, use proper password hashing (bcrypt)
     const users = await sql`
       SELECT id, email, name, location, housing_type, has_children, 
-             experience_level, activity_level, preferred_pet_size, preferred_temperament
+             experience_level, activity_level, preferred_pet_size, preferred_temperament, image_url
       FROM users 
       WHERE email = ${email}
     `
@@ -24,6 +24,7 @@ export async function POST(request: NextRequest) {
         id: user.id,
         email: user.email,
         name: user.name,
+        imageUrl: user.image_url, // Added imageUrl to response
         preferences: {
           location: user.location,
           housingType: user.housing_type,
