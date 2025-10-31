@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
-import { mockPets } from "@/lib/mock-data";
 import { getMatchesForUser } from "@/lib/matching-algorithm";
 import { AppLayout } from "@/components/app-layout";
 import { PetCard } from "@/components/pet-card";
@@ -14,6 +13,7 @@ export default function MatchesPage() {
   const [matches, setMatches] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [appliedPets, setAppliedPets] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (!user) {
@@ -28,10 +28,23 @@ export default function MatchesPage() {
         const data = await res.json();
 
         if (res.ok) {
-          // Calcula matchScore usando la función existente
-          console.log("pets", data.pets);
           const matchedPets = getMatchesForUser(user, data.pets);
           setMatches(matchedPets);
+
+          const petIds = matchedPets.map((p) => p.id);
+          const appliedSet = new Set<string>();
+
+          for (const petId of petIds) {
+            const checkRes = await fetch(
+              `/api/applications/check?userId=${user.id}&petId=${petId}`
+            );
+            const checkData = await checkRes.json();
+            if (checkData.hasApplied) {
+              appliedSet.add(petId);
+            }
+          }
+
+          setAppliedPets(appliedSet);
         } else {
           console.error("Error fetching pets:", data.error);
           setError(data.error || "Failed to fetch pets");
@@ -47,16 +60,44 @@ export default function MatchesPage() {
     fetchPets();
   }, [user, router]);
 
+  const handleApply = async (petId: string) => {
+    if (!user) return;
+
+    try {
+      const res = await fetch("/api/applications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id, petId }),
+      });
+
+      if (res.ok) {
+        setAppliedPets((prev) => new Set(prev).add(petId));
+      }
+    } catch (error) {
+      console.error("[v0] Apply error:", error);
+    }
+  };
+
   if (!user) {
-    return null; // o un loader si quieres
+    return null;
   }
 
   if (loading) {
-    return <div>Loading matches...</div>;
+    return (
+      <AppLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <p className="text-muted-foreground">Loading matches...</p>
+        </div>
+      </AppLayout>
+    );
   }
 
   if (error) {
-    return <div className="text-red-500">{error}</div>;
+    return (
+      <AppLayout>
+        <div className="text-red-500">{error}</div>
+      </AppLayout>
+    );
   }
 
   return (
@@ -85,7 +126,13 @@ export default function MatchesPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {matches.map((pet) => (
-              <PetCard key={pet.id} pet={pet} matchScore={pet.matchScore} />
+              <PetCard
+                key={pet.id}
+                pet={pet}
+                matchScore={pet.matchScore}
+                hasApplied={appliedPets.has(pet.id)}
+                onApply={() => handleApply(pet.id)}
+              />
             ))}
           </div>
         )}

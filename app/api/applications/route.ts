@@ -12,19 +12,42 @@ export async function GET(request: NextRequest) {
 
     const applications = await sql`
       SELECT 
-        a.id, a.match_rank, a.compatibility_score, a.status, a.applied_at,
-        ad.id as adopter_id, ad.name, ad.email, ad.location, ad.distance_miles,
-        ad.housing_type, ad.has_yard, ad.experience_level, ad.experience_description,
-        ad.family_adults, ad.family_children, ad.verified, ad.image_url
-      FROM applications a
-      JOIN adopters ad ON a.adopter_id = ad.id
-      WHERE a.pet_id = ${petId}
-      ORDER BY a.match_rank ASC
+        upa.id, upa.created_at as applied_at,
+        u.id as user_id, u.name, u.email, u.location, 
+        u.housing_type, u.has_children, u.experience_level,
+        u.activity_level, u.preferred_pet_size, u.preferred_temperament
+      FROM user_pet_applications upa
+      JOIN users u ON upa.user_id = u.id
+      WHERE upa.pet_id = ${petId}
+      ORDER BY upa.created_at DESC
     `
 
     return NextResponse.json({ applications })
   } catch (error) {
     console.error("[v0] Fetch applications error:", error)
     return NextResponse.json({ error: "Failed to fetch applications" }, { status: 500 })
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const { userId, petId } = await request.json()
+
+    if (!userId || !petId) {
+      return NextResponse.json({ error: "User ID and Pet ID required" }, { status: 400 })
+    }
+
+    const applicationId = `app-${Date.now()}`
+
+    await sql`
+      INSERT INTO user_pet_applications (id, user_id, pet_id)
+      VALUES (${applicationId}, ${userId}, ${petId})
+      ON CONFLICT (user_id, pet_id) DO NOTHING
+    `
+
+    return NextResponse.json({ success: true, applicationId })
+  } catch (error) {
+    console.error("[v0] Create application error:", error)
+    return NextResponse.json({ error: "Failed to create application" }, { status: 500 })
   }
 }
