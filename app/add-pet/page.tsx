@@ -48,8 +48,6 @@ export default function AddPetPage() {
     requiresFencedYard: false,
     needsCompany: false,
     comfortableHoursAlone: "",
-    okWithChildren: false,
-    okWithChildrenAges: [], //  ["under 5", "6-10"]
     ownerExperienceRequired: "",
   });
 
