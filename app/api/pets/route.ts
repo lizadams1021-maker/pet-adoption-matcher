@@ -41,25 +41,68 @@ export async function POST(request: NextRequest) {
 
     await sql`
       INSERT INTO pets (
-        id, name, type, breed, age_group, weight_range, energy_level, 
-        size, temperament, good_with_children, good_with_pets, 
-        house_trained, special_needs, description, image_url, owner_id, status
+        id,
+        name,
+        type,
+        breed,
+        age_group,
+        weight_range,
+        energy_level,
+        size,
+        temperament,
+        good_with_children,
+        good_with_pets,
+        house_trained,
+        special_needs,
+        description,
+        image_url,
+        owner_id,
+        status,
+        state,
+        adoptable_out_of_state,
+        only_pet,
+        ok_with_animals,
+        requires_fenced_yard,
+        needs_company,
+        comfortable_hours_alone,
+        owner_experience_required
       )
       VALUES (
-        ${petId}, ${petData.name}, ${petData.type}, ${petData.breed}, 
-        ${petData.ageGroup}, ${petData.weightRange}, ${petData.energyLevel},
-        ${petData.size}, ${petData.temperament}, ${petData.goodWithChildren},
-        ${petData.goodWithPets}, ${petData.houseTrained}, ${petData.specialNeeds},
-        ${petData.description}, ${petData.imageUrl}, ${petData.ownerId}, 'available'
+        ${petId},
+        ${petData.name},
+        ${petData.type},
+        ${petData.breed},
+        ${petData.ageGroup},
+        ${petData.weightRange},
+        ${petData.energyLevel},
+        ${petData.size},
+        ${petData.temperament || []},
+        ${petData.goodWithChildren || false},
+        ${petData.goodWithPets || false},
+        ${petData.houseTrained || false},
+        ${petData.specialNeeds || null},
+        ${petData.description || null},
+        ${petData.imageUrl || null},
+        ${petData.ownerId},
+        'available',
+        ${petData.state || null},
+        ${petData.adoptable_out_of_state || false},
+        ${petData.only_pet || false},
+        ${petData.ok_with_animals || null},
+        ${petData.requires_fenced_yard || false},
+        ${petData.needs_company || false},
+        ${petData.comfortable_hours_alone || null},
+        ${petData.owner_experience_required || null}
       )
     `
 
     return NextResponse.json({ success: true, petId })
   } catch (error) {
-    console.error("[v0] Add pet error:", error)
+    console.error("[API] Add pet error:", error)
     return NextResponse.json({ error: "Failed to add pet" }, { status: 500 })
   }
 }
+
 
 export async function PUT(request: NextRequest) {
   try {
