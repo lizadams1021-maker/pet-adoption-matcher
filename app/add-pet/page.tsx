@@ -113,10 +113,22 @@ export default function AddPetPage() {
       goodWithChildren: formData.goodWithKids,
       goodWithPets: formData.goodWithCats || formData.goodWithDogs,
       houseTrained: formData.houseTrained,
+      state: formData.state || null,
+      adoptable_out_of_state: formData.adoptableOutOfState || false,
+      only_pet: formData.onlyPet || false,
+      ok_with_animals: formData.okWithAnimals?.length
+        ? formData.okWithAnimals
+        : null,
+      requires_fenced_yard: formData.requiresFencedYard || false,
+      needs_company: formData.needsCompany || false,
+      comfortable_hours_alone: formData.comfortableHoursAlone || null,
+      owner_experience_required: formData.ownerExperienceRequired || null,
       specialNeeds: formData.specialNeeds || null,
       description: formData.description || null,
       imageUrl: formData.imageUrl || null,
     };
+
+    console.log("New pet", newPet);
 
     await addPet(newPet);
     router.push("/my-pets");
