@@ -81,6 +81,13 @@ export default function MatchesPage() {
 
         if (!res.ok) throw new Error("Failed to delete application");
 
+        Swal.fire({
+          title: "Application Withdrawn",
+          html: `You have withdrawn your application for <strong>${petName}</strong>. You can always apply again later if you change your mind.`,
+          icon: undefined,
+          confirmButtonText: "OK",
+        });
+
         // Actualizar el estado local
         const updated = new Set(appliedPets);
         updated.delete(petId);

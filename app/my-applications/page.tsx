@@ -7,6 +7,8 @@ import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AppLayout } from "@/components/app-layout";
 import React from "react";
+import Link from "next/link";
+import Swal from "sweetalert2";
 
 interface Application {
   id: string;
@@ -50,6 +52,43 @@ export default function MyApplicationsPage() {
     fetchApps();
   }, [user, router]);
 
+  const handleWithdraw = async (
+    appId: string,
+    petId: string,
+    petName: string
+  ) => {
+    if (!user) return;
+
+    try {
+      const res = await fetch("/api/applications", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id, petId }),
+      });
+
+      if (!res.ok) throw new Error("Failed to withdraw application");
+
+      // Actualizar estado local de apps
+      setApps((prev) => prev.filter((a) => a.id !== appId));
+
+      // Mostrar mensaje de éxito
+      Swal.fire({
+        title: "Application Withdrawn",
+        html: `You have withdrawn your application for <strong>${petName}</strong>. You can always apply again later if you change your mind.`,
+        icon: undefined,
+        confirmButtonText: "OK",
+      });
+    } catch (error) {
+      console.error("[v0] Withdraw error:", error);
+      Swal.fire({
+        title: "Error",
+        text: "There was an error withdrawing your application. Please try again.",
+        icon: "error",
+        confirmButtonText: "OK",
+      });
+    }
+  };
+
   if (!user) return null;
 
   if (loading) {
@@ -62,7 +101,7 @@ export default function MyApplicationsPage() {
 
   return (
     <AppLayout>
-      <div className="max-w-7xl">
+      <div className="max-w-6xl">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">My Applications</h1>
@@ -82,7 +121,7 @@ export default function MyApplicationsPage() {
             </Button>
           </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="grid gap-4 md:grid-cols-3">
             {apps.map((app) => (
               <div
                 key={app.id}
@@ -103,6 +142,23 @@ export default function MyApplicationsPage() {
                 <p className="mt-2 text-sm font-medium capitalize">
                   Status: {app.pet_status}
                 </p>
+
+                <div className="mt-3 flex gap-2">
+                  <Link href={`/pet/${app.pet_id}`} className="flex-1">
+                    <Button className="w-full bg-transparent" variant="outline">
+                      View Details
+                    </Button>
+                  </Link>
+
+                  <Button
+                    onClick={() =>
+                      handleWithdraw(app.id, app.pet_id, app.pet_name)
+                    }
+                    className="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg transition"
+                  >
+                    Cancel
+                  </Button>
+                </div>
               </div>
             ))}
           </div>
