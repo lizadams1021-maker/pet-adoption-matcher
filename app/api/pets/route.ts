@@ -106,7 +106,7 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const { petId, updates } = await request.json()
+    const { petId, updates } = await request.json();
 
     await sql`
       UPDATE pets 
@@ -122,19 +122,31 @@ export async function PUT(request: NextRequest) {
         good_with_children = ${updates.goodWithChildren},
         good_with_pets = ${updates.goodWithPets},
         house_trained = ${updates.houseTrained},
+        state = ${updates.state},
+        adoptable_out_of_state = ${updates.adoptable_out_of_state},
+        only_pet = ${updates.only_pet},
+        ok_with_animals = ${updates.ok_with_animals},
+        requires_fenced_yard = ${updates.requires_fenced_yard},
+        needs_company = ${updates.needs_company},
+        comfortable_hours_alone = ${updates.comfortable_hours_alone},
+        owner_experience_required = ${updates.owner_experience_required},
         special_needs = ${updates.specialNeeds},
         description = ${updates.description},
         image_url = ${updates.imageUrl},
         updated_at = NOW()
       WHERE id = ${petId}
-    `
+    `;
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("[v0] Update pet error:", error)
-    return NextResponse.json({ error: "Failed to update pet" }, { status: 500 })
+    console.error("[API] Update pet error:", error);
+    return NextResponse.json(
+      { error: "Failed to update pet" },
+      { status: 500 }
+    );
   }
 }
+
 
 export async function DELETE(request: NextRequest) {
   try {
