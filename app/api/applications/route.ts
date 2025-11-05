@@ -49,3 +49,24 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Failed to create application" }, { status: 500 })
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const { userId, petId } = await request.json()
+
+    if (!userId || !petId) {
+      return NextResponse.json({ error: "User ID and Pet ID required" }, { status: 400 })
+    }
+
+    await sql`
+      DELETE FROM user_pet_applications
+      WHERE user_id = ${userId} AND pet_id = ${petId}
+    `
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error("[v0] Delete application error:", error)
+    return NextResponse.json({ error: "Failed to delete application" }, { status: 500 })
+  }
+}
+
