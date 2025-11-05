@@ -24,6 +24,7 @@ import { Pencil, Trash2, X, Upload } from "lucide-react";
 export default function MyPetsPage() {
   const { user, getUserPets, deletePet, updatePet } = useAuth();
   const router = useRouter();
+  const [loading, setLoading] = useState(true);
   const [userPets, setUserPets] = useState<any[]>([]);
   const [editingPet, setEditingPet] = useState<any | null>(null);
   const [editFormData, setEditFormData] = useState({
@@ -61,8 +62,10 @@ export default function MyPetsPage() {
     }
 
     const fetchPets = async () => {
+      setLoading(true);
       const pets = await getUserPets();
       setUserPets(pets || []);
+      setLoading(false);
     };
     fetchPets();
   }, [user, router, getUserPets]);
@@ -198,6 +201,19 @@ export default function MyPetsPage() {
 
   if (!user) {
     return null;
+  }
+
+  if (loading) {
+    return (
+      <AppLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-muted-foreground">Loading pets...</p>
+          </div>
+        </div>
+      </AppLayout>
+    );
   }
 
   return (

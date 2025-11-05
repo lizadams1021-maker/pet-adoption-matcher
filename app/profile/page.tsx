@@ -28,6 +28,7 @@ import {
 export default function ProfilePage() {
   const { user, logout } = useAuth();
   const router = useRouter();
+  const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -106,6 +107,7 @@ export default function ProfilePage() {
     // Load user profile data
     const loadProfile = async () => {
       try {
+        setLoading(true);
         const response = await fetch(`/api/user/profile?userId=${user.id}`);
         if (response.ok) {
           const data = await response.json();
@@ -181,6 +183,7 @@ export default function ProfilePage() {
           if (userData.state) {
             setAvailableCities(getCitiesForState(userData.state));
           }
+          setLoading(false);
         }
       } catch (error) {
         console.error("[v0] Load profile error:", error);
@@ -338,6 +341,19 @@ export default function ProfilePage() {
 
   const isRenting = formData.homeType?.includes("Rent");
   const isOwnCondo = formData.homeType === "Own Condo";
+
+  if (loading) {
+    return (
+      <AppLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-muted-foreground">Loading profile info...</p>
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout>
