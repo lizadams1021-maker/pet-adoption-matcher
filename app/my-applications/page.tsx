@@ -26,6 +26,7 @@ export default function MyApplicationsPage() {
   const { user } = useAuth();
   const router = useRouter();
   const [apps, setApps] = useState<Application[]>([]);
+  const [loadingAppId, setLoadingAppId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -58,6 +59,7 @@ export default function MyApplicationsPage() {
     petName: string
   ) => {
     if (!user) return;
+    setLoadingAppId(appId);
 
     try {
       const res = await fetch("/api/applications", {
@@ -86,6 +88,8 @@ export default function MyApplicationsPage() {
         icon: "error",
         confirmButtonText: "OK",
       });
+    } finally {
+      setLoadingAppId(null); // termina animación
     }
   };
 
@@ -159,9 +163,14 @@ export default function MyApplicationsPage() {
                     onClick={() =>
                       handleWithdraw(app.id, app.pet_id, app.pet_name)
                     }
-                    className="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg transition"
+                    className="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg flex items-center justify-center gap-2 transition"
+                    disabled={loadingAppId === app.id} // bloquea mientras carga
                   >
-                    Cancel
+                    {loadingAppId === app.id ? (
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    ) : (
+                      "Cancel"
+                    )}
                   </Button>
                 </div>
               </div>

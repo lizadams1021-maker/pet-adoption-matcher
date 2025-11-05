@@ -12,6 +12,7 @@ export default function MatchesPage() {
   const { user } = useAuth();
   const router = useRouter();
   const [matches, setMatches] = useState<any[]>([]);
+  const [loadingPetId, setLoadingPetId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [appliedPets, setAppliedPets] = useState<Set<string>>(new Set());
@@ -68,6 +69,7 @@ export default function MatchesPage() {
     owner_name: string
   ) => {
     if (!user) return;
+    setLoadingPetId(petId);
 
     try {
       const hasApplied = appliedPets.has(petId);
@@ -122,6 +124,9 @@ export default function MatchesPage() {
       }
     } catch (error) {
       console.error("[v0] Apply error:", error);
+    } finally {
+      console.log("Cleaning spinner for pet:");
+      setLoadingPetId(null);
     }
   };
 
@@ -181,6 +186,7 @@ export default function MatchesPage() {
                 pet={pet}
                 matchScore={pet.matchScore}
                 hasApplied={appliedPets.has(pet.id)}
+                loading={loadingPetId === pet.id}
                 onApply={() => handleApply(pet.id, pet.name, pet.owner_name)}
               />
             ))}

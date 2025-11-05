@@ -12,6 +12,7 @@ interface PetCardProps {
   matchScore: MatchScore;
   hasApplied?: boolean;
   onApply?: () => void;
+  loading: boolean;
 }
 
 export function PetCard({
@@ -19,6 +20,7 @@ export function PetCard({
   matchScore,
   hasApplied = false,
   onApply,
+  loading,
 }: PetCardProps) {
   return (
     <div className="bg-card rounded-lg border overflow-hidden hover:shadow-lg transition-shadow">
@@ -93,8 +95,25 @@ export function PetCard({
                 ? "text-green-700 flex items-center justify-center px-3 py-2 bg-green-50 border border-green-200 rounded-md hover:bg-green-100"
                 : "bg-primary hover:bg-primary/90"
             }`}
+            disabled={loading}
           >
-            {hasApplied ? "✓ Applied" : "Apply"}
+            {loading ? (
+              <div
+                className={`
+      w-5 h-5 border-2 rounded-full animate-spin
+      border-t-transparent
+      ${
+        hasApplied
+          ? "border-green-700 border-l-green-700 border-b-green-700 border-r-green-700"
+          : "border-white"
+      }
+    `}
+              ></div>
+            ) : hasApplied ? (
+              <span className="text-green-700 font-medium">✓ Applied</span>
+            ) : (
+              "Apply"
+            )}
           </Button>
         </div>
       </div>
