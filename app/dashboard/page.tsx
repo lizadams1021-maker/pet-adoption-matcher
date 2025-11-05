@@ -183,7 +183,11 @@ export default function DashboardPage() {
 
         {/* Stat Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-card rounded-lg border p-6">
+          {/* Active Pets */}
+          <div
+            className="bg-card rounded-lg border p-6 cursor-pointer hover:shadow-md transition"
+            onClick={() => router.push("/my-pets")}
+          >
             <div className="flex items-center gap-4">
               <div className="p-3 bg-purple-100 rounded-lg">
                 <Users className="h-6 w-6 text-primary" />
@@ -195,7 +199,11 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="bg-card rounded-lg border p-6">
+          {/* New Matches */}
+          <div
+            className="bg-card rounded-lg border p-6 cursor-pointer hover:shadow-md transition"
+            onClick={() => router.push("/matches")}
+          >
             <div className="flex items-center gap-4">
               <div className="p-3 bg-green-100 rounded-lg">
                 <Heart className="h-6 w-6 text-green-600" />
@@ -207,7 +215,11 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="bg-card rounded-lg border p-6">
+          {/* Pending Apps */}
+          <div
+            className="bg-card rounded-lg border p-6 cursor-pointer hover:shadow-md transition"
+            onClick={() => router.push("/my-applications")}
+          >
             <div className="flex items-center gap-4">
               <div className="p-3 bg-yellow-100 rounded-lg">
                 <Briefcase className="h-6 w-6 text-yellow-600" />
@@ -219,7 +231,12 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="bg-card rounded-lg border p-6">
+          {/* This Week */}
+          <div
+            className="bg-card rounded-lg border p-6 cursor-pointer hover:shadow-md transition"
+            onClick={() => router.push("/matches")}
+            // Puedes ajustar la ruta si quieres otra vista
+          >
             <div className="flex items-center gap-4">
               <div className="p-3 bg-blue-100 rounded-lg">
                 <TrendingUp className="h-6 w-6 text-blue-600" />
