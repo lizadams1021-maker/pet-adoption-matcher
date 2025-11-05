@@ -12,6 +12,7 @@ export default function MatchesPage() {
   const { user } = useAuth();
   const router = useRouter();
   const [matches, setMatches] = useState<any[]>([]);
+  const [loadingPetId, setLoadingPetId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [appliedPets, setAppliedPets] = useState<Set<string>>(new Set());
@@ -25,13 +26,12 @@ export default function MatchesPage() {
     const fetchPets = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`/api/pets`);
+        const res = await fetch(`/api/pets?excludeOwnerId=${user.id}`);
         const data = await res.json();
 
+        console.log("Pets", data.pets);
         if (res.ok) {
           const matchedPets = getMatchesForUser(user, data.pets);
-          console.log("user", user);
-          console.log("matchedPets", matchedPets);
           setMatches(matchedPets);
 
           const petIds = matchedPets.map((p) => p.id);
@@ -69,21 +69,45 @@ export default function MatchesPage() {
     owner_name: string
   ) => {
     if (!user) return;
+    setLoadingPetId(petId);
 
     try {
-      const res = await fetch("/api/applications", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user.id, petId }),
-      });
+      const hasApplied = appliedPets.has(petId);
 
-      if (res.ok) {
-        setAppliedPets((prev) => new Set(prev).add(petId));
+      if (hasApplied) {
+        const res = await fetch("/api/applications", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: user.id, petId }),
+        });
 
-        // SweetAlert message when application is successful
+        if (!res.ok) throw new Error("Failed to delete application");
+
         Swal.fire({
-          title: "Application Submitted!",
-          html: `
+          title: "Application Withdrawn",
+          html: `You have withdrawn your application for <strong>${petName}</strong>. You can always apply again later if you change your mind.`,
+          icon: undefined,
+          confirmButtonText: "OK",
+        });
+
+        // Actualizar el estado local
+        const updated = new Set(appliedPets);
+        updated.delete(petId);
+        setAppliedPets(updated);
+      } else {
+        const res = await fetch("/api/applications", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: user.id, petId }),
+        });
+
+        if (res.ok) {
+          setAppliedPets((prev) => new Set(prev).add(petId));
+
+          // SweetAlert message when application is successful
+          Swal.fire({
+            title: "Application Submitted!",
+            html: `
             Thanks for showing interest in <strong>${petName}</strong>. 
             We shared your interest, details, and match criteria with <strong>${owner_name}</strong>. 
             We hope it’s a perfect match.<br><br>
@@ -91,14 +115,18 @@ export default function MatchesPage() {
             We encourage you to keep looking while you wait to hear from <strong>${owner_name}</strong>
             in case there’s an even better pet out there for you!
           `,
-          icon: "success",
-          confirmButtonText: "OK",
-          width: 600,
-          padding: "2em",
-        });
+            icon: "success",
+            confirmButtonText: "OK",
+            width: 600,
+            padding: "2em",
+          });
+        }
       }
     } catch (error) {
       console.error("[v0] Apply error:", error);
+    } finally {
+      console.log("Cleaning spinner for pet:");
+      setLoadingPetId(null);
     }
   };
 
@@ -110,7 +138,10 @@ export default function MatchesPage() {
     return (
       <AppLayout>
         <div className="flex items-center justify-center min-h-screen">
-          <p className="text-muted-foreground">Loading matches...</p>
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-muted-foreground">Loading matches...</p>
+          </div>
         </div>
       </AppLayout>
     );
@@ -155,6 +186,7 @@ export default function MatchesPage() {
                 pet={pet}
                 matchScore={pet.matchScore}
                 hasApplied={appliedPets.has(pet.id)}
+                loading={loadingPetId === pet.id}
                 onApply={() => handleApply(pet.id, pet.name, pet.owner_name)}
               />
             ))}
