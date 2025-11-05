@@ -70,19 +70,35 @@ export default function MatchesPage() {
     if (!user) return;
 
     try {
-      const res = await fetch("/api/applications", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user.id, petId }),
-      });
+      const hasApplied = appliedPets.has(petId);
 
-      if (res.ok) {
-        setAppliedPets((prev) => new Set(prev).add(petId));
+      if (hasApplied) {
+        const res = await fetch("/api/applications", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: user.id, petId }),
+        });
 
-        // SweetAlert message when application is successful
-        Swal.fire({
-          title: "Application Submitted!",
-          html: `
+        if (!res.ok) throw new Error("Failed to delete application");
+
+        // Actualizar el estado local
+        const updated = new Set(appliedPets);
+        updated.delete(petId);
+        setAppliedPets(updated);
+      } else {
+        const res = await fetch("/api/applications", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: user.id, petId }),
+        });
+
+        if (res.ok) {
+          setAppliedPets((prev) => new Set(prev).add(petId));
+
+          // SweetAlert message when application is successful
+          Swal.fire({
+            title: "Application Submitted!",
+            html: `
             Thanks for showing interest in <strong>${petName}</strong>. 
             We shared your interest, details, and match criteria with <strong>${owner_name}</strong>. 
             We hope it’s a perfect match.<br><br>
@@ -90,11 +106,12 @@ export default function MatchesPage() {
             We encourage you to keep looking while you wait to hear from <strong>${owner_name}</strong>
             in case there’s an even better pet out there for you!
           `,
-          icon: "success",
-          confirmButtonText: "OK",
-          width: 600,
-          padding: "2em",
-        });
+            icon: "success",
+            confirmButtonText: "OK",
+            width: 600,
+            padding: "2em",
+          });
+        }
       }
     } catch (error) {
       console.error("[v0] Apply error:", error);
