@@ -25,11 +25,11 @@ export default function PetDetailPage() {
 
     const fetchPet = async () => {
       try {
-        console.log("params.id", params.id);
         const response = await fetch(`/api/pets/${params.id}`);
 
         if (response.ok) {
           const data = await response.json();
+          console.log("Pet", data.pet);
           setPet(data.pet);
         } else {
           const errorData = await response.json();
@@ -124,6 +124,7 @@ export default function PetDetailPage() {
                 </div>
               )}
 
+              {/* Characteristics */}
               <div>
                 <h2 className="text-xl font-semibold mb-3">Characteristics</h2>
                 <div className="grid grid-cols-2 gap-4">
@@ -149,22 +150,6 @@ export default function PetDetailPage() {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">
-                      Good with Children
-                    </p>
-                    <p className="font-medium">
-                      {pet.good_with_children ? "Yes" : "No"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">
-                      Good with Other Pets
-                    </p>
-                    <p className="font-medium">
-                      {pet.good_with_pets ? "Yes" : "No"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground">
                       House Trained
                     </p>
                     <p className="font-medium">
@@ -182,6 +167,114 @@ export default function PetDetailPage() {
                 </div>
               </div>
 
+              {/* Compatibility */}
+              <div>
+                <h2 className="text-xl font-semibold mb-3">Compatibility</h2>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      Good with Children
+                    </p>
+                    <p className="font-medium">
+                      {pet.good_with_children ? "Yes" : "No"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      Good with Other Pets
+                    </p>
+                    <p className="font-medium">
+                      {pet.good_with_pets ? "Yes" : "No"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Only Pet</p>
+                    <p className="font-medium">{pet.only_pet ? "Yes" : "No"}</p>
+                  </div>
+                  {pet.ok_with_animals && pet.ok_with_animals.length > 0 && (
+                    <div className="col-span-2">
+                      <p className="text-sm text-muted-foreground">
+                        OK With Animals
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {pet.ok_with_animals.map((a: string) => (
+                          <Badge
+                            key={a}
+                            variant="secondary"
+                            className="capitalize"
+                          >
+                            {a}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Requirements */}
+              <div>
+                <h2 className="text-xl font-semibold mb-3">
+                  Home Requirements
+                </h2>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      Requires Fenced Yard
+                    </p>
+                    <p className="font-medium">
+                      {pet.requires_fenced_yard ? "Yes" : "No"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      Needs Company Often
+                    </p>
+                    <p className="font-medium">
+                      {pet.needs_company ? "Yes" : "No"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      Comfortable Hours Alone
+                    </p>
+                    <p className="font-medium capitalize">
+                      {pet.comfortable_hours_alone || "Not specified"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      Owner Experience Required
+                    </p>
+                    <p className="font-medium capitalize">
+                      {pet.owner_experience_required || "None"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Adoption Info */}
+              <div>
+                <h2 className="text-xl font-semibold mb-3">Adoption Info</h2>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-muted-foreground">State</p>
+                    <p className="font-medium capitalize">
+                      {pet.state || "Not specified"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      Adoptable Out of State
+                    </p>
+                    <p className="font-medium">
+                      {pet.adoptable_out_of_state ? "Yes" : "No"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Temperament */}
               {pet.temperament && pet.temperament.length > 0 && (
                 <div>
                   <h2 className="text-xl font-semibold mb-3">Temperament</h2>
