@@ -21,6 +21,7 @@ import {
   calculateApplicationMatches,
   calculateCompatibility,
 } from "@/lib/matching-algorithm";
+import Swal from "sweetalert2";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -111,6 +112,41 @@ export default function DashboardPage() {
     fetchAdopters();
   }, [selectedPet]);
 
+  const handleReject = async (
+    petId: string,
+    adopterId: string,
+    adopterName: string
+  ) => {
+    try {
+      const res = await fetch("/api/applications/reject", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ petId, adopterId }),
+      });
+
+      if (!res.ok) throw new Error("Failed to reject application");
+
+      // Actualizar el estado local para remover al adoptador del listado
+      setAdopters((prev) => prev.filter((a) => a.id !== adopterId));
+
+      // Mensaje informativo (sin icono feliz)
+      Swal.fire({
+        title: "Application Rejected",
+        html: `You have rejected the application from <strong>${adopterName}</strong>.`,
+        icon: undefined,
+        confirmButtonText: "OK",
+      });
+    } catch (error) {
+      console.error("[v0] Reject error:", error);
+      Swal.fire({
+        title: "Error",
+        text: "There was an error rejecting the application. Please try again.",
+        icon: "error",
+        confirmButtonText: "OK",
+      });
+    }
+  };
+
   if (!user) {
     return null;
   }
@@ -119,7 +155,10 @@ export default function DashboardPage() {
     return (
       <AppLayout>
         <div className="flex items-center justify-center min-h-screen">
-          <p className="text-muted-foreground">Loading dashboard...</p>
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-muted-foreground">Loading dashboard...</p>
+          </div>
         </div>
       </AppLayout>
     );
@@ -147,7 +186,11 @@ export default function DashboardPage() {
 
         {/* Stat Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-card rounded-lg border p-6">
+          {/* Active Pets */}
+          <div
+            className="bg-card rounded-lg border p-6 cursor-pointer hover:shadow-md transition"
+            onClick={() => router.push("/my-pets")}
+          >
             <div className="flex items-center gap-4">
               <div className="p-3 bg-purple-100 rounded-lg">
                 <Users className="h-6 w-6 text-primary" />
@@ -159,7 +202,11 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="bg-card rounded-lg border p-6">
+          {/* New Matches */}
+          <div
+            className="bg-card rounded-lg border p-6 cursor-pointer hover:shadow-md transition"
+            onClick={() => router.push("/matches")}
+          >
             <div className="flex items-center gap-4">
               <div className="p-3 bg-green-100 rounded-lg">
                 <Heart className="h-6 w-6 text-green-600" />
@@ -171,7 +218,11 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="bg-card rounded-lg border p-6">
+          {/* Pending Apps */}
+          <div
+            className="bg-card rounded-lg border p-6 cursor-pointer hover:shadow-md transition"
+            onClick={() => router.push("/my-applications")}
+          >
             <div className="flex items-center gap-4">
               <div className="p-3 bg-yellow-100 rounded-lg">
                 <Briefcase className="h-6 w-6 text-yellow-600" />
@@ -183,7 +234,12 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="bg-card rounded-lg border p-6">
+          {/* This Week */}
+          <div
+            className="bg-card rounded-lg border p-6 cursor-pointer hover:shadow-md transition"
+            onClick={() => router.push("/matches")}
+            // Puedes ajustar la ruta si quieres otra vista
+          >
             <div className="flex items-center gap-4">
               <div className="p-3 bg-blue-100 rounded-lg">
                 <TrendingUp className="h-6 w-6 text-blue-600" />
@@ -516,25 +572,17 @@ export default function DashboardPage() {
                           </div>
 
                           {/* Action Buttons */}
-                          <div className="grid grid-cols-2 gap-3">
-                            <Button className="w-full bg-primary hover:bg-primary/90">
-                              Review Full Application
-                            </Button>
-                            <Button
-                              variant="outline"
-                              className="w-full bg-transparent"
-                            >
-                              Contact Adopter
-                            </Button>
-                            <Button
-                              variant="outline"
-                              className="w-full bg-transparent"
-                            >
-                              Schedule Visit
-                            </Button>
+                          <div className="gap-3">
                             <Button
                               variant="outline"
                               className="w-full text-red-600 hover:text-red-700 bg-transparent"
+                              onClick={() =>
+                                handleReject(
+                                  selectedPet.id,
+                                  adopter.id,
+                                  adopter.name
+                                )
+                              }
                             >
                               Reject
                             </Button>

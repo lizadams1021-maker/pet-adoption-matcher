@@ -19,18 +19,18 @@ export async function GET(request: NextRequest) {
 
     // Get new matches count (applications from last 7 days)
     const newMatchesResult = await sql`
-      SELECT COUNT(*) as count FROM applications a
-      JOIN pets p ON a.pet_id = p.id
-      WHERE p.owner_id = ${ownerId} 
-      AND a.applied_at > NOW() - INTERVAL '7 days'
+      SELECT COUNT(*) as count 
+      FROM user_pet_applications upa
+      JOIN pets p ON upa.pet_id = p.id
+      WHERE p.owner_id != ${ownerId} 
     `
     const newMatches = Number(newMatchesResult[0].count)
 
     // Get pending applications count
     const pendingAppsResult = await sql`
-      SELECT COUNT(*) as count FROM applications a
-      JOIN pets p ON a.pet_id = p.id
-      WHERE p.owner_id = ${ownerId} AND a.status = 'pending'
+      SELECT COUNT(*) as count
+      FROM user_pet_applications upa
+      WHERE upa.user_id = ${ownerId} 
     `
     const pendingApps = Number(pendingAppsResult[0].count)
 
