@@ -21,6 +21,7 @@ import {
   calculateApplicationMatches,
   calculateCompatibility,
 } from "@/lib/matching-algorithm";
+import Swal from "sweetalert2";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -110,6 +111,41 @@ export default function DashboardPage() {
 
     fetchAdopters();
   }, [selectedPet]);
+
+  const handleReject = async (
+    petId: string,
+    adopterId: string,
+    adopterName: string
+  ) => {
+    try {
+      const res = await fetch("/api/applications/reject", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ petId, adopterId }),
+      });
+
+      if (!res.ok) throw new Error("Failed to reject application");
+
+      // Actualizar el estado local para remover al adoptador del listado
+      setAdopters((prev) => prev.filter((a) => a.id !== adopterId));
+
+      // Mensaje informativo (sin icono feliz)
+      Swal.fire({
+        title: "Application Rejected",
+        html: `You have rejected the application from <strong>${adopterName}</strong>.`,
+        icon: undefined,
+        confirmButtonText: "OK",
+      });
+    } catch (error) {
+      console.error("[v0] Reject error:", error);
+      Swal.fire({
+        title: "Error",
+        text: "There was an error rejecting the application. Please try again.",
+        icon: "error",
+        confirmButtonText: "OK",
+      });
+    }
+  };
 
   if (!user) {
     return null;
@@ -516,25 +552,17 @@ export default function DashboardPage() {
                           </div>
 
                           {/* Action Buttons */}
-                          <div className="grid grid-cols-2 gap-3">
-                            <Button className="w-full bg-primary hover:bg-primary/90">
-                              Review Full Application
-                            </Button>
-                            <Button
-                              variant="outline"
-                              className="w-full bg-transparent"
-                            >
-                              Contact Adopter
-                            </Button>
-                            <Button
-                              variant="outline"
-                              className="w-full bg-transparent"
-                            >
-                              Schedule Visit
-                            </Button>
+                          <div className="gap-3">
                             <Button
                               variant="outline"
                               className="w-full text-red-600 hover:text-red-700 bg-transparent"
+                              onClick={() =>
+                                handleReject(
+                                  selectedPet.id,
+                                  adopter.id,
+                                  adopter.name
+                                )
+                              }
                             >
                               Reject
                             </Button>
