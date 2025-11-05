@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     let pets;
 
     if (ownerId) {
-      // Devuelve solo las mascotas del usuario
+      // Returns the user's pets
       pets = await sql`
         SELECT p.*, u.name AS owner_name
         FROM pets p
@@ -18,14 +18,29 @@ export async function GET(request: NextRequest) {
         ORDER BY p.created_at DESC
       `;
     } else {
-      // Devuelve todas las mascotas
-      pets = await sql`
-        SELECT p.*, u.name AS owner_name
-        FROM pets p
-        JOIN users u ON p.owner_id = u.id
-        ORDER BY p.created_at DESC
-      `;
+      // Returns all the pets that are not owned by the user
+      const excludeOwnerId = searchParams.get("excludeOwnerId");
+
+      if (excludeOwnerId) {
+        pets = await sql`
+          SELECT p.*, u.name AS owner_name
+          FROM pets p
+          JOIN users u ON p.owner_id = u.id
+          WHERE p.owner_id != ${excludeOwnerId}
+          ORDER BY p.created_at DESC
+        `;
+      } else {
+        // If any id is sent, it will return all pets
+        pets = await sql`
+          SELECT p.*, u.name AS owner_name
+          FROM pets p
+          JOIN users u ON p.owner_id = u.id
+          ORDER BY p.created_at DESC
+        `;
+      }
     }
+
+    
 
     return NextResponse.json({ pets });
   } catch (error) {

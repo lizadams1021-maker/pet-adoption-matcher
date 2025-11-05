@@ -25,13 +25,12 @@ export default function MatchesPage() {
     const fetchPets = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`/api/pets`);
+        const res = await fetch(`/api/pets?excludeOwnerId=${user.id}`);
         const data = await res.json();
 
+        console.log("Pets", data.pets);
         if (res.ok) {
           const matchedPets = getMatchesForUser(user, data.pets);
-          console.log("user", user);
-          console.log("matchedPets", matchedPets);
           setMatches(matchedPets);
 
           const petIds = matchedPets.map((p) => p.id);
