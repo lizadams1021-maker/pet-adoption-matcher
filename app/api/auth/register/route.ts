@@ -1,32 +1,36 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { sql } from "@/lib/db"
+import { sql } from "@/lib/db";
+import bcrypt from "bcryptjs";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password, name } = await request.json()
+    const { email, password, name } = await request.json();
 
-    // Check if user already exists
+    // Verificar si ya existe el usuario
     const existingUsers = await sql`
       SELECT id FROM users WHERE email = ${email}
-    `
+    `;
 
     if (existingUsers.length > 0) {
-      return NextResponse.json({ error: "User already exists" }, { status: 400 })
+      return NextResponse.json({ error: "User already exists" }, { status: 400 });
     }
 
-    // In production, use proper password hashing (bcrypt)
-    const userId = `user-${Date.now()}`
+    // Generar hash seguro de la contraseña
+    const saltRounds = 10;
+    const passwordHash = await bcrypt.hash(password, saltRounds);
+
+    const userId = `user-${Date.now()}`;
 
     await sql`
       INSERT INTO users (id, email, password_hash, name, has_children)
-      VALUES (${userId}, ${email}, ${password}, ${name}, false)
-    `
+      VALUES (${userId}, ${email}, ${passwordHash}, ${name}, false)
+    `;
 
     const user = {
       id: userId,
       email,
       name,
-      imageUrl: null, // Added imageUrl field
+      imageUrl: null,
       preferences: {
         location: null,
         housingType: null,
@@ -36,11 +40,11 @@ export async function POST(request: NextRequest) {
         petSizePreference: null,
         temperamentPreference: [],
       },
-    }
+    };
 
-    return NextResponse.json({ user })
+    return NextResponse.json({ user });
   } catch (error) {
-    console.error("[v0] Registration error:", error)
-    return NextResponse.json({ error: "Registration failed" }, { status: 500 })
+    console.error("[v0] Registration error:", error);
+    return NextResponse.json({ error: "Registration failed" }, { status: 500 });
   }
 }
