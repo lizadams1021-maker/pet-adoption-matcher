@@ -44,11 +44,34 @@ export default function MatchesPage() {
         const newPets = data.pets || [];
         const matchedPets = getMatchesForUser(user, newPets);
 
+        // Actualizar matches
         setMatches((prev) =>
           append ? [...prev, ...matchedPets] : matchedPets
         );
 
-        setHasMore(newPets.length === limit); // si trae menos que limit, ya no hay más
+        // ------------------------
+        // Actualizar appliedPets
+        // ------------------------
+        const appliedSet = append ? new Set(appliedPets) : new Set<string>();
+        for (const pet of matchedPets) {
+          try {
+            const checkRes = await fetch(
+              `/api/applications/check?userId=${user.id}&petId=${pet.id}`
+            );
+            const checkData = await checkRes.json();
+            if (checkData.hasApplied) {
+              appliedSet.add(pet.id);
+            }
+          } catch (err) {
+            console.error(`Failed to check application for pet ${pet.id}`, err);
+          }
+        }
+        setAppliedPets(appliedSet);
+
+        // ------------------------
+        // Manejar paginación
+        // ------------------------
+        setHasMore(newPets.length === limit);
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -202,9 +225,9 @@ export default function MatchesPage() {
               key={pet.id}
               pet={pet}
               matchScore={pet.matchScore}
-              hasApplied={false}
+              hasApplied={appliedPets.has(pet.id)}
               loading={loadingPetId === pet.id}
-              onApply={() => {}}
+              onApply={() => handleApply(pet.id, pet.name, pet.owner_name)}
             />
           ))}
         </div>
