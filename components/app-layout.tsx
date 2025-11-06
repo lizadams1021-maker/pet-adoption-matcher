@@ -11,14 +11,18 @@ import {
   Heart,
   Plus,
   ClipboardList,
+  Menu,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
+  const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
 
@@ -38,7 +42,23 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen flex">
       {/* Sidebar */}
-      <aside className="w-64 bg-card border-r flex flex-col">
+      <div className="sm:hidden p-4">
+        <Button onClick={() => setIsOpen(true)}>
+          <Menu className="h-6 w-6" />
+        </Button>
+      </div>
+      <aside
+        className={cn(
+          "fixed inset-y-0 left-0 w-64 bg-card border-r flex flex-col transform transition-transform duration-300 ease-in-out z-50",
+          isOpen ? "translate-x-0" : "-translate-x-full",
+          "sm:translate-x-0 sm:static sm:flex" // desktop siempre visible
+        )}
+      >
+        <div className="p-4 sm:hidden flex justify-end">
+          <Button onClick={() => setIsOpen(false)}>
+            <X className="h-6 w-6" />
+          </Button>
+        </div>
         <div className="p-6 border-b">
           <h1 className="text-xl font-bold text-primary">
             Pet Protect & Connect
