@@ -5,42 +5,41 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const ownerId = searchParams.get("ownerId");
+    const excludeOwnerId = searchParams.get("excludeOwnerId");
+
+    // Pagination: by default 10 for every page
+    const limit = Number(searchParams.get("limit")) || 10;
+    const offset = Number(searchParams.get("offset")) || 0;
 
     let pets;
 
     if (ownerId) {
-      // Returns the user's pets
       pets = await sql`
         SELECT p.*, u.name AS owner_name
         FROM pets p
         JOIN users u ON p.owner_id = u.id
         WHERE p.owner_id = ${ownerId}
         ORDER BY p.created_at DESC
+        LIMIT ${limit} OFFSET ${offset}
+      `;
+    } else if (excludeOwnerId) {
+      pets = await sql`
+        SELECT p.*, u.name AS owner_name
+        FROM pets p
+        JOIN users u ON p.owner_id = u.id
+        WHERE p.owner_id != ${excludeOwnerId}
+        ORDER BY p.created_at DESC
+        LIMIT ${limit} OFFSET ${offset}
       `;
     } else {
-      // Returns all the pets that are not owned by the user
-      const excludeOwnerId = searchParams.get("excludeOwnerId");
-
-      if (excludeOwnerId) {
-        pets = await sql`
-          SELECT p.*, u.name AS owner_name
-          FROM pets p
-          JOIN users u ON p.owner_id = u.id
-          WHERE p.owner_id != ${excludeOwnerId}
-          ORDER BY p.created_at DESC
-        `;
-      } else {
-        // If any id is sent, it will return all pets
-        pets = await sql`
-          SELECT p.*, u.name AS owner_name
-          FROM pets p
-          JOIN users u ON p.owner_id = u.id
-          ORDER BY p.created_at DESC
-        `;
-      }
+      pets = await sql`
+        SELECT p.*, u.name AS owner_name
+        FROM pets p
+        JOIN users u ON p.owner_id = u.id
+        ORDER BY p.created_at DESC
+        LIMIT ${limit} OFFSET ${offset}
+      `;
     }
-
-    
 
     return NextResponse.json({ pets });
   } catch (error) {
@@ -48,6 +47,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Failed to fetch pets" }, { status: 500 });
   }
 }
+
 
 export async function POST(request: NextRequest) {
   try {
