@@ -42,7 +42,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen flex">
       {/* Sidebar */}
-      <div className="sm:hidden p-4">
+      <div className="sm:hidden fixed top-4 left-4 z-50">
         <Button onClick={() => setIsOpen(true)}>
           <Menu className="h-6 w-6" />
         </Button>
