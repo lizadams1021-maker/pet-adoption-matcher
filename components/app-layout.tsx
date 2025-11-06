@@ -105,18 +105,17 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               </Link>
             </li>
           </ul>
+          <div className="p-4 border-t">
+            <Button
+              variant="outline"
+              className="w-full flex items-center gap-3 justify-start bg-transparent"
+              onClick={handleLogout}
+            >
+              <LogOut className="h-5 w-5" />
+              <span>Logout</span>
+            </Button>
+          </div>
         </nav>
-
-        <div className="p-4 border-t">
-          <Button
-            variant="outline"
-            className="w-full flex items-center gap-3 justify-start bg-transparent"
-            onClick={handleLogout}
-          >
-            <LogOut className="h-5 w-5" />
-            <span>Logout</span>
-          </Button>
-        </div>
       </aside>
 
       {/* Main content */}
