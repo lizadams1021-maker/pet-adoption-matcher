@@ -29,6 +29,9 @@ export default function DashboardPage() {
   const [selectedPet, setSelectedPet] = useState<any>(null);
   const [pets, setPets] = useState<any[]>([]);
   const [adopters, setAdopters] = useState<any[]>([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [loadingAdopters, setLoadingAdopters] = useState(false);
   const [stats, setStats] = useState({
     activePets: 0,
     newMatches: 0,
@@ -78,8 +81,13 @@ export default function DashboardPage() {
 
     const fetchAdopters = async () => {
       try {
-        const res = await fetch(`/api/applications?petId=${selectedPet.id}`);
+        setLoadingAdopters(true);
+        const res = await fetch(
+          `/api/applications?petId=${selectedPet.id}&page=${page}&limit=5`
+        );
         const data = await res.json();
+
+        if (!res.ok) throw new Error(data.error || "Failed to fetch adopters");
 
         const applicationsWithPet = data.applications.map((app: any) => ({
           user: app,
@@ -88,8 +96,6 @@ export default function DashboardPage() {
 
         const matchedApplications =
           calculateApplicationMatches(applicationsWithPet);
-
-        console.log("Matched Applications", matchedApplications);
 
         const applicationsWithMatches = data.applications.map((app: any) => {
           const match = matchedApplications.find((m) => m.userId === app.id);
@@ -101,16 +107,17 @@ export default function DashboardPage() {
           };
         });
 
-        if (res.ok) {
-          setAdopters(applicationsWithMatches);
-        }
+        setAdopters(applicationsWithMatches);
+        setTotalPages(data.totalPages || 1);
       } catch (error) {
         console.error("[v0] Fetch adopters error:", error);
+      } finally {
+        setLoadingAdopters(false);
       }
     };
 
     fetchAdopters();
-  }, [selectedPet]);
+  }, [selectedPet, page]);
 
   const handleReject = async (
     petId: string,
@@ -599,6 +606,35 @@ export default function DashboardPage() {
               </>
             )}
           </div>
+          {loadingAdopters && (
+            <div className="flex justify-center py-6">
+              <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          )}
+
+          {!loadingAdopters && totalPages > 1 && (
+            <div className="flex justify-center gap-4 mt-8">
+              <Button
+                variant="outline"
+                disabled={page === 1}
+                onClick={() => setPage((p) => Math.max(p - 1, 1))}
+              >
+                ← Previous
+              </Button>
+
+              <span className="text-sm text-muted-foreground">
+                Page {page} of {totalPages}
+              </span>
+
+              <Button
+                variant="outline"
+                disabled={page === totalPages}
+                onClick={() => setPage((p) => Math.min(p + 1, totalPages))}
+              >
+                Next →
+              </Button>
+            </div>
+          )}
         </div>
       </div>
     </AppLayout>

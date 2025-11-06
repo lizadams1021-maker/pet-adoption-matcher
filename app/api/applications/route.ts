@@ -3,11 +3,14 @@ import { sql } from "@/lib/db"
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const petId = searchParams.get("petId")
+    const { searchParams } = new URL(request.url);
+    const petId = searchParams.get("petId");
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const limit = parseInt(searchParams.get("limit") || "5", 10);
+    const offset = (page - 1) * limit;
 
     if (!petId) {
-      return NextResponse.json({ error: "Pet ID required" }, { status: 400 })
+      return NextResponse.json({ error: "Pet ID required" }, { status: 400 });
     }
 
     const applications = await sql`
@@ -18,14 +21,29 @@ export async function GET(request: NextRequest) {
       JOIN users u ON upa.user_id = u.id
       WHERE upa.pet_id = ${petId}
       ORDER BY upa.created_at DESC
-    `
+      LIMIT ${limit} OFFSET ${offset}
+    `;
 
-    return NextResponse.json({ applications })
+    const [{ count }] =
+      await sql`SELECT COUNT(*)::int AS count FROM user_pet_applications WHERE pet_id = ${petId}`;
+
+    const totalPages = Math.ceil(count / limit);
+
+    return NextResponse.json({
+      applications,
+      total: count,
+      totalPages,
+      page,
+    });
   } catch (error) {
-    console.error("[v0] Fetch applications error:", error)
-    return NextResponse.json({ error: "Failed to fetch applications" }, { status: 500 })
+    console.error("[v0] Fetch applications error:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch applications" },
+      { status: 500 }
+    );
   }
 }
+
 
 export async function POST(request: NextRequest) {
   try {
