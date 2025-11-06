@@ -96,23 +96,15 @@ export function calculateApplicationMatches(applications: Application[]): MatchR
     }
 
     // --------------------
-    // Out of state adoption
-    // --------------------
-    if (user.willing_out_of_state || pet.adoptable_out_of_state) {
-      score += 5;
-      reasons.push("User is willing to adopt out of state or pet is adoptable out of state.");
-    }
-
-    // --------------------
     // State compatibility
     // --------------------
     if (pet.state && user.state) {
       if (pet.state === user.state) {
         score += 5;
         reasons.push("Pet is in the same state as the user.");
-      } else if (pet.adoptable_out_of_state) {
+      } else if (pet.adoptable_out_of_state && user.willing_out_of_state) {
         score += 3;
-        reasons.push("Pet is adoptable out of state and user is in a different state.");
+        reasons.push("Pet is adoptable out of state and user is willing to adopt out of state.");
       } else {
         negativeReasons.push("Pet is in a different state and is not adoptable out of state.");
       }
