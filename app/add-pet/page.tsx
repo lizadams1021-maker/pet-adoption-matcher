@@ -2,6 +2,7 @@
 
 import type React from "react";
 
+import { US_STATES } from "@/lib/us-states-cities";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
@@ -369,12 +370,21 @@ export default function AddPetPage() {
 
             <div className="space-y-2">
               <Label htmlFor="state">State</Label>
-              <Input
-                id="state"
-                placeholder="e.g., Texas"
+              <Select
                 value={formData.state}
-                onChange={(e) => handleChange("state", e.target.value)}
-              />
+                onValueChange={(v) => handleChange("state", v)}
+              >
+                <SelectTrigger id="state">
+                  <SelectValue placeholder="Select state" />
+                </SelectTrigger>
+                <SelectContent>
+                  {US_STATES.map((state) => (
+                    <SelectItem key={state.code} value={state.code}>
+                      {state.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { getMatchesForUser } from "@/lib/matching-algorithm";
@@ -13,9 +13,15 @@ export default function MatchesPage() {
   const router = useRouter();
   const [matches, setMatches] = useState<any[]>([]);
   const [loadingPetId, setLoadingPetId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loadingInitial, setLoadingInitial] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [appliedPets, setAppliedPets] = useState<Set<string>>(new Set());
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const loaderRef = useRef<HTMLDivElement>(null);
+
+  const limit = 9; // pets for every page
 
   useEffect(() => {
     if (!user) {
@@ -23,45 +29,92 @@ export default function MatchesPage() {
       return;
     }
 
-    const fetchPets = async () => {
+    const fetchPets = async (pageToLoad = 1, append = false) => {
       try {
-        setLoading(true);
-        const res = await fetch(`/api/pets?excludeOwnerId=${user.id}`);
+        if (pageToLoad === 1) setLoadingInitial(true);
+        else setLoadingMore(true);
+
+        const res = await fetch(
+          `/api/pets?excludeOwnerId=${user.id}&page=${pageToLoad}&limit=${limit}`
+        );
         const data = await res.json();
 
-        console.log("Pets", data.pets);
-        if (res.ok) {
-          const matchedPets = getMatchesForUser(user, data.pets);
-          setMatches(matchedPets);
+        if (!res.ok) throw new Error(data.error || "Failed to fetch pets");
 
-          const petIds = matchedPets.map((p) => p.id);
-          const appliedSet = new Set<string>();
+        const newPets = data.pets || [];
+        const matchedPets = getMatchesForUser(user, newPets);
 
-          for (const petId of petIds) {
+        // Actualizar matches
+        setMatches((prev) =>
+          append ? [...prev, ...matchedPets] : matchedPets
+        );
+
+        // ------------------------
+        // Actualizar appliedPets
+        // ------------------------
+        const appliedSet = append ? new Set(appliedPets) : new Set<string>();
+        for (const pet of matchedPets) {
+          try {
             const checkRes = await fetch(
-              `/api/applications/check?userId=${user.id}&petId=${petId}`
+              `/api/applications/check?userId=${user.id}&petId=${pet.id}`
             );
             const checkData = await checkRes.json();
             if (checkData.hasApplied) {
-              appliedSet.add(petId);
+              appliedSet.add(pet.id);
             }
+          } catch (err) {
+            console.error(`Failed to check application for pet ${pet.id}`, err);
           }
-
-          setAppliedPets(appliedSet);
-        } else {
-          console.error("Error fetching pets:", data.error);
-          setError(data.error || "Failed to fetch pets");
         }
-      } catch (err) {
-        console.error("Fetch failed:", err);
-        setError("An error occurred while fetching pets");
+        setAppliedPets(appliedSet);
+
+        // ------------------------
+        // Manejar paginación
+        // ------------------------
+        setHasMore(newPets.length === limit);
+      } catch (err: any) {
+        setError(err.message);
       } finally {
-        setLoading(false);
+        setLoadingInitial(false);
+        setLoadingMore(false);
       }
     };
 
-    fetchPets();
+    fetchPets(1, false);
   }, [user, router]);
+
+  // Infinite scroll
+  useEffect(() => {
+    if (!hasMore || loadingMore) return;
+
+    const handleScroll = () => {
+      const bottom =
+        window.innerHeight + window.scrollY >= document.body.offsetHeight - 200;
+
+      if (bottom && !loadingMore && hasMore) {
+        const nextPage = page + 1;
+        setPage(nextPage);
+      }
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [page, hasMore, loadingMore]);
+
+  // Fetch siguiente página cuando cambia `page`
+  useEffect(() => {
+    if (page > 1) {
+      (async () => {
+        const res = await fetch(
+          `/api/pets?excludeOwnerId=${user.id}&page=${page}&limit=${limit}`
+        );
+        const data = await res.json();
+        const newPets = getMatchesForUser(user, data.pets);
+        setMatches((prev) => [...prev, ...newPets]);
+        setHasMore(data.pets.length === limit);
+      })();
+    }
+  }, [page]);
 
   const handleApply = async (
     petId: string,
@@ -134,7 +187,7 @@ export default function MatchesPage() {
     return null;
   }
 
-  if (loading) {
+  if (loadingInitial) {
     return (
       <AppLayout>
         <div className="flex items-center justify-center min-h-screen">
@@ -166,30 +219,28 @@ export default function MatchesPage() {
           </p>
         </div>
 
-        {matches.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground mb-4">
-              No matches found. Try updating your preferences.
-            </p>
-            <button
-              onClick={() => router.push("/profile")}
-              className="text-primary hover:underline"
-            >
-              Update Preferences
-            </button>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {matches.map((pet) => (
+            <PetCard
+              key={pet.id}
+              pet={pet}
+              matchScore={pet.matchScore}
+              hasApplied={appliedPets.has(pet.id)}
+              loading={loadingPetId === pet.id}
+              onApply={() => handleApply(pet.id, pet.name, pet.owner_name)}
+            />
+          ))}
+        </div>
+
+        {loadingMore && (
+          <div className="flex justify-center py-8">
+            <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {matches.map((pet) => (
-              <PetCard
-                key={pet.id}
-                pet={pet}
-                matchScore={pet.matchScore}
-                hasApplied={appliedPets.has(pet.id)}
-                loading={loadingPetId === pet.id}
-                onApply={() => handleApply(pet.id, pet.name, pet.owner_name)}
-              />
-            ))}
+        )}
+
+        {!hasMore && (
+          <div className="text-center text-muted-foreground py-8">
+            No more pets to show
           </div>
         )}
       </div>
