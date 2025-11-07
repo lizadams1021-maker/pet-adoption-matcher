@@ -3,12 +3,11 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
-import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AppLayout } from "@/components/app-layout";
-import React from "react";
 import Link from "next/link";
 import Swal from "sweetalert2";
+import { useAuthClient } from "@/lib/useAuthClient";
 
 interface Application {
   id: string;
@@ -23,13 +22,15 @@ interface Application {
 }
 
 export default function MyApplicationsPage() {
-  const { user } = useAuth();
+  const { user, loading } = useAuthClient();
   const router = useRouter();
   const [apps, setApps] = useState<Application[]>([]);
   const [loadingAppId, setLoadingAppId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loadingPage, setLoadingPage] = useState(true);
 
   useEffect(() => {
+    if (loading) return;
+
     if (!user) {
       router.push("/login");
       return;
@@ -46,12 +47,12 @@ export default function MyApplicationsPage() {
       } catch (err) {
         console.error("[MyApplicationsPage] Fetch error:", err);
       } finally {
-        setLoading(false);
+        setLoadingPage(false);
       }
     };
 
     fetchApps();
-  }, [user, router]);
+  }, [user, router, loading]);
 
   const handleWithdraw = async (
     appId: string,
@@ -95,7 +96,7 @@ export default function MyApplicationsPage() {
 
   if (!user) return null;
 
-  if (loading) {
+  if (loadingPage) {
     return (
       <AppLayout>
         <div className="flex items-center justify-center min-h-screen">

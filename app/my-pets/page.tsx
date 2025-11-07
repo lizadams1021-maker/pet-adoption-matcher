@@ -20,11 +20,13 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Pencil, Trash2, X, Upload } from "lucide-react";
+import { useAuthClient } from "@/lib/useAuthClient";
 
 export default function MyPetsPage() {
-  const { user, getUserPets, deletePet, updatePet } = useAuth();
+  const { user, loading } = useAuthClient();
+  const { getUserPets, deletePet, updatePet } = useAuth();
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
+  const [loadingPage, setLoading] = useState(true);
   const [userPets, setUserPets] = useState<any[]>([]);
   const [editingPet, setEditingPet] = useState<any | null>(null);
   const [editFormData, setEditFormData] = useState({
@@ -56,6 +58,8 @@ export default function MyPetsPage() {
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
+    if (loading) return;
+
     if (!user) {
       router.push("/login");
       return;
@@ -68,7 +72,7 @@ export default function MyPetsPage() {
       setLoading(false);
     };
     fetchPets();
-  }, [user, router, getUserPets]);
+  }, [user, router, getUserPets, loading]);
 
   const handleDelete = async (petId: string) => {
     if (confirm("Are you sure you want to delete this pet?")) {
@@ -203,7 +207,7 @@ export default function MyPetsPage() {
     return null;
   }
 
-  if (loading) {
+  if (loadingPage) {
     return (
       <AppLayout>
         <div className="flex items-center justify-center min-h-screen">

@@ -22,9 +22,10 @@ import {
   calculateCompatibility,
 } from "@/lib/matching-algorithm";
 import Swal from "sweetalert2";
+import { useAuthClient } from "@/lib/useAuthClient";
 
 export default function DashboardPage() {
-  const { user } = useAuth();
+  const { user, loading } = useAuthClient();
   const router = useRouter();
   const [selectedPet, setSelectedPet] = useState<any>(null);
   const [pets, setPets] = useState<any[]>([]);
@@ -38,9 +39,11 @@ export default function DashboardPage() {
     pendingApps: 0,
     thisWeek: 0,
   });
-  const [loading, setLoading] = useState(true);
+  const [loadingPage, setLoading] = useState(true);
 
   useEffect(() => {
+    if (loading) return;
+
     if (!user) {
       router.push("/login");
       return;
@@ -74,7 +77,7 @@ export default function DashboardPage() {
     };
 
     fetchData();
-  }, [user, router]);
+  }, [user, router, loading]);
 
   useEffect(() => {
     if (!selectedPet) return;
@@ -158,7 +161,7 @@ export default function DashboardPage() {
     return null;
   }
 
-  if (loading) {
+  if (loadingPage) {
     return (
       <AppLayout>
         <div className="flex items-center justify-center min-h-screen">
