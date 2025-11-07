@@ -110,12 +110,9 @@ export default function ProfilePage() {
     // Load user profile data
     const loadProfile = async () => {
       try {
-        setLoadingPage(true);
         console.log("User", user.id);
-        const response = await fetch(`/api/user/profile?userId=${user.id}`);
-        if (response.ok) {
-          const data = await response.json();
-          const userData = data.user;
+        if (user) {
+          const userData = user;
 
           console.log("[v0] User Data", userData);
 
