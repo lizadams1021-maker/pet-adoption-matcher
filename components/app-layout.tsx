@@ -18,7 +18,8 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { refreshAccess } from "@/lib/auth";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const { user, logout } = useAuth();
@@ -38,6 +39,19 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     logout();
     router.push("/login");
   };
+
+  useEffect(() => {
+    async function initAuth() {
+      let token = sessionStorage.getItem("accessToken");
+      if (!token) {
+        token = await refreshAccess();
+      }
+      if (!token) {
+        router.push("/login");
+      }
+    }
+    initAuth();
+  }, []);
 
   return (
     <div className="min-h-screen flex">

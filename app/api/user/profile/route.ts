@@ -7,6 +7,8 @@ export async function PUT(request: NextRequest) {
     const body = await request.json()
     const { userId, ...profileData } = body
 
+    console.log("Body", body);
+
     if (!userId) {
       return NextResponse.json({ error: "User ID is required" }, { status: 400 })
     }
@@ -113,8 +115,6 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: "Failed to update profile", details: String(error) }, { status: 500 })
   }
 }
-
-
 
 export async function GET(request: NextRequest) {
   try {

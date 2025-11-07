@@ -2,14 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/auth-context";
 import { getMatchesForUser } from "@/lib/matching-algorithm";
 import { AppLayout } from "@/components/app-layout";
 import { PetCard } from "@/components/pet-card";
 import Swal from "sweetalert2";
+import { useAuthClient } from "@/lib/useAuthClient";
 
 export default function MatchesPage() {
-  const { user } = useAuth();
+  const { user, loading } = useAuthClient();
   const router = useRouter();
   const [matches, setMatches] = useState<any[]>([]);
   const [loadingPetId, setLoadingPetId] = useState<string | null>(null);
@@ -24,6 +24,8 @@ export default function MatchesPage() {
   const limit = 9; // pets for every page
 
   useEffect(() => {
+    if (loading) return;
+
     if (!user) {
       router.push("/login");
       return;
@@ -42,6 +44,7 @@ export default function MatchesPage() {
         if (!res.ok) throw new Error(data.error || "Failed to fetch pets");
 
         const newPets = data.pets || [];
+        console.log("New pets", newPets);
         const matchedPets = getMatchesForUser(user, newPets);
 
         // Actualizar matches
@@ -55,6 +58,7 @@ export default function MatchesPage() {
         const appliedSet = append ? new Set(appliedPets) : new Set<string>();
         for (const pet of matchedPets) {
           try {
+            console.log("Here");
             const checkRes = await fetch(
               `/api/applications/check?userId=${user.id}&petId=${pet.id}`
             );
@@ -81,7 +85,7 @@ export default function MatchesPage() {
     };
 
     fetchPets(1, false);
-  }, [user, router]);
+  }, [user, router, loading]);
 
   // Infinite scroll
   useEffect(() => {
@@ -182,10 +186,6 @@ export default function MatchesPage() {
       setLoadingPetId(null);
     }
   };
-
-  if (!user) {
-    return null;
-  }
 
   if (loadingInitial) {
     return (

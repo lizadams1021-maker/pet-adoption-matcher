@@ -3,7 +3,7 @@
 import type React from "react";
 
 import { US_STATES } from "@/lib/us-states-cities";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { AppLayout } from "@/components/app-layout";
@@ -20,9 +20,11 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import Image from "next/image";
 import { Upload } from "lucide-react";
+import { useAuthClient } from "@/lib/useAuthClient";
 
 export default function AddPetPage() {
-  const { user, addPet } = useAuth();
+  const { user, loading } = useAuthClient();
+  const { addPet } = useAuth();
   const router = useRouter();
   const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({
@@ -139,10 +141,14 @@ export default function AddPetPage() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  if (!user) {
-    router.push("/login");
-    return null;
-  }
+  useEffect(() => {
+    if (loading) return;
+
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+  }, [user, router, loading]);
 
   return (
     <AppLayout>
