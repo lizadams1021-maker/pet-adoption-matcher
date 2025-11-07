@@ -31,8 +31,6 @@ export default function MatchesPage() {
       return;
     }
 
-    console.log("User", user);
-
     const fetchPets = async (pageToLoad = 1, append = false) => {
       try {
         if (pageToLoad === 1) setLoadingInitial(true);

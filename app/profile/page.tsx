@@ -195,7 +195,7 @@ export default function ProfilePage() {
     };
 
     loadProfile();
-  }, [user, router]);
+  }, [user, router, loading]);
 
   useEffect(() => {
     if (formData.state) {
@@ -346,7 +346,7 @@ export default function ProfilePage() {
   const isRenting = formData.homeType?.includes("Rent");
   const isOwnCondo = formData.homeType === "Own Condo";
 
-  if (loadingPage || loading) {
+  if (loadingPage) {
     return (
       <AppLayout>
         <div className="flex items-center justify-center min-h-screen">
