@@ -32,7 +32,7 @@ export function useAuthClient() {
         });
         if (!res.ok) throw new Error("Invalid token");
         const data = await res.json();
-        setUser(data);
+        setUser(data.user);
       } catch {
         setUser(null);
         router.push("/login");

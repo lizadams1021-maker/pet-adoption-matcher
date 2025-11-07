@@ -24,11 +24,12 @@ import {
   validateProfileForm,
   type ProfileFormData,
 } from "@/lib/profile-validation";
+import { useAuthClient } from "@/lib/useAuthClient";
 
 export default function ProfilePage() {
-  const { user, logout } = useAuth();
+  const { user, loading } = useAuthClient();
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
+  const [loadingPage, setLoadingPage] = useState(true);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -99,6 +100,8 @@ export default function ProfilePage() {
   const [customCity, setCustomCity] = useState("");
 
   useEffect(() => {
+    if (loading) return;
+
     if (!user) {
       router.push("/login");
       return;
@@ -107,7 +110,8 @@ export default function ProfilePage() {
     // Load user profile data
     const loadProfile = async () => {
       try {
-        setLoading(true);
+        setLoadingPage(true);
+        console.log("User", user.id);
         const response = await fetch(`/api/user/profile?userId=${user.id}`);
         if (response.ok) {
           const data = await response.json();
@@ -183,7 +187,7 @@ export default function ProfilePage() {
           if (userData.state) {
             setAvailableCities(getCitiesForState(userData.state));
           }
-          setLoading(false);
+          setLoadingPage(false);
         }
       } catch (error) {
         console.error("[v0] Load profile error:", error);
@@ -342,7 +346,7 @@ export default function ProfilePage() {
   const isRenting = formData.homeType?.includes("Rent");
   const isOwnCondo = formData.homeType === "Own Condo";
 
-  if (loading) {
+  if (loadingPage || loading) {
     return (
       <AppLayout>
         <div className="flex items-center justify-center min-h-screen">
@@ -1475,7 +1479,6 @@ export default function ProfilePage() {
         <div className="mt-6">
           <Button
             variant="ghost"
-            onClick={logout}
             className="text-destructive hover:text-destructive"
           >
             Sign Out

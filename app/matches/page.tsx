@@ -24,12 +24,14 @@ export default function MatchesPage() {
   const limit = 9; // pets for every page
 
   useEffect(() => {
-    console.log("Matchesssss");
     if (loading) return;
 
     if (!user) {
+      router.push("/login");
       return;
     }
+
+    console.log("User", user);
 
     const fetchPets = async (pageToLoad = 1, append = false) => {
       try {
