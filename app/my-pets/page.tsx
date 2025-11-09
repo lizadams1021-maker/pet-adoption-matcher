@@ -68,6 +68,7 @@ export default function MyPetsPage() {
     const fetchPets = async () => {
       setLoading(true);
       const pets = await getUserPets();
+      console.log("My pets", pets);
       setUserPets(pets || []);
       setLoading(false);
     };

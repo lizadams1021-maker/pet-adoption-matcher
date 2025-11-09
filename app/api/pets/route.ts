@@ -7,7 +7,6 @@ export async function GET(request: NextRequest) {
     const ownerId = searchParams.get("ownerId");
     const excludeOwnerId = searchParams.get("excludeOwnerId");
 
-    // Pagination: by default 10 for every page
     const limit = Number(searchParams.get("limit")) || 10;
     const offset = Number(searchParams.get("offset")) || 0;
 
@@ -15,7 +14,16 @@ export async function GET(request: NextRequest) {
 
     if (ownerId) {
       pets = await sql`
-        SELECT p.*, u.name AS owner_name
+        SELECT 
+          p.id, 
+          p.name, 
+          p.breed, 
+          p.age_group, 
+          p.gender, 
+          p.temperament, 
+          p.energy_level, 
+          p.size, 
+          u.name AS owner_name
         FROM pets p
         JOIN users u ON p.owner_id = u.id
         WHERE p.owner_id = ${ownerId}
@@ -24,7 +32,14 @@ export async function GET(request: NextRequest) {
       `;
     } else if (excludeOwnerId) {
       pets = await sql`
-        SELECT p.*, u.name AS owner_name
+        SELECT 
+          p.id, 
+          p.name, 
+          p.breed, 
+          p.temperament, 
+          p.energy_level, 
+          p.size, 
+          u.name AS owner_name
         FROM pets p
         JOIN users u ON p.owner_id = u.id
         WHERE p.owner_id != ${excludeOwnerId}
@@ -33,7 +48,14 @@ export async function GET(request: NextRequest) {
       `;
     } else {
       pets = await sql`
-        SELECT p.*, u.name AS owner_name
+        SELECT 
+          p.id, 
+          p.name, 
+          p.breed, 
+          p.temperament, 
+          p.energy_level, 
+          p.size, 
+          u.name AS owner_name
         FROM pets p
         JOIN users u ON p.owner_id = u.id
         ORDER BY p.created_at DESC
@@ -47,6 +69,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Failed to fetch pets" }, { status: 500 });
   }
 }
+
 
 
 export async function POST(request: NextRequest) {
