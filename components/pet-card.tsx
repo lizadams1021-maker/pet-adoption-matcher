@@ -17,6 +17,7 @@ interface PetCardProps {
   hasApplied?: boolean;
   onApply?: () => void;
   loading: boolean;
+  loadingApplied: boolean;
 }
 
 export function PetCard({
@@ -26,6 +27,7 @@ export function PetCard({
   hasApplied = false,
   onApply,
   loading,
+  loadingApplied,
 }: PetCardProps) {
   const [fullPet, setFullPet] = useState<any>(null);
   const [match, setMatch] = useState<any>(null);
@@ -141,19 +143,25 @@ export function PetCard({
                 ? "text-green-700 flex items-center justify-center px-3 py-2 bg-green-50 border border-green-200 rounded-md hover:bg-green-100"
                 : "bg-primary hover:bg-primary/90"
             }`}
-            disabled={loading}
+            disabled={loading || loadingApplied} // deshabilitado mientras cargue applied o se aplique
           >
-            {loading ? (
+            {loadingApplied ? (
+              // Spinner mientras se revisa applied
               <div
-                className={`
-      w-5 h-5 border-2 rounded-full animate-spin
-      border-t-transparent
-      ${
-        hasApplied
-          ? "border-green-700 border-l-green-700 border-b-green-700 border-r-green-700"
-          : "border-white"
-      }
-    `}
+                className={`w-5 h-5 border-2 rounded-full animate-spin border-t-transparent ${
+                  hasApplied
+                    ? "border-green-700 border-l-green-700 border-b-green-700 border-r-green-700"
+                    : "border-white"
+                }`}
+              ></div>
+            ) : loading ? (
+              // Spinner mientras se aplica
+              <div
+                className={`w-5 h-5 border-2 rounded-full animate-spin border-t-transparent ${
+                  hasApplied
+                    ? "border-green-700 border-l-green-700 border-b-green-700 border-r-green-700"
+                    : "border-white"
+                }`}
               ></div>
             ) : hasApplied ? (
               <span className="text-green-700 font-medium">✓ Applied</span>

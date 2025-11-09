@@ -14,6 +14,7 @@ export default function MatchesPage() {
   const [matches, setMatches] = useState<any[]>([]);
   const [loadingPetId, setLoadingPetId] = useState<string | null>(null);
   const [loadingInitial, setLoadingInitial] = useState(true);
+  const [loadingApplied, setLoadingApplied] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [appliedPets, setAppliedPets] = useState<Set<string>>(new Set());
@@ -46,34 +47,9 @@ export default function MatchesPage() {
         const newPets = data.pets || [];
         console.log("Fetched pets", newPets);
 
-        // Actualizar matches
-        setMatches(newPets);
-        console.log("Matches set");
+        setMatches((prev) => (append ? [...prev, ...newPets] : newPets));
 
-        // ------------------------
-        // Actualizar appliedPets
-        // ------------------------
-        const appliedSet = append ? new Set(appliedPets) : new Set<string>();
-        for (const pet of newPets) {
-          try {
-            console.log("Here");
-            const checkRes = await fetch(
-              `/api/applications/check?userId=${user.id}&petId=${pet.id}`
-            );
-            const checkData = await checkRes.json();
-            if (checkData.hasApplied) {
-              appliedSet.add(pet.id);
-            }
-          } catch (err) {
-            console.error(`Failed to check application for pet ${pet.id}`, err);
-          }
-        }
-        setAppliedPets(appliedSet);
-        console.log("Updated applied pets");
-
-        // ------------------------
         // Manejar paginación
-        // ------------------------
         setHasMore(newPets.length === limit);
       } catch (err: any) {
         setError(err.message);
@@ -85,6 +61,37 @@ export default function MatchesPage() {
 
     fetchPets(1, false);
   }, [user, router, loading]);
+
+  // ---------------------------
+  // Verify pet application
+  // ---------------------------
+  useEffect(() => {
+    const checkAppliedPets = async () => {
+      if (!matches.length) return;
+
+      setLoadingApplied(true);
+      const updatedSet = new Set<string>();
+
+      await Promise.all(
+        matches.map(async (pet) => {
+          try {
+            const res = await fetch(
+              `/api/applications/check?userId=${user.id}&petId=${pet.id}`
+            );
+            const data = await res.json();
+            if (data.hasApplied) updatedSet.add(pet.id);
+          } catch (err) {
+            console.error(`Failed to check application for pet ${pet.id}`, err);
+          }
+        })
+      );
+
+      setAppliedPets(updatedSet);
+      setLoadingApplied(false);
+    };
+
+    checkAppliedPets();
+  }, [matches, user]);
 
   // Infinite scroll
   /*useEffect(() => {
@@ -226,6 +233,7 @@ export default function MatchesPage() {
               pet={pet}
               matchScore={pet.matchScore}
               hasApplied={appliedPets.has(pet.id)}
+              loadingApplied={loadingApplied}
               loading={loadingPetId === pet.id}
               onApply={() => handleApply(pet.id, pet.name, pet.owner_name)}
             />
