@@ -66,12 +66,28 @@ export default function MyPetsPage() {
     }
 
     const fetchPets = async () => {
-      setLoading(true);
-      const pets = await getUserPets();
-      console.log("My pets", pets);
-      setUserPets(pets || []);
-      setLoading(false);
+      try {
+        setLoading(true);
+
+        const res = await fetch(`/api/pets?ownerId=${user.id}`);
+        const data = await res.json();
+
+        if (!res.ok) {
+          console.error("Failed to fetch pets:", data.error);
+          setUserPets([]);
+          return;
+        }
+
+        console.log("My pets", data.pets);
+        setUserPets(data.pets || []);
+      } catch (err) {
+        console.error("Error fetching pets:", err);
+        setUserPets([]);
+      } finally {
+        setLoading(false);
+      }
     };
+
     fetchPets();
   }, [user, router, getUserPets, loading]);
 
