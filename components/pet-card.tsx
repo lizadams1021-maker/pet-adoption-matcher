@@ -8,7 +8,7 @@ import type { Pet } from "@/lib/mock-data";
 import type { MatchScore } from "@/lib/matching-algorithm";
 
 interface PetCardProps {
-  pet: Pet;
+  pet: any;
   matchScore: MatchScore;
   hasApplied?: boolean;
   onApply?: () => void;
@@ -34,7 +34,7 @@ export function PetCard({
           />
           <div className="absolute top-3 right-3">
             <Badge className="bg-primary text-primary-foreground font-bold">
-              {matchScore.score}% Match
+              {/*matchScore.score*/}% Match
             </Badge>
           </div>
         </div>
@@ -70,7 +70,7 @@ export function PetCard({
         <div className="space-y-1 text-sm mb-4">
           <div className="flex justify-between">
             <span className="text-muted-foreground">Energy:</span>
-            <span className="font-medium capitalize">{pet.energyLevel}</span>
+            <span className="font-medium capitalize">{pet.energy_level}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-muted-foreground">Size:</span>

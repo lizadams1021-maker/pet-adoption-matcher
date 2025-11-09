@@ -44,13 +44,16 @@ export default function MatchesPage() {
         if (!res.ok) throw new Error(data.error || "Failed to fetch pets");
 
         const newPets = data.pets || [];
-        console.log("New pets", newPets);
-        const matchedPets = getMatchesForUser(user, newPets);
+        console.log("Fetched pets", newPets);
+        //const matchedPets = getMatchesForUser(user, newPets);
+        const matchedPets = newPets;
+        console.log("Pets matched");
 
         // Actualizar matches
         setMatches((prev) =>
           append ? [...prev, ...matchedPets] : matchedPets
         );
+        console.log("Matches set");
 
         // ------------------------
         // Actualizar appliedPets
@@ -71,6 +74,7 @@ export default function MatchesPage() {
           }
         }
         setAppliedPets(appliedSet);
+        console.log("Updated applied pets");
 
         // ------------------------
         // Manejar paginación
@@ -88,7 +92,7 @@ export default function MatchesPage() {
   }, [user, router, loading]);
 
   // Infinite scroll
-  useEffect(() => {
+  /*useEffect(() => {
     if (!hasMore || loadingMore) return;
 
     const handleScroll = () => {
@@ -103,10 +107,10 @@ export default function MatchesPage() {
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [page, hasMore, loadingMore]);
+  }, [page, hasMore, loadingMore]);*/
 
   // Fetch siguiente página cuando cambia `page`
-  useEffect(() => {
+  /*useEffect(() => {
     if (page > 1) {
       (async () => {
         const res = await fetch(
@@ -118,7 +122,7 @@ export default function MatchesPage() {
         setHasMore(data.pets.length === limit);
       })();
     }
-  }, [page]);
+  }, [page]);*/
 
   const handleApply = async (
     petId: string,
