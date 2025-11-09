@@ -7,6 +7,7 @@ import { AppLayout } from "@/components/app-layout";
 import { PetCard } from "@/components/pet-card";
 import Swal from "sweetalert2";
 import { useAuthClient } from "@/lib/useAuthClient";
+import { Button } from "@/components/ui/button";
 
 export default function MatchesPage() {
   const { user, loading } = useAuthClient();
@@ -18,11 +19,11 @@ export default function MatchesPage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [appliedPets, setAppliedPets] = useState<Set<string>>(new Set());
-  const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const loaderRef = useRef<HTMLDivElement>(null);
-
-  const limit = 9; // pets for every page
+  const limit = 6; // pets for every page
 
   useEffect(() => {
     if (loading) return;
@@ -32,11 +33,12 @@ export default function MatchesPage() {
       return;
     }
 
-    const fetchPets = async (pageToLoad = 1, append = false) => {
+    const fetchPets = async (pageToLoad = 0) => {
       try {
-        if (pageToLoad === 1) setLoadingInitial(true);
+        if (pageToLoad === 0) setLoadingInitial(true);
         else setLoadingMore(true);
 
+        console.log("[fetchPets] Applying fetching. Page to load", pageToLoad);
         const res = await fetch(
           `/api/pets?excludeOwnerId=${user.id}&page=${pageToLoad}&limit=${limit}`
         );
@@ -46,10 +48,18 @@ export default function MatchesPage() {
 
         const newPets = data.pets || [];
 
-        setMatches((prev) => (append ? [...prev, ...newPets] : newPets));
+        console.log("[Fetch] Pets", newPets);
 
-        // Manejar paginación
-        setHasMore(newPets.length === limit);
+        setMatches(newPets);
+
+        // calcular número total de páginas (si la API lo devuelve)
+        if (data.totalCount) {
+          const total = Math.ceil(data.totalCount / limit);
+          setTotalPages(total);
+        } else {
+          // fallback si la API no devuelve total
+          setHasMore(newPets.length === limit);
+        }
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -58,8 +68,8 @@ export default function MatchesPage() {
       }
     };
 
-    fetchPets(1, false);
-  }, [user, router, loading]);
+    fetchPets(page);
+  }, [user, router, loading, page]);
 
   // ---------------------------
   // Verify pet application
@@ -87,39 +97,6 @@ export default function MatchesPage() {
       }
     });
   }, [matches, user]);
-
-  // Infinite scroll
-  /*useEffect(() => {
-    if (!hasMore || loadingMore) return;
-
-    const handleScroll = () => {
-      const bottom =
-        window.innerHeight + window.scrollY >= document.body.offsetHeight - 200;
-
-      if (bottom && !loadingMore && hasMore) {
-        const nextPage = page + 1;
-        setPage(nextPage);
-      }
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [page, hasMore, loadingMore]);*/
-
-  // Fetch next page
-  /*useEffect(() => {
-    if (page > 1) {
-      (async () => {
-        const res = await fetch(
-          `/api/pets?excludeOwnerId=${user.id}&page=${page}&limit=${limit}`
-        );
-        const data = await res.json();
-        const newPets = getMatchesForUser(user, data.pets);
-        setMatches((prev) => [...prev, ...newPets]);
-        setHasMore(data.pets.length === limit);
-      })();
-    }
-  }, [page]);*/
 
   const handleApply = async (
     petId: string,
@@ -219,30 +196,68 @@ export default function MatchesPage() {
           </p>
         </div>
 
+        {/* Listado de mascotas */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {matches.map((pet) => (
-            <PetCard
-              key={pet.id}
-              user={user}
-              pet={pet}
-              matchScore={pet.matchScore}
-              hasApplied={appliedPets.has(pet.id)}
-              loadingApplied={loadingApplied}
-              loading={loadingPetId === pet.id}
-              onApply={() => handleApply(pet.id, pet.name, pet.owner_name)}
-            />
-          ))}
+          {loadingInitial ? (
+            <div className="col-span-full flex justify-center py-10">
+              <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          ) : matches.length === 0 ? (
+            <div className="col-span-full text-center text-muted-foreground py-8">
+              No pets found.
+            </div>
+          ) : (
+            matches.map((pet) => (
+              <PetCard
+                key={pet.id}
+                user={user}
+                pet={pet}
+                matchScore={pet.matchScore}
+                hasApplied={appliedPets.has(pet.id)}
+                loadingApplied={loadingApplied}
+                loading={loadingPetId === pet.id}
+                onApply={() => handleApply(pet.id, pet.name, pet.owner_name)}
+              />
+            ))
+          )}
         </div>
 
+        {/* Spinner mientras cambia de página */}
         {loadingMore && (
           <div className="flex justify-center py-8">
             <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
           </div>
         )}
 
-        {!hasMore && (
+        {/* Paginador */}
+        {!loadingInitial && totalPages > 1 && (
+          <div className="flex justify-center gap-4 mt-8">
+            <Button
+              variant="outline"
+              disabled={page === 0}
+              onClick={() => setPage((p) => Math.max(p - 1, 0))}
+            >
+              ← Previous
+            </Button>
+
+            <span className="text-sm text-muted-foreground">
+              Page {page + 1} of {totalPages}
+            </span>
+
+            <Button
+              variant="outline"
+              disabled={page + 1 === totalPages}
+              onClick={() => setPage((p) => Math.min(p + 1, totalPages - 1))}
+            >
+              Next →
+            </Button>
+          </div>
+        )}
+
+        {/* Si no hay más páginas y no está cargando */}
+        {!loadingInitial && totalPages === 1 && matches.length > 0 && (
           <div className="text-center text-muted-foreground py-8">
-            No more pets to show
+            End of results
           </div>
         )}
       </div>
