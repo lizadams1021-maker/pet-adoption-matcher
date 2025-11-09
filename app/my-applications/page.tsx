@@ -42,7 +42,6 @@ export default function MyApplicationsPage() {
         if (!res.ok) throw new Error("Failed to fetch applications");
 
         const data = await res.json();
-        console.log("Applications sent", data.applications);
         setApps(data.applications || []);
       } catch (err) {
         console.error("[MyApplicationsPage] Fetch error:", err);

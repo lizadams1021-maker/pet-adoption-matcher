@@ -45,7 +45,6 @@ export default function MatchesPage() {
         if (!res.ok) throw new Error(data.error || "Failed to fetch pets");
 
         const newPets = data.pets || [];
-        console.log("Fetched pets", newPets);
 
         setMatches((prev) => (append ? [...prev, ...newPets] : newPets));
 
@@ -66,31 +65,27 @@ export default function MatchesPage() {
   // Verify pet application
   // ---------------------------
   useEffect(() => {
-    const checkAppliedPets = async () => {
-      if (!matches.length) return;
+    if (!matches.length) return;
 
-      setLoadingApplied(true);
-      const updatedSet = new Set<string>();
+    let pending = matches.length;
+    setLoadingApplied(true);
+    const updatedSet = new Set<string>();
 
-      await Promise.all(
-        matches.map(async (pet) => {
-          try {
-            const res = await fetch(
-              `/api/applications/check?userId=${user.id}&petId=${pet.id}`
-            );
-            const data = await res.json();
-            if (data.hasApplied) updatedSet.add(pet.id);
-          } catch (err) {
-            console.error(`Failed to check application for pet ${pet.id}`, err);
-          }
-        })
-      );
-
-      setAppliedPets(updatedSet);
-      setLoadingApplied(false);
-    };
-
-    checkAppliedPets();
+    matches.forEach(async (pet) => {
+      try {
+        const res = await fetch(
+          `/api/applications/check?userId=${user.id}&petId=${pet.id}`
+        );
+        const data = await res.json();
+        if (data.hasApplied) updatedSet.add(pet.id);
+        setAppliedPets(new Set(updatedSet));
+      } catch (err) {
+        console.error(err);
+      } finally {
+        pending--;
+        if (pending === 0) setLoadingApplied(false); // hide spinner cuando todos terminen
+      }
+    });
   }, [matches, user]);
 
   // Infinite scroll
@@ -111,7 +106,7 @@ export default function MatchesPage() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [page, hasMore, loadingMore]);*/
 
-  // Fetch siguiente página cuando cambia `page`
+  // Fetch next page
   /*useEffect(() => {
     if (page > 1) {
       (async () => {
@@ -188,7 +183,6 @@ export default function MatchesPage() {
     } catch (error) {
       console.error("[v0] Apply error:", error);
     } finally {
-      console.log("Cleaning spinner for pet:");
       setLoadingPetId(null);
     }
   };

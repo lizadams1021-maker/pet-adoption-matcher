@@ -35,30 +35,41 @@ export function PetCard({
 
   // Full pet info fetch
   useEffect(() => {
+    if (!pet?.id) return;
+
+    let isCancelled = false; // para evitar actualizar estado si se desmonta
+
     const fetchAndCalculateMatch = async () => {
       setLoadingMatch(true);
+
+      // fetch del pet completo
       try {
-        // 1️⃣ Fetch del pet completo
         const res = await fetch(`/api/pets/${pet.id}`);
         const data = await res.json();
         if (!res.ok || !data.pet) {
           console.error("Error fetching pet:", data.error);
           return;
         }
-        setFullPet(data.pet);
 
-        // 2️⃣ Calcular compatibilidad
-        const matchResult = calculateCompatibility(user, data.pet);
-        setMatch(matchResult);
+        if (!isCancelled) {
+          setFullPet(data.pet);
+
+          // calcular compatibilidad
+          const matchResult = calculateCompatibility(user, data.pet);
+          setMatch(matchResult);
+        }
       } catch (err) {
         console.error("Error fetching or calculating match:", err);
       } finally {
-        // 3️⃣ Solo aquí ponemos loading false
-        setLoadingMatch(false);
+        if (!isCancelled) setLoadingMatch(false);
       }
     };
 
-    if (pet?.id) fetchAndCalculateMatch();
+    fetchAndCalculateMatch();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [pet?.id, user]);
 
   return (
@@ -87,7 +98,6 @@ export function PetCard({
           </div>
         </div>
       </Link>
-
       <div className="p-4">
         <Link href={`/pet/${pet.id}`}>
           <h3 className="text-xl font-bold mb-1 cursor-pointer hover:text-primary">

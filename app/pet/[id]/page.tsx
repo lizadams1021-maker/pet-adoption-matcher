@@ -32,7 +32,6 @@ export default function PetDetailPage() {
 
         if (response.ok) {
           const data = await response.json();
-          console.log("Pet", data.pet);
           setPet(data.pet);
         } else {
           const errorData = await response.json();

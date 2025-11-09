@@ -7,8 +7,6 @@ export async function PUT(request: NextRequest) {
     const body = await request.json()
     const { userId, ...profileData } = body
 
-    console.log("Body", body);
-
     if (!userId) {
       return NextResponse.json({ error: "User ID is required" }, { status: 400 })
     }
@@ -124,24 +122,11 @@ export async function GET(request: NextRequest) {
     if (!userId) {
       return NextResponse.json({ error: "User ID is required" }, { status: 400 })
     }
-
-    console.log("[v0] Fetching profile for user:", userId)
     const result = await sql`SELECT * FROM users WHERE id = ${userId}`
 
     if (result.length === 0) {
-      console.log("[v0] User not found:", userId)
       return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
-
-    console.log("[v0] Profile fetched successfully")
-    console.log("[v0] Fetched data sample:", {
-      firstName: result[0].first_name,
-      lastName: result[0].last_name,
-      email: result[0].email,
-      city: result[0].city,
-      state: result[0].state,
-      hasAllFields: !!(result[0].first_name && result[0].last_name && result[0].email),
-    })
 
     return NextResponse.json({ user: result[0] }, { status: 200 })
   } catch (error) {
