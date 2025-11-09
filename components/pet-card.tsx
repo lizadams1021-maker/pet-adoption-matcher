@@ -4,10 +4,14 @@ import Link from "next/link";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { Pet } from "@/lib/mock-data";
-import type { MatchScore } from "@/lib/matching-algorithm";
+import {
+  calculateCompatibility,
+  type MatchScore,
+} from "@/lib/matching-algorithm";
+import { useEffect, useMemo, useState } from "react";
 
 interface PetCardProps {
+  user: any;
   pet: any;
   matchScore: MatchScore;
   hasApplied?: boolean;
@@ -16,25 +20,67 @@ interface PetCardProps {
 }
 
 export function PetCard({
+  user,
   pet,
   matchScore,
   hasApplied = false,
   onApply,
   loading,
 }: PetCardProps) {
+  const [fullPet, setFullPet] = useState<any>(null);
+  const [match, setMatch] = useState<any>(null);
+  const [loadingMatch, setLoadingMatch] = useState(true);
+
+  // Full pet info fetch
+  useEffect(() => {
+    const fetchAndCalculateMatch = async () => {
+      setLoadingMatch(true);
+      try {
+        // 1️⃣ Fetch del pet completo
+        const res = await fetch(`/api/pets/${pet.id}`);
+        const data = await res.json();
+        if (!res.ok || !data.pet) {
+          console.error("Error fetching pet:", data.error);
+          return;
+        }
+        setFullPet(data.pet);
+
+        // 2️⃣ Calcular compatibilidad
+        const matchResult = calculateCompatibility(user, data.pet);
+        setMatch(matchResult);
+      } catch (err) {
+        console.error("Error fetching or calculating match:", err);
+      } finally {
+        // 3️⃣ Solo aquí ponemos loading false
+        setLoadingMatch(false);
+      }
+    };
+
+    if (pet?.id) fetchAndCalculateMatch();
+  }, [pet?.id, user]);
+
   return (
     <div className="bg-card rounded-lg border overflow-hidden hover:shadow-lg transition-shadow">
       <Link href={`/pet/${pet.id}`}>
-        <div className="relative h-48 bg-muted cursor-pointer">
-          <Image
-            src={pet.image_url || "/placeholder.svg"}
-            alt={pet.name}
-            fill
-            className="object-cover"
-          />
+        <div className="relative h-48 bg-muted cursor-pointer flex items-center justify-center">
+          {loadingMatch ? (
+            <div className="w-12 h-12 border-4 rounded-full animate-spin border-t-transparent border-white"></div>
+          ) : (
+            <Image
+              src={fullPet?.image_url || "/placeholder.svg"}
+              alt={pet.name}
+              fill
+              className="object-cover"
+            />
+          )}
+
           <div className="absolute top-3 right-3">
             <Badge className="bg-primary text-primary-foreground font-bold">
-              {/*matchScore.score*/}% Match
+              {loadingMatch ? (
+                <div className="w-5 h-5 border-2 rounded-full animate-spin border-t-transparent border-white"></div>
+              ) : (
+                `${match?.score ?? 0}% Match`
+              )}
             </Badge>
           </div>
         </div>

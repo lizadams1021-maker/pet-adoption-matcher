@@ -45,21 +45,16 @@ export default function MatchesPage() {
 
         const newPets = data.pets || [];
         console.log("Fetched pets", newPets);
-        //const matchedPets = getMatchesForUser(user, newPets);
-        const matchedPets = newPets;
-        console.log("Pets matched");
 
         // Actualizar matches
-        setMatches((prev) =>
-          append ? [...prev, ...matchedPets] : matchedPets
-        );
+        setMatches(newPets);
         console.log("Matches set");
 
         // ------------------------
         // Actualizar appliedPets
         // ------------------------
         const appliedSet = append ? new Set(appliedPets) : new Set<string>();
-        for (const pet of matchedPets) {
+        for (const pet of newPets) {
           try {
             console.log("Here");
             const checkRes = await fetch(
@@ -227,6 +222,7 @@ export default function MatchesPage() {
           {matches.map((pet) => (
             <PetCard
               key={pet.id}
+              user={user}
               pet={pet}
               matchScore={pet.matchScore}
               hasApplied={appliedPets.has(pet.id)}
