@@ -1453,15 +1453,6 @@ export default function ProfilePage() {
             </Button>
           </div>
         </div>
-
-        <div className="mt-6">
-          <Button
-            variant="ghost"
-            className="text-destructive hover:text-destructive"
-          >
-            Sign Out
-          </Button>
-        </div>
       </div>
     </AppLayout>
   );

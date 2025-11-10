@@ -126,7 +126,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               onClick={handleLogout}
             >
               <LogOut className="h-5 w-5" />
-              <span>Logout</span>
+              <span>Sign out</span>
             </Button>
           </div>
         </nav>
