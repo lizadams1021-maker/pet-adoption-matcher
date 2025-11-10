@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     let totalCountResult;
 
     if (ownerId) {
-      // Si se tiene ownerId, traemos todas sus mascotas sin filtrar por status
+      // If has ownerId, we bring pets with no filter by status
       pets = await sql`
         SELECT 
           p.id, 
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
         WHERE owner_id = ${ownerId}
       `;
     } else if (excludeOwnerId) {
-      // Excluimos al ownerId y además no mostramos adoptadas
+      // We exclude ownerId and not displaye adopted pets
       pets = await sql`
         SELECT 
           p.id, 
@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
         WHERE owner_id != ${excludeOwnerId} AND status != 'adopted'
       `;
     } else {
-      // Sin ownerId, filtramos todas las adoptadas
+      // Without ownerId, we filter all the adopted pets
       pets = await sql`
         SELECT 
           p.id, 

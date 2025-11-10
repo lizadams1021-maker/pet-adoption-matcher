@@ -12,21 +12,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 1️⃣ Marcar la aplicación aceptada
+    // 1️⃣ Mark application as accepted
     await sql`
       UPDATE user_pet_applications
       SET status = 'accepted'
       WHERE user_id = ${adopterId} AND pet_id = ${petId}
     `;
 
-    // 2️⃣ Marcar la mascota como adoptada
+    // 2️⃣ Marcar pet as adopted
     await sql`
       UPDATE pets
       SET status = 'adopted'
       WHERE id = ${petId}
     `;
 
-    // 3️⃣ Eliminar todas las demás aplicaciones de esa mascota
+    // 3️⃣ Delete other applications for this pet
     await sql`
       DELETE FROM user_pet_applications
       WHERE pet_id = ${petId} AND user_id <> ${adopterId}

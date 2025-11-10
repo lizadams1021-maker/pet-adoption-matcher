@@ -56,7 +56,7 @@ export function PetCard({
         if (!isCancelled) {
           setFullPet(data.pet);
 
-          // calcular compatibilidad
+          // Calculate compatibility
           const matchResult = calculateCompatibility(user, data.pet);
           setMatch(matchResult);
         }
@@ -158,7 +158,7 @@ export function PetCard({
             disabled={loading || loadingApplied} // deshabilitado mientras cargue applied o se aplique
           >
             {loadingApplied ? (
-              // Spinner mientras se revisa applied
+              // Spinner while is applied is checked
               <div
                 className={`w-5 h-5 border-2 rounded-full animate-spin border-t-transparent ${
                   hasApplied
@@ -167,7 +167,7 @@ export function PetCard({
                 }`}
               ></div>
             ) : loading ? (
-              // Spinner mientras se aplica
+              // Spinner while being applied
               <div
                 className={`w-5 h-5 border-2 rounded-full animate-spin border-t-transparent ${
                   hasApplied
