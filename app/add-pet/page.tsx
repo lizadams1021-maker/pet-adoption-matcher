@@ -3,7 +3,7 @@
 import type React from "react";
 
 import { US_STATES } from "@/lib/us-states-cities";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { AppLayout } from "@/components/app-layout";
@@ -20,9 +20,11 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import Image from "next/image";
 import { Upload } from "lucide-react";
+import { useAuthClient } from "@/lib/useAuthClient";
 
 export default function AddPetPage() {
-  const { user, addPet } = useAuth();
+  const { user, loading } = useAuthClient();
+  const { addPet } = useAuth();
   const router = useRouter();
   const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({
@@ -58,7 +60,6 @@ export default function AddPetPage() {
 
     setUploading(true);
     try {
-      console.log("[v0] Starting image upload:", file.name);
       const formDataObj = new FormData();
       formDataObj.append("file", file);
 
@@ -67,18 +68,14 @@ export default function AddPetPage() {
         body: formDataObj,
       });
 
-      console.log("[v0] Upload response status:", response.status);
-
       if (!response.ok) {
         let errorMessage = "Failed to upload image";
         try {
           const error = await response.json();
           errorMessage = error.error || errorMessage;
-          console.log("[v0] Upload error:", error);
         } catch (e) {
           // Response is not JSON, try to get text
           const text = await response.text();
-          console.log("[v0] Non-JSON error response:", text);
           errorMessage = text || errorMessage;
         }
         alert(errorMessage);
@@ -86,10 +83,6 @@ export default function AddPetPage() {
       }
 
       const data = await response.json();
-      console.log(
-        "[v0] Upload successful, imageUrl length:",
-        data.imageUrl?.length
-      );
       setFormData((prev) => ({ ...prev, imageUrl: data.imageUrl }));
     } catch (error) {
       console.error("[v0] Image upload error:", error);
@@ -128,9 +121,6 @@ export default function AddPetPage() {
       description: formData.description || null,
       imageUrl: formData.imageUrl || null,
     };
-
-    console.log("New pet", newPet);
-
     await addPet(newPet);
     router.push("/my-pets");
   };
@@ -139,10 +129,14 @@ export default function AddPetPage() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  if (!user) {
-    router.push("/login");
-    return null;
-  }
+  useEffect(() => {
+    if (loading) return;
+
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+  }, [user, router, loading]);
 
   return (
     <AppLayout>
@@ -432,7 +426,7 @@ export default function AddPetPage() {
             </div>
 
             <Label>Compatibility</Label>
-            <div className="space-y-3">
+            <div className="space-y-3 mt-2">
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="goodWithKids"
@@ -441,12 +435,7 @@ export default function AddPetPage() {
                     handleChange("goodWithKids", checked)
                   }
                 />
-                <label
-                  htmlFor="goodWithKids"
-                  className="text-sm cursor-pointer"
-                >
-                  Good with kids
-                </label>
+                <Label>Good with kids</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox
@@ -456,12 +445,7 @@ export default function AddPetPage() {
                     handleChange("goodWithCats", checked)
                   }
                 />
-                <label
-                  htmlFor="goodWithCats"
-                  className="text-sm cursor-pointer"
-                >
-                  Good with cats
-                </label>
+                <Label>Good with cats</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox
@@ -471,12 +455,7 @@ export default function AddPetPage() {
                     handleChange("goodWithDogs", checked)
                   }
                 />
-                <label
-                  htmlFor="goodWithDogs"
-                  className="text-sm cursor-pointer"
-                >
-                  Good with dogs
-                </label>
+                <Label>Good with dogs</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox
@@ -486,12 +465,7 @@ export default function AddPetPage() {
                     handleChange("houseTrained", checked)
                   }
                 />
-                <label
-                  htmlFor="houseTrained"
-                  className="text-sm cursor-pointer"
-                >
-                  House trained
-                </label>
+                <Label>House trained</Label>
               </div>
             </div>
           </div>

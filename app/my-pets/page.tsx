@@ -20,11 +20,13 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Pencil, Trash2, X, Upload } from "lucide-react";
+import { useAuthClient } from "@/lib/useAuthClient";
 
 export default function MyPetsPage() {
-  const { user, getUserPets, deletePet, updatePet } = useAuth();
+  const { user, loading } = useAuthClient();
+  const { getUserPets, deletePet, updatePet } = useAuth();
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
+  const [loadingPage, setLoading] = useState(true);
   const [userPets, setUserPets] = useState<any[]>([]);
   const [editingPet, setEditingPet] = useState<any | null>(null);
   const [editFormData, setEditFormData] = useState({
@@ -56,19 +58,36 @@ export default function MyPetsPage() {
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
+    if (loading) return;
+
     if (!user) {
       router.push("/login");
       return;
     }
 
     const fetchPets = async () => {
-      setLoading(true);
-      const pets = await getUserPets();
-      setUserPets(pets || []);
-      setLoading(false);
+      try {
+        setLoading(true);
+
+        const res = await fetch(`/api/pets?ownerId=${user.id}`);
+        const data = await res.json();
+
+        if (!res.ok) {
+          console.error("Failed to fetch pets:", data.error);
+          setUserPets([]);
+          return;
+        }
+        setUserPets(data.pets || []);
+      } catch (err) {
+        console.error("Error fetching pets:", err);
+        setUserPets([]);
+      } finally {
+        setLoading(false);
+      }
     };
+
     fetchPets();
-  }, [user, router, getUserPets]);
+  }, [user, router, getUserPets, loading]);
 
   const handleDelete = async (petId: string) => {
     if (confirm("Are you sure you want to delete this pet?")) {
@@ -113,7 +132,6 @@ export default function MyPetsPage() {
 
     setUploading(true);
     try {
-      console.log("[v0] Starting pet image upload:", file.name);
       const formDataObj = new FormData();
       formDataObj.append("file", file);
 
@@ -122,18 +140,14 @@ export default function MyPetsPage() {
         body: formDataObj,
       });
 
-      console.log("[v0] Pet upload response status:", response.status);
-
       if (!response.ok) {
         let errorMessage = "Failed to upload image";
         try {
           const error = await response.json();
           errorMessage = error.error || errorMessage;
-          console.log("[v0] Pet upload error:", error);
         } catch (e) {
           // Response is not JSON, try to get text
           const text = await response.text();
-          console.log("[v0] Non-JSON error response:", text);
           errorMessage = text || errorMessage;
         }
         alert(errorMessage);
@@ -141,10 +155,6 @@ export default function MyPetsPage() {
       }
 
       const data = await response.json();
-      console.log(
-        "[v0] Pet upload successful, imageUrl length:",
-        data.imageUrl?.length
-      );
       setEditFormData((prev: any) => ({ ...prev, imageUrl: data.imageUrl }));
     } catch (error) {
       console.error("[v0] Image upload error:", error);
@@ -203,7 +213,7 @@ export default function MyPetsPage() {
     return null;
   }
 
-  if (loading) {
+  if (loadingPage) {
     return (
       <AppLayout>
         <div className="flex items-center justify-center min-h-screen">
@@ -683,7 +693,13 @@ export default function MyPetsPage() {
                             {pet.breed} • {pet.age_group} • {pet.type}
                           </p>
                         </div>
-                        <Badge className="bg-green-100 text-green-700 border-green-200 capitalize">
+                        <Badge
+                          className={`capitalize border ${
+                            pet.status === "adopted"
+                              ? "bg-green-100 text-green-700 border-green-200"
+                              : "bg-gray-100 text-gray-600 border-gray-200"
+                          }`}
+                        >
                           {pet.status}
                         </Badge>
                       </div>

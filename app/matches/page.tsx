@@ -2,38 +2,43 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/auth-context";
 import { getMatchesForUser } from "@/lib/matching-algorithm";
 import { AppLayout } from "@/components/app-layout";
 import { PetCard } from "@/components/pet-card";
 import Swal from "sweetalert2";
+import { useAuthClient } from "@/lib/useAuthClient";
+import { Button } from "@/components/ui/button";
 
 export default function MatchesPage() {
-  const { user } = useAuth();
+  const { user, loading } = useAuthClient();
   const router = useRouter();
   const [matches, setMatches] = useState<any[]>([]);
   const [loadingPetId, setLoadingPetId] = useState<string | null>(null);
   const [loadingInitial, setLoadingInitial] = useState(true);
+  const [loadingApplied, setLoadingApplied] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [appliedPets, setAppliedPets] = useState<Set<string>>(new Set());
-  const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const loaderRef = useRef<HTMLDivElement>(null);
-
-  const limit = 9; // pets for every page
+  const limit = 6; // pets for every page
 
   useEffect(() => {
+    if (loading) return;
+
     if (!user) {
       router.push("/login");
       return;
     }
 
-    const fetchPets = async (pageToLoad = 1, append = false) => {
+    const fetchPets = async (pageToLoad = 0) => {
       try {
-        if (pageToLoad === 1) setLoadingInitial(true);
+        if (pageToLoad === 0) setLoadingInitial(true);
         else setLoadingMore(true);
 
+        console.log("[fetchPets] Applying fetching. Page to load", pageToLoad);
         const res = await fetch(
           `/api/pets?excludeOwnerId=${user.id}&page=${pageToLoad}&limit=${limit}`
         );
@@ -42,36 +47,17 @@ export default function MatchesPage() {
         if (!res.ok) throw new Error(data.error || "Failed to fetch pets");
 
         const newPets = data.pets || [];
-        const matchedPets = getMatchesForUser(user, newPets);
 
-        // Actualizar matches
-        setMatches((prev) =>
-          append ? [...prev, ...matchedPets] : matchedPets
-        );
+        console.log("[Fetch] Pets", newPets);
 
-        // ------------------------
-        // Actualizar appliedPets
-        // ------------------------
-        const appliedSet = append ? new Set(appliedPets) : new Set<string>();
-        for (const pet of matchedPets) {
-          try {
-            const checkRes = await fetch(
-              `/api/applications/check?userId=${user.id}&petId=${pet.id}`
-            );
-            const checkData = await checkRes.json();
-            if (checkData.hasApplied) {
-              appliedSet.add(pet.id);
-            }
-          } catch (err) {
-            console.error(`Failed to check application for pet ${pet.id}`, err);
-          }
+        setMatches(newPets);
+
+        if (data.totalCount) {
+          const total = Math.ceil(data.totalCount / limit);
+          setTotalPages(total);
+        } else {
+          setHasMore(newPets.length === limit);
         }
-        setAppliedPets(appliedSet);
-
-        // ------------------------
-        // Manejar paginación
-        // ------------------------
-        setHasMore(newPets.length === limit);
       } catch (err: any) {
         setError(err.message);
       } finally {
@@ -80,41 +66,42 @@ export default function MatchesPage() {
       }
     };
 
-    fetchPets(1, false);
-  }, [user, router]);
+    fetchPets(page);
+  }, [user, router, loading, page]);
 
-  // Infinite scroll
+  // ---------------------------
+  // Verify pet application
+  // ---------------------------
   useEffect(() => {
-    if (!hasMore || loadingMore) return;
+    if (!matches.length) return;
 
-    const handleScroll = () => {
-      const bottom =
-        window.innerHeight + window.scrollY >= document.body.offsetHeight - 200;
+    setLoadingApplied(true);
 
-      if (bottom && !loadingMore && hasMore) {
-        const nextPage = page + 1;
-        setPage(nextPage);
+    const checkApplications = async () => {
+      try {
+        const petIds = matches.map((pet) => pet.id);
+        const queryParams = petIds.map((id) => `petId=${id}`).join("&");
+
+        const res = await fetch(
+          `/api/applications/check?userId=${user.id}&${queryParams}`
+        );
+        const data = await res.json();
+
+        const updatedSet = new Set<string>();
+        Object.entries(data).forEach(([petId, hasApplied]) => {
+          if (hasApplied) updatedSet.add(petId);
+        });
+
+        setAppliedPets(updatedSet);
+      } catch (err) {
+        console.error("Error checking applications:", err);
+      } finally {
+        setLoadingApplied(false);
       }
     };
 
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [page, hasMore, loadingMore]);
-
-  // Fetch siguiente página cuando cambia `page`
-  useEffect(() => {
-    if (page > 1) {
-      (async () => {
-        const res = await fetch(
-          `/api/pets?excludeOwnerId=${user.id}&page=${page}&limit=${limit}`
-        );
-        const data = await res.json();
-        const newPets = getMatchesForUser(user, data.pets);
-        setMatches((prev) => [...prev, ...newPets]);
-        setHasMore(data.pets.length === limit);
-      })();
-    }
-  }, [page]);
+    checkApplications();
+  }, [matches, user]);
 
   const handleApply = async (
     petId: string,
@@ -143,7 +130,7 @@ export default function MatchesPage() {
           confirmButtonText: "OK",
         });
 
-        // Actualizar el estado local
+        // Update local state
         const updated = new Set(appliedPets);
         updated.delete(petId);
         setAppliedPets(updated);
@@ -178,14 +165,9 @@ export default function MatchesPage() {
     } catch (error) {
       console.error("[v0] Apply error:", error);
     } finally {
-      console.log("Cleaning spinner for pet:");
       setLoadingPetId(null);
     }
   };
-
-  if (!user) {
-    return null;
-  }
 
   if (loadingInitial) {
     return (
@@ -219,28 +201,68 @@ export default function MatchesPage() {
           </p>
         </div>
 
+        {/* Listado de mascotas */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {matches.map((pet) => (
-            <PetCard
-              key={pet.id}
-              pet={pet}
-              matchScore={pet.matchScore}
-              hasApplied={appliedPets.has(pet.id)}
-              loading={loadingPetId === pet.id}
-              onApply={() => handleApply(pet.id, pet.name, pet.owner_name)}
-            />
-          ))}
+          {loadingInitial ? (
+            <div className="col-span-full flex justify-center py-10">
+              <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          ) : matches.length === 0 ? (
+            <div className="col-span-full text-center text-muted-foreground py-8">
+              No pets found.
+            </div>
+          ) : (
+            matches.map((pet) => (
+              <PetCard
+                key={pet.id}
+                user={user}
+                pet={pet}
+                matchScore={pet.matchScore}
+                hasApplied={appliedPets.has(pet.id)}
+                loadingApplied={loadingApplied}
+                loading={loadingPetId === pet.id}
+                onApply={() => handleApply(pet.id, pet.name, pet.owner_name)}
+              />
+            ))
+          )}
         </div>
 
+        {/* Spinner mientras cambia de página */}
         {loadingMore && (
           <div className="flex justify-center py-8">
             <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
           </div>
         )}
 
-        {!hasMore && (
+        {/* Paginador */}
+        {!loadingInitial && totalPages > 1 && (
+          <div className="flex justify-center gap-4 mt-8">
+            <Button
+              variant="outline"
+              disabled={page === 0}
+              onClick={() => setPage((p) => Math.max(p - 1, 0))}
+            >
+              ← Previous
+            </Button>
+
+            <span className="text-sm text-muted-foreground">
+              Page {page + 1} of {totalPages}
+            </span>
+
+            <Button
+              variant="outline"
+              disabled={page + 1 === totalPages}
+              onClick={() => setPage((p) => Math.min(p + 1, totalPages - 1))}
+            >
+              Next →
+            </Button>
+          </div>
+        )}
+
+        {/* Si no hay más páginas y no está cargando */}
+        {!loadingInitial && totalPages === 1 && matches.length > 0 && (
           <div className="text-center text-muted-foreground py-8">
-            No more pets to show
+            End of results
           </div>
         )}
       </div>

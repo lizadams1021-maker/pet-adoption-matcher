@@ -1,50 +1,31 @@
-import { sql } from "@/lib/db";
+import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
-import { NextRequest, NextResponse } from "next/server";
+import { sql } from "@/lib/db";
+import { createRefreshToken, signAccessToken, setRefreshCookie } from "@/lib/auth";
 
-export async function POST(request: NextRequest) {
-  try {
-    const { email, password, name } = await request.json();
+export async function POST(req: Request) {
+  const { email, password, name } = await req.json();
 
-    // Verificar si ya existe el usuario
-    const existingUsers = await sql`
-      SELECT id FROM users WHERE email = ${email}
-    `;
+  const existing = await sql`SELECT id FROM users WHERE email = ${email}`;
+  if (existing.length) return NextResponse.json({ error: "User already exists" }, { status: 400 });
 
-    if (existingUsers.length > 0) {
-      return NextResponse.json({ error: "User already exists" }, { status: 400 });
-    }
+  const passwordHash = await bcrypt.hash(password, 10);
+  const userId = `user-${Date.now()}`;
 
-    // Generar hash seguro de la contraseña
-    const saltRounds = 10;
-    const passwordHash = await bcrypt.hash(password, saltRounds);
+  await sql`
+    INSERT INTO users (id, email, password_hash, name, has_children)
+    VALUES (${userId}, ${email}, ${passwordHash}, ${name}, false)
+  `;
 
-    const userId = `user-${Date.now()}`;
+  // ✅ Create refresh token
+  const refreshToken = await createRefreshToken(userId);
+  await setRefreshCookie(refreshToken);
 
-    await sql`
-      INSERT INTO users (id, email, password_hash, name, has_children)
-      VALUES (${userId}, ${email}, ${passwordHash}, ${name}, false)
-    `;
+  // ✅ Create access token
+  const accessToken = await signAccessToken({ sub: userId });
 
-    const user = {
-      id: userId,
-      email,
-      name,
-      imageUrl: null,
-      preferences: {
-        location: null,
-        housingType: null,
-        hasChildren: false,
-        experienceLevel: null,
-        activityLevel: null,
-        petSizePreference: null,
-        temperamentPreference: [],
-      },
-    };
-
-    return NextResponse.json({ user });
-  } catch (error) {
-    console.error("[v0] Registration error:", error);
-    return NextResponse.json({ error: "Registration failed" }, { status: 500 });
-  }
+  return NextResponse.json({
+    user: { id: userId, email, name },
+    accessToken
+  });
 }

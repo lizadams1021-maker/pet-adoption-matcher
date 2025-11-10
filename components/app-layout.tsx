@@ -18,10 +18,13 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { refreshAccess } from "@/lib/auth";
+import { useAuthClient } from "@/lib/useAuthClient";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
+  const { user } = useAuthClient();
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
@@ -38,6 +41,19 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     logout();
     router.push("/login");
   };
+
+  useEffect(() => {
+    async function initAuth() {
+      let token = sessionStorage.getItem("accessToken");
+      if (!token) {
+        token = await refreshAccess();
+      }
+      if (!token) {
+        router.push("/login");
+      }
+    }
+    initAuth();
+  }, []);
 
   return (
     <div className="min-h-screen flex">
@@ -112,7 +128,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               onClick={handleLogout}
             >
               <LogOut className="h-5 w-5" />
-              <span>Logout</span>
+              <span>Sign out</span>
             </Button>
           </div>
         </nav>

@@ -11,13 +11,13 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "User ID is required" }, { status: 400 })
     }
 
-    // Validar los datos
+    // Validate data
     const validationErrors = validateProfileForm(profileData as Partial<ProfileFormData>)
     if (validationErrors.length > 0) {
       return NextResponse.json({ errors: validationErrors }, { status: 400 })
     }
 
-    // Mapeo de campos del formulario a columnas de DB
+    // Mapping form fields to db columns
     const columnMap: Record<string, string> = {
       firstName: "first_name",
       lastName: "last_name",
@@ -78,7 +78,7 @@ export async function PUT(request: NextRequest) {
       imageUrl: "image_url",
     }
 
-    // Filtrar solo los campos que tienen valor y mapeo válido
+    // Filter only fields with value and valid mapping
     const entries = Object.entries(profileData)
       .filter(([key, value]) => value !== undefined && value !== null && columnMap[key])
       .map(([key, value]) => ({ column: columnMap[key], value }))
@@ -87,19 +87,19 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ success: true, message: "No changes to update" }, { status: 200 })
     }
 
-    // Construir SET dinámico usando solo interpolación de valores segura
+    // Build a dynamic SET using only safe values interpolation
     const setClauses = entries.map((_, i) => `"${entries[i].column}" = $${i + 1}`).join(", ")
     const values = entries.map(e => e.value)
 
-    // Agregar updated_at
+    // Add updated_at
     const updatedAtIndex = values.length + 1
     const query = `UPDATE users SET ${setClauses}, updated_at = NOW() WHERE id = $${updatedAtIndex}`
     values.push(userId)
 
-    // Ejecutar query seguro
+    // Execute safe query
     await sql.query(query, values)
 
-    // Traer usuario actualizado
+    // Bring updated user
     const result = await sql`SELECT * FROM users WHERE id = ${userId}`
 
     if (!result || result.length === 0) {
@@ -114,8 +114,6 @@ export async function PUT(request: NextRequest) {
   }
 }
 
-
-
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
@@ -124,24 +122,11 @@ export async function GET(request: NextRequest) {
     if (!userId) {
       return NextResponse.json({ error: "User ID is required" }, { status: 400 })
     }
-
-    console.log("[v0] Fetching profile for user:", userId)
     const result = await sql`SELECT * FROM users WHERE id = ${userId}`
 
     if (result.length === 0) {
-      console.log("[v0] User not found:", userId)
       return NextResponse.json({ error: "User not found" }, { status: 404 })
     }
-
-    console.log("[v0] Profile fetched successfully")
-    console.log("[v0] Fetched data sample:", {
-      firstName: result[0].first_name,
-      lastName: result[0].last_name,
-      email: result[0].email,
-      city: result[0].city,
-      state: result[0].state,
-      hasAllFields: !!(result[0].first_name && result[0].last_name && result[0].email),
-    })
 
     return NextResponse.json({ user: result[0] }, { status: 200 })
   } catch (error) {

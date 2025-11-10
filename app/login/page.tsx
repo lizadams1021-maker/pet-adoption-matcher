@@ -15,7 +15,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -24,12 +23,25 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const success = await login(email, password);
-      if (success) {
-        router.push("/matches");
-      } else {
-        setError("Invalid email or password");
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error || "Login failed");
+        return;
       }
+
+      const data = await res.json();
+      // Save access token on memory
+      sessionStorage.clear();
+      sessionStorage.setItem("accessToken", data.accessToken);
+
+      router.push("/matches");
     } catch (err) {
       setError("Something went wrong. Please try again.");
     } finally {

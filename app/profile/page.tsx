@@ -24,11 +24,12 @@ import {
   validateProfileForm,
   type ProfileFormData,
 } from "@/lib/profile-validation";
+import { useAuthClient } from "@/lib/useAuthClient";
 
 export default function ProfilePage() {
-  const { user, logout } = useAuth();
+  const { user, loading } = useAuthClient();
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
+  const [loadingPage, setLoadingPage] = useState(true);
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -41,7 +42,7 @@ export default function ProfilePage() {
     email: "",
     homePhone: "",
     cellPhone: "",
-    gender: "",
+    gender: "M",
     birthday: "",
     addressLine: "",
     city: "",
@@ -99,6 +100,8 @@ export default function ProfilePage() {
   const [customCity, setCustomCity] = useState("");
 
   useEffect(() => {
+    if (loading) return;
+
     if (!user) {
       router.push("/login");
       return;
@@ -107,14 +110,8 @@ export default function ProfilePage() {
     // Load user profile data
     const loadProfile = async () => {
       try {
-        setLoading(true);
-        const response = await fetch(`/api/user/profile?userId=${user.id}`);
-        if (response.ok) {
-          const data = await response.json();
-          const userData = data.user;
-
-          console.log("[v0] User Data", userData);
-
+        if (user) {
+          const userData = user;
           setFormData({
             firstName: userData.first_name || "",
             lastName: userData.last_name || "",
@@ -183,7 +180,7 @@ export default function ProfilePage() {
           if (userData.state) {
             setAvailableCities(getCitiesForState(userData.state));
           }
-          setLoading(false);
+          setLoadingPage(false);
         }
       } catch (error) {
         console.error("[v0] Load profile error:", error);
@@ -191,7 +188,7 @@ export default function ProfilePage() {
     };
 
     loadProfile();
-  }, [user, router]);
+  }, [user, router, loading]);
 
   useEffect(() => {
     if (formData.state) {
@@ -242,12 +239,9 @@ export default function ProfilePage() {
   };
 
   const handleSave = async () => {
-    console.log("[v0] Starting profile save...");
-
     // Validate form
     const validationErrors = validateProfileForm(formData);
     if (validationErrors.length > 0) {
-      console.log("[v0] Validation failed:", validationErrors);
       const errorMap: Record<string, string> = {};
       validationErrors.forEach((err) => {
         errorMap[err.field] = err.message;
@@ -261,9 +255,6 @@ export default function ProfilePage() {
     setErrors({});
 
     try {
-      console.log("[v0] Sending profile update request...");
-      console.log("[v0] form data", formData);
-
       const response = await fetch("/api/user/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -274,12 +265,8 @@ export default function ProfilePage() {
         }),
       });
 
-      console.log("[v0] Response status:", response.status);
-      console.log("[v0] Full response", response);
-
       if (response.ok) {
         const data = await response.json();
-        console.log("[v0] Profile saved successfully");
         setSaved(true);
         setTimeout(() => setSaved(false), 3000);
 
@@ -288,14 +275,9 @@ export default function ProfilePage() {
         );
         if (reloadResponse.ok) {
           const reloadData = await reloadResponse.json();
-          console.log(
-            "[v0] Profile reloaded successfully, data persisted:",
-            !!reloadData.user
-          );
         }
       } else {
         const error = await response.json();
-        console.log("[v0] Save failed:", error);
         if (error.errors) {
           const errorMap: Record<string, string> = {};
           error.errors.forEach((err: any) => {
@@ -310,6 +292,7 @@ export default function ProfilePage() {
       alert("Failed to save profile: " + String(error));
     } finally {
       setSaving(false);
+      updateUser(formData);
     }
   };
 
@@ -323,6 +306,19 @@ export default function ProfilePage() {
         return newErrors;
       });
     }
+  };
+
+  const updateUser = (updatedData: Partial<typeof user>) => {
+    if (!user) return;
+
+    // Actualiza el objeto user existente con los nuevos datos
+    const newUser = { ...user, ...updatedData };
+
+    // Actualiza el estado local si tienes uno para user (opcional)
+    // setUser(newUser);
+
+    // Guarda el usuario actualizado en sessionStorage
+    sessionStorage.setItem("user", JSON.stringify(newUser));
   };
 
   const toggleArrayField = (field: keyof ProfileFormData, value: string) => {
@@ -342,7 +338,7 @@ export default function ProfilePage() {
   const isRenting = formData.homeType?.includes("Rent");
   const isOwnCondo = formData.homeType === "Own Condo";
 
-  if (loading) {
+  if (loadingPage) {
     return (
       <AppLayout>
         <div className="flex items-center justify-center min-h-screen">
@@ -1470,16 +1466,6 @@ export default function ProfilePage() {
               View Matches
             </Button>
           </div>
-        </div>
-
-        <div className="mt-6">
-          <Button
-            variant="ghost"
-            onClick={logout}
-            className="text-destructive hover:text-destructive"
-          >
-            Sign Out
-          </Button>
         </div>
       </div>
     </AppLayout>

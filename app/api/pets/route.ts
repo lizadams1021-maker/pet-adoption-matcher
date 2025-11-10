@@ -7,46 +7,102 @@ export async function GET(request: NextRequest) {
     const ownerId = searchParams.get("ownerId");
     const excludeOwnerId = searchParams.get("excludeOwnerId");
 
-    // Pagination: by default 10 for every page
     const limit = Number(searchParams.get("limit")) || 10;
-    const offset = Number(searchParams.get("offset")) || 0;
+    const offset = Number(searchParams.get("page")) || 0;
 
     let pets;
+    let totalCountResult;
 
     if (ownerId) {
+      // If has ownerId, we bring pets with no filter by status
       pets = await sql`
-        SELECT p.*, u.name AS owner_name
+        SELECT 
+          p.id, 
+          p.name, 
+          p.breed, 
+          p.age_group, 
+          p.type,
+          p.energy_level, 
+          p.size, 
+          p.good_with_children,
+          p.good_with_pets,
+          p.status,
+          p.image_url,
+          u.name AS owner_name
         FROM pets p
         JOIN users u ON p.owner_id = u.id
         WHERE p.owner_id = ${ownerId}
         ORDER BY p.created_at DESC
         LIMIT ${limit} OFFSET ${offset}
       `;
+
+      totalCountResult = await sql`
+        SELECT COUNT(*) AS count
+        FROM pets
+        WHERE owner_id = ${ownerId}
+      `;
     } else if (excludeOwnerId) {
+      // We exclude ownerId and not displaye adopted pets
       pets = await sql`
-        SELECT p.*, u.name AS owner_name
+        SELECT 
+          p.id, 
+          p.name, 
+          p.breed, 
+          p.age_group,
+          p.temperament, 
+          p.energy_level, 
+          p.size, 
+          u.name AS owner_name
         FROM pets p
         JOIN users u ON p.owner_id = u.id
-        WHERE p.owner_id != ${excludeOwnerId}
+        WHERE p.owner_id != ${excludeOwnerId} AND p.status != 'adopted'
         ORDER BY p.created_at DESC
         LIMIT ${limit} OFFSET ${offset}
       `;
+
+      totalCountResult = await sql`
+        SELECT COUNT(*) AS count
+        FROM pets
+        WHERE owner_id != ${excludeOwnerId} AND status != 'adopted'
+      `;
     } else {
+      // Without ownerId, we filter all the adopted pets
       pets = await sql`
-        SELECT p.*, u.name AS owner_name
+        SELECT 
+          p.id, 
+          p.name, 
+          p.breed, 
+          p.age_group,
+          p.temperament, 
+          p.energy_level, 
+          p.size, 
+          u.name AS owner_name
         FROM pets p
         JOIN users u ON p.owner_id = u.id
+        WHERE p.status != 'adopted'
         ORDER BY p.created_at DESC
         LIMIT ${limit} OFFSET ${offset}
+      `;
+
+      totalCountResult = await sql`
+        SELECT COUNT(*) AS count
+        FROM pets
+        WHERE status != 'adopted'
       `;
     }
 
-    return NextResponse.json({ pets });
+    const totalCount = Number(totalCountResult[0]?.count || 0);
+
+    return NextResponse.json({ pets, totalCount });
   } catch (error) {
     console.error("[v0] Fetch pets error:", error);
-    return NextResponse.json({ error: "Failed to fetch pets" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch pets" },
+      { status: 500 }
+    );
   }
 }
+
 
 
 export async function POST(request: NextRequest) {

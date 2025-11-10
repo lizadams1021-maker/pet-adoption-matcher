@@ -8,16 +8,19 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft } from "lucide-react";
 import Image from "next/image";
+import { useAuthClient } from "@/lib/useAuthClient";
 
 export default function PetDetailPage() {
-  const { user } = useAuth();
+  const { user, loading } = useAuthClient();
   const router = useRouter();
   const params = useParams();
   const [pet, setPet] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [loadingPage, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    if (loading) return;
+
     if (!user) {
       router.push("/login");
       return;
@@ -29,7 +32,6 @@ export default function PetDetailPage() {
 
         if (response.ok) {
           const data = await response.json();
-          console.log("Pet", data.pet);
           setPet(data.pet);
         } else {
           const errorData = await response.json();
@@ -44,9 +46,9 @@ export default function PetDetailPage() {
     };
 
     fetchPet();
-  }, [user, params.id, router]);
+  }, [user, params.id, router, loading]);
 
-  if (!user || loading) {
+  if (!user || loadingPage) {
     return null;
   }
 
