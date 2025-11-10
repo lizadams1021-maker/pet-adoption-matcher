@@ -14,6 +14,7 @@ export async function GET(request: NextRequest) {
     let totalCountResult;
 
     if (ownerId) {
+      // Si se tiene ownerId, traemos todas sus mascotas sin filtrar por status
       pets = await sql`
         SELECT 
           p.id, 
@@ -41,6 +42,7 @@ export async function GET(request: NextRequest) {
         WHERE owner_id = ${ownerId}
       `;
     } else if (excludeOwnerId) {
+      // Excluimos al ownerId y además no mostramos adoptadas
       pets = await sql`
         SELECT 
           p.id, 
@@ -52,7 +54,7 @@ export async function GET(request: NextRequest) {
           u.name AS owner_name
         FROM pets p
         JOIN users u ON p.owner_id = u.id
-        WHERE p.owner_id != ${excludeOwnerId}
+        WHERE p.owner_id != ${excludeOwnerId} AND p.status != 'adopted'
         ORDER BY p.created_at DESC
         LIMIT ${limit} OFFSET ${offset}
       `;
@@ -60,9 +62,10 @@ export async function GET(request: NextRequest) {
       totalCountResult = await sql`
         SELECT COUNT(*) AS count
         FROM pets
-        WHERE owner_id != ${excludeOwnerId}
+        WHERE owner_id != ${excludeOwnerId} AND status != 'adopted'
       `;
     } else {
+      // Sin ownerId, filtramos todas las adoptadas
       pets = await sql`
         SELECT 
           p.id, 
@@ -74,6 +77,7 @@ export async function GET(request: NextRequest) {
           u.name AS owner_name
         FROM pets p
         JOIN users u ON p.owner_id = u.id
+        WHERE p.status != 'adopted'
         ORDER BY p.created_at DESC
         LIMIT ${limit} OFFSET ${offset}
       `;
@@ -81,6 +85,7 @@ export async function GET(request: NextRequest) {
       totalCountResult = await sql`
         SELECT COUNT(*) AS count
         FROM pets
+        WHERE status != 'adopted'
       `;
     }
 
@@ -95,6 +100,7 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
 
 
 export async function POST(request: NextRequest) {

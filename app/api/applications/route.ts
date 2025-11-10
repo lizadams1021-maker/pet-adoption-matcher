@@ -15,7 +15,9 @@ export async function GET(request: NextRequest) {
 
     const applications = await sql`
       SELECT 
-        upa.id, upa.created_at as applied_at,
+        upa.id,
+        upa.created_at AS applied_at,
+        upa.status,
         u.*
       FROM user_pet_applications upa
       JOIN users u ON upa.user_id = u.id
@@ -23,6 +25,7 @@ export async function GET(request: NextRequest) {
       ORDER BY upa.created_at DESC
       LIMIT ${limit} OFFSET ${offset}
     `;
+
 
     const [{ count }] =
       await sql`SELECT COUNT(*)::int AS count FROM user_pet_applications WHERE pet_id = ${petId}`;

@@ -693,7 +693,13 @@ export default function MyPetsPage() {
                             {pet.breed} • {pet.age_group} • {pet.type}
                           </p>
                         </div>
-                        <Badge className="bg-green-100 text-green-700 border-green-200 capitalize">
+                        <Badge
+                          className={`capitalize border ${
+                            pet.status === "adopted"
+                              ? "bg-green-100 text-green-700 border-green-200"
+                              : "bg-gray-100 text-gray-600 border-gray-200"
+                          }`}
+                        >
                           {pet.status}
                         </Badge>
                       </div>

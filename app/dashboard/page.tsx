@@ -33,6 +33,7 @@ export default function DashboardPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loadingAdopters, setLoadingAdopters] = useState(false);
+  const [loadingStats, setLoadingStats] = useState<boolean>(false);
   const [stats, setStats] = useState({
     activePets: 0,
     newMatches: 0,
@@ -61,14 +62,6 @@ export default function DashboardPage() {
           setPets(petsData.pets);
           setSelectedPet(petsData.pets[0]);
         }
-
-        // Fetch stats
-        const statsRes = await fetch(`/api/stats?ownerId=${user.id}`);
-        const statsData = await statsRes.json();
-
-        if (statsRes.ok) {
-          setStats(statsData);
-        }
       } catch (error) {
         console.error("[v0] Fetch dashboard data error:", error);
       } finally {
@@ -80,61 +73,88 @@ export default function DashboardPage() {
   }, [user, router, loading]);
 
   useEffect(() => {
-    if (!selectedPet) return;
+    if (!user) return;
 
-    const fetchAdopters = async () => {
+    const fetchStats = async () => {
       try {
-        setLoadingAdopters(true);
+        setLoadingStats(true);
 
-        // 1️⃣ Traer info completa del pet
-        const petRes = await fetch(`/api/pets/${selectedPet.id}`);
-        const petData = await petRes.json();
-        if (!petRes.ok || !petData.pet) {
-          console.error("Failed to fetch full pet info:", petData.error);
-          return;
+        const statsRes = await fetch(`/api/stats?ownerId=${user.id}`);
+        const statsData = await statsRes.json();
+
+        if (statsRes.ok) {
+          setStats(statsData);
         }
-        const fullPet = petData.pet;
-
-        // 2️⃣ Traer aplicaciones del pet
-        const res = await fetch(
-          `/api/applications?petId=${selectedPet.id}&page=${page}&limit=5`
-        );
-        const data = await res.json();
-
-        if (!res.ok) throw new Error(data.error || "Failed to fetch adopters");
-
-        // 3️⃣ Combinar aplicaciones con el pet completo
-        const applicationsWithPet = data.applications.map((app: any) => ({
-          user: app,
-          pet: fullPet,
-        }));
-
-        // 4️⃣ Calcular matches
-        const matchedApplications =
-          calculateApplicationMatches(applicationsWithPet);
-
-        // 5️⃣ Añadir score y razones a cada aplicación
-        const applicationsWithMatches = data.applications.map((app: any) => {
-          const match = matchedApplications.find((m) => m.userId === app.id);
-          return {
-            ...app,
-            score: match?.score ?? 0,
-            reasons: match?.reasons ?? [],
-            negativeReasons: match?.negativeReasons ?? [],
-          };
-        });
-
-        setAdopters(applicationsWithMatches);
-        setTotalPages(data.totalPages || 1);
       } catch (error) {
-        console.error("[v0] Fetch adopters error:", error);
+        console.error("[v0] Fetch stats error:", error);
       } finally {
-        setLoadingAdopters(false);
+        setLoadingStats(false);
       }
     };
 
+    fetchStats();
+  }, [user]);
+
+  useEffect(() => {
+    if (!selectedPet) return;
+
     fetchAdopters();
   }, [selectedPet, page]);
+
+  const fetchAdopters = async () => {
+    try {
+      setLoadingAdopters(true);
+
+      // 1️⃣ Traer info completa del pet
+      const petRes = await fetch(`/api/pets/${selectedPet.id}`);
+      const petData = await petRes.json();
+      if (!petRes.ok || !petData.pet) {
+        console.error("Failed to fetch full pet info:", petData.error);
+        return;
+      }
+      const fullPet = petData.pet;
+
+      // 2️⃣ Traer aplicaciones del pet
+      const res = await fetch(
+        `/api/applications?petId=${selectedPet.id}&page=${page}&limit=5`
+      );
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error || "Failed to fetch adopters");
+
+      // 3️⃣ Combinar aplicaciones con el pet completo
+      const applicationsWithPet = data.applications.map((app: any) => ({
+        user: app,
+        pet: fullPet,
+      }));
+
+      // 4️⃣ Calcular matches
+      const matchedApplications =
+        calculateApplicationMatches(applicationsWithPet);
+
+      // 5️⃣ Añadir score y razones a cada aplicación
+      const applicationsWithMatches = data.applications.map((app: any) => {
+        const match = matchedApplications.find((m) => m.userId === app.id);
+        return {
+          ...app,
+          score: match?.score ?? 0,
+          reasons: match?.reasons ?? [],
+          negativeReasons: match?.negativeReasons ?? [],
+        };
+      });
+
+      setAdopters(applicationsWithMatches);
+      console.log(
+        "[Dashboard] Application with matches",
+        applicationsWithMatches
+      );
+      setTotalPages(data.totalPages || 1);
+    } catch (error) {
+      console.error("[v0] Fetch adopters error:", error);
+    } finally {
+      setLoadingAdopters(false);
+    }
+  };
 
   const handleReject = async (
     petId: string,
@@ -165,6 +185,62 @@ export default function DashboardPage() {
       Swal.fire({
         title: "Error",
         text: "There was an error rejecting the application. Please try again.",
+        icon: "error",
+        confirmButtonText: "OK",
+      });
+    }
+  };
+
+  const handleAccept = async (
+    petId: string,
+    adopterId: string,
+    adopterName: string
+  ) => {
+    const result = await Swal.fire({
+      title: "Confirm Adoption",
+      html: `
+      Are you sure you want to accept <strong>${adopterName}</strong> for this pet?<br>
+      This will mark the pet as adopted and remove all other applications.
+    `,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#16a34a",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, accept",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      const res = await fetch("/api/applications/accept", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ petId, adopterId }),
+      });
+
+      if (!res.ok) throw new Error("Failed to accept application");
+
+      Swal.fire({
+        title: "Application Accepted",
+        html: `You have accepted <strong>${adopterName}</strong> for adoption.`,
+        icon: "success",
+        confirmButtonText: "OK",
+      }).then(async () => {
+        // ✅ Actualizar la lista de adoptadores para esta mascota
+        await fetchAdopters();
+
+        // ✅ Actualizar el estado de la mascota en pets a 'adopted'
+        setPets((prevPets) =>
+          prevPets.map((p) =>
+            p.id === petId ? { ...p, status: "adopted" } : p
+          )
+        );
+      });
+    } catch (error) {
+      console.error("[v0] Accept error:", error);
+      Swal.fire({
+        title: "Error",
+        text: "There was an error accepting the application. Please try again.",
         icon: "error",
         confirmButtonText: "OK",
       });
@@ -209,72 +285,80 @@ export default function DashboardPage() {
         </div>
 
         {/* Stat Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          {/* Active Pets */}
-          <div
-            className="bg-card rounded-lg border p-6 cursor-pointer hover:shadow-md transition"
-            onClick={() => router.push("/my-pets")}
-          >
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-purple-100 rounded-lg">
-                <Users className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <p className="text-3xl font-bold">{stats.activePets}</p>
-                <p className="text-sm text-muted-foreground">Active Pets</p>
-              </div>
+        {loadingStats ? (
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+              <p className="text-muted-foreground">Loading dashboard...</p>
             </div>
           </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            {/* Active Pets */}
+            <div
+              className="bg-card rounded-lg border p-6 cursor-pointer hover:shadow-md transition"
+              onClick={() => router.push("/my-pets")}
+            >
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-purple-100 rounded-lg">
+                  <Users className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <p className="text-3xl font-bold">{stats.activePets}</p>
+                  <p className="text-sm text-muted-foreground">Active Pets</p>
+                </div>
+              </div>
+            </div>
 
-          {/* New Matches */}
-          <div
-            className="bg-card rounded-lg border p-6 cursor-pointer hover:shadow-md transition"
-            onClick={() => router.push("/matches")}
-          >
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-green-100 rounded-lg">
-                <Heart className="h-6 w-6 text-green-600" />
-              </div>
-              <div>
-                <p className="text-3xl font-bold">{stats.newMatches}</p>
-                <p className="text-sm text-muted-foreground">New Matches</p>
+            {/* New Matches */}
+            <div
+              className="bg-card rounded-lg border p-6 cursor-pointer hover:shadow-md transition"
+              onClick={() => router.push("/matches")}
+            >
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-green-100 rounded-lg">
+                  <Heart className="h-6 w-6 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-3xl font-bold">{stats.newMatches}</p>
+                  <p className="text-sm text-muted-foreground">New Matches</p>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Pending Apps */}
-          <div
-            className="bg-card rounded-lg border p-6 cursor-pointer hover:shadow-md transition"
-            onClick={() => router.push("/my-applications")}
-          >
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-yellow-100 rounded-lg">
-                <Briefcase className="h-6 w-6 text-yellow-600" />
-              </div>
-              <div>
-                <p className="text-3xl font-bold">{stats.pendingApps}</p>
-                <p className="text-sm text-muted-foreground">Pending Apps</p>
+            {/* Pending Apps */}
+            <div
+              className="bg-card rounded-lg border p-6 cursor-pointer hover:shadow-md transition"
+              onClick={() => router.push("/my-applications")}
+            >
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-yellow-100 rounded-lg">
+                  <Briefcase className="h-6 w-6 text-yellow-600" />
+                </div>
+                <div>
+                  <p className="text-3xl font-bold">{stats.pendingApps}</p>
+                  <p className="text-sm text-muted-foreground">Pending Apps</p>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* This Week */}
-          <div
-            className="bg-card rounded-lg border p-6 cursor-pointer hover:shadow-md transition"
-            onClick={() => router.push("/matches")}
-            // Puedes ajustar la ruta si quieres otra vista
-          >
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <TrendingUp className="h-6 w-6 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-3xl font-bold">{stats.thisWeek}</p>
-                <p className="text-sm text-muted-foreground">This Week</p>
+            {/* This Week */}
+            <div
+              className="bg-card rounded-lg border p-6 cursor-pointer hover:shadow-md transition"
+              onClick={() => router.push("/matches")}
+            >
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-blue-100 rounded-lg">
+                  <TrendingUp className="h-6 w-6 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-3xl font-bold">{stats.thisWeek}</p>
+                  <p className="text-sm text-muted-foreground">This Week</p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-[400px_1fr] gap-6">
           {/* Left Column - My Pets */}
@@ -290,13 +374,24 @@ export default function DashboardPage() {
               <div className="space-y-4">
                 {pets.map((pet) => {
                   const isSelected = selectedPet?.id === pet.id;
+                  const isAdopted = pet.status === "adopted";
+
                   return (
                     <button
                       key={pet.id}
                       onClick={() => setSelectedPet(pet)}
-                      className={`w-full flex items-center gap-4 p-4 rounded-lg border bg-card hover:bg-accent transition-colors text-left ${
-                        isSelected ? "ring-2 ring-primary" : ""
-                      }`}
+                      className={`w-full flex items-center gap-4 p-4 rounded-lg border transition-colors text-left
+              ${
+                isAdopted
+                  ? "bg-green-100 border-green-300"
+                  : "bg-card border-border"
+              }
+              ${
+                isSelected
+                  ? `ring-2 ${isAdopted ? "ring-green-500" : "ring-primary"}`
+                  : ""
+              }
+              hover:bg-accent`}
                     >
                       <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
                         <Image
@@ -311,7 +406,13 @@ export default function DashboardPage() {
                         <p className="text-sm text-muted-foreground">
                           {pet.breed}
                         </p>
-                        <p className="text-sm text-muted-foreground mt-1">
+                        <p
+                          className={`text-sm mt-1 ${
+                            isAdopted
+                              ? "text-green-700 font-semibold"
+                              : "text-muted-foreground"
+                          }`}
+                        >
                           {pet.status}
                         </p>
                       </div>
@@ -604,21 +705,41 @@ export default function DashboardPage() {
                             </div>
 
                             {/* Action Buttons */}
-                            <div className="gap-3">
-                              <Button
-                                variant="outline"
-                                className="w-full text-red-600 hover:text-red-700 bg-transparent"
-                                onClick={() =>
-                                  handleReject(
-                                    selectedPet.id,
-                                    adopter.id,
-                                    adopter.name
-                                  )
-                                }
-                              >
-                                Reject
-                              </Button>
-                            </div>
+                            {adopter.status === "accepted" ? (
+                              <div className="text-green-700 font-semibold text-center mt-2">
+                                Application accepted
+                              </div>
+                            ) : (
+                              <div className="flex gap-3">
+                                <Button
+                                  variant="outline"
+                                  className="flex-1 text-green-600 hover:text-green-700 bg-transparent"
+                                  onClick={() =>
+                                    handleAccept(
+                                      selectedPet.id,
+                                      adopter.id,
+                                      adopter.name
+                                    )
+                                  }
+                                >
+                                  Accept
+                                </Button>
+
+                                <Button
+                                  variant="outline"
+                                  className="flex-1 text-red-600 hover:text-red-700 bg-transparent"
+                                  onClick={() =>
+                                    handleReject(
+                                      selectedPet.id,
+                                      adopter.id,
+                                      adopter.name
+                                    )
+                                  }
+                                >
+                                  Reject
+                                </Button>
+                              </div>
+                            )}
                           </div>
                         );
                       })}
