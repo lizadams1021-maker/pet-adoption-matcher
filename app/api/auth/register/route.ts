@@ -17,11 +17,11 @@ export async function POST(req: Request) {
     VALUES (${userId}, ${email}, ${passwordHash}, ${name}, false)
   `;
 
-  // ✅ Crear refresh token
+  // ✅ Create refresh token
   const refreshToken = await createRefreshToken(userId);
   await setRefreshCookie(refreshToken);
 
-  // ✅ Crear access token
+  // ✅ Create access token
   const accessToken = await signAccessToken({ sub: userId });
 
   return NextResponse.json({

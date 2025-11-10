@@ -37,7 +37,7 @@ export default function LoginPage() {
       }
 
       const data = await res.json();
-      // Guardamos access token en memoria
+      // Save access token on memory
       sessionStorage.clear();
       sessionStorage.setItem("accessToken", data.accessToken);
 

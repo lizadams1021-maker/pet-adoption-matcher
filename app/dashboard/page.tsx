@@ -105,7 +105,7 @@ export default function DashboardPage() {
     try {
       setLoadingAdopters(true);
 
-      // 1️⃣ Traer info completa del pet
+      // 1️⃣ Bring full pet info
       const petRes = await fetch(`/api/pets/${selectedPet.id}`);
       const petData = await petRes.json();
       if (!petRes.ok || !petData.pet) {
@@ -114,7 +114,7 @@ export default function DashboardPage() {
       }
       const fullPet = petData.pet;
 
-      // 2️⃣ Traer aplicaciones del pet
+      // 2️⃣ Brring pet applications
       const res = await fetch(
         `/api/applications?petId=${selectedPet.id}&page=${page}&limit=5`
       );
@@ -122,17 +122,17 @@ export default function DashboardPage() {
 
       if (!res.ok) throw new Error(data.error || "Failed to fetch adopters");
 
-      // 3️⃣ Combinar aplicaciones con el pet completo
+      // 3️⃣ Combine applications with full pet data
       const applicationsWithPet = data.applications.map((app: any) => ({
         user: app,
         pet: fullPet,
       }));
 
-      // 4️⃣ Calcular matches
+      // 4️⃣ Calculate matches
       const matchedApplications =
         calculateApplicationMatches(applicationsWithPet);
 
-      // 5️⃣ Añadir score y razones a cada aplicación
+      // 5️⃣ Add score and reasons for every application
       const applicationsWithMatches = data.applications.map((app: any) => {
         const match = matchedApplications.find((m) => m.userId === app.id);
         return {
@@ -170,10 +170,9 @@ export default function DashboardPage() {
 
       if (!res.ok) throw new Error("Failed to reject application");
 
-      // Actualizar el estado local para remover al adoptador del listado
+      // Update local state to remove adopter from list
       setAdopters((prev) => prev.filter((a) => a.id !== adopterId));
 
-      // Mensaje informativo (sin icono feliz)
       Swal.fire({
         title: "Application Rejected",
         html: `You have rejected the application from <strong>${adopterName}</strong>.`,
@@ -226,10 +225,10 @@ export default function DashboardPage() {
         icon: "success",
         confirmButtonText: "OK",
       }).then(async () => {
-        // ✅ Actualizar la lista de adoptadores para esta mascota
+        // ✅ Update list of adopters for this pet
         await fetchAdopters();
 
-        // ✅ Actualizar el estado de la mascota en pets a 'adopted'
+        // ✅ Update pet status to 'adopted'
         setPets((prevPets) =>
           prevPets.map((p) =>
             p.id === petId ? { ...p, status: "adopted" } : p

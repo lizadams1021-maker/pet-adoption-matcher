@@ -21,7 +21,7 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    setLoading(true); // 🔥 empieza la carga
+    setLoading(true); // 🔥 load starts
 
     try {
       const res = await fetch("/api/auth/register", {
@@ -39,7 +39,7 @@ export default function RegisterPage() {
 
       const data = await res.json();
 
-      // limpiar sessionStorage y guardar el token nuevo
+      // clean session storage en bring new token
       sessionStorage.clear();
       sessionStorage.setItem("accessToken", data.accessToken);
 

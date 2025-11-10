@@ -70,10 +70,8 @@ export default function MyApplicationsPage() {
 
       if (!res.ok) throw new Error("Failed to withdraw application");
 
-      // Actualizar estado local de apps
       setApps((prev) => prev.filter((a) => a.id !== appId));
 
-      // Mostrar mensaje de éxito
       Swal.fire({
         title: "Application Withdrawn",
         html: `You have withdrawn your application for <strong>${petName}</strong>. You can always apply again later if you change your mind.`,

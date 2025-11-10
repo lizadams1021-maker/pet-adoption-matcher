@@ -1,4 +1,3 @@
-// app/api/me/route.ts
 import { NextResponse } from "next/server";
 import { sql } from "@/lib/db";
 import { verifyAccessToken } from "@/lib/auth";
@@ -11,7 +10,6 @@ export async function GET(req: Request) {
     const token = authHeader.replace("Bearer ", "");
     const payload: any = await verifyAccessToken(token);
 
-    // Traer todos los campos del usuario desde la DB
     const users = await sql`
       SELECT *
       FROM users

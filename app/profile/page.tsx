@@ -42,7 +42,7 @@ export default function ProfilePage() {
     email: "",
     homePhone: "",
     cellPhone: "",
-    gender: "",
+    gender: "M",
     birthday: "",
     addressLine: "",
     city: "",
@@ -292,6 +292,7 @@ export default function ProfilePage() {
       alert("Failed to save profile: " + String(error));
     } finally {
       setSaving(false);
+      updateUser(formData);
     }
   };
 
@@ -305,6 +306,19 @@ export default function ProfilePage() {
         return newErrors;
       });
     }
+  };
+
+  const updateUser = (updatedData: Partial<typeof user>) => {
+    if (!user) return;
+
+    // Actualiza el objeto user existente con los nuevos datos
+    const newUser = { ...user, ...updatedData };
+
+    // Actualiza el estado local si tienes uno para user (opcional)
+    // setUser(newUser);
+
+    // Guarda el usuario actualizado en sessionStorage
+    sessionStorage.setItem("user", JSON.stringify(newUser));
   };
 
   const toggleArrayField = (field: keyof ProfileFormData, value: string) => {
@@ -1452,15 +1466,6 @@ export default function ProfilePage() {
               View Matches
             </Button>
           </div>
-        </div>
-
-        <div className="mt-6">
-          <Button
-            variant="ghost"
-            className="text-destructive hover:text-destructive"
-          >
-            Sign Out
-          </Button>
         </div>
       </div>
     </AppLayout>

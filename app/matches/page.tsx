@@ -52,12 +52,10 @@ export default function MatchesPage() {
 
         setMatches(newPets);
 
-        // calcular número total de páginas (si la API lo devuelve)
         if (data.totalCount) {
           const total = Math.ceil(data.totalCount / limit);
           setTotalPages(total);
         } else {
-          // fallback si la API no devuelve total
           setHasMore(newPets.length === limit);
         }
       } catch (err: any) {
@@ -132,7 +130,7 @@ export default function MatchesPage() {
           confirmButtonText: "OK",
         });
 
-        // Actualizar el estado local
+        // Update local state
         const updated = new Set(appliedPets);
         updated.delete(petId);
         setAppliedPets(updated);

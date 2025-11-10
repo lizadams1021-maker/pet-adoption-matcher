@@ -426,7 +426,7 @@ export default function AddPetPage() {
             </div>
 
             <Label>Compatibility</Label>
-            <div className="space-y-3">
+            <div className="space-y-3 mt-2">
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="goodWithKids"
@@ -435,12 +435,7 @@ export default function AddPetPage() {
                     handleChange("goodWithKids", checked)
                   }
                 />
-                <label
-                  htmlFor="goodWithKids"
-                  className="text-sm cursor-pointer"
-                >
-                  Good with kids
-                </label>
+                <Label>Good with kids</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox
@@ -450,12 +445,7 @@ export default function AddPetPage() {
                     handleChange("goodWithCats", checked)
                   }
                 />
-                <label
-                  htmlFor="goodWithCats"
-                  className="text-sm cursor-pointer"
-                >
-                  Good with cats
-                </label>
+                <Label>Good with cats</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox
@@ -465,12 +455,7 @@ export default function AddPetPage() {
                     handleChange("goodWithDogs", checked)
                   }
                 />
-                <label
-                  htmlFor="goodWithDogs"
-                  className="text-sm cursor-pointer"
-                >
-                  Good with dogs
-                </label>
+                <Label>Good with dogs</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox
@@ -480,12 +465,7 @@ export default function AddPetPage() {
                     handleChange("houseTrained", checked)
                   }
                 />
-                <label
-                  htmlFor="houseTrained"
-                  className="text-sm cursor-pointer"
-                >
-                  House trained
-                </label>
+                <Label>House trained</Label>
               </div>
             </div>
           </div>

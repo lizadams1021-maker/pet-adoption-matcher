@@ -20,9 +20,11 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { refreshAccess } from "@/lib/auth";
+import { useAuthClient } from "@/lib/useAuthClient";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
+  const { user } = useAuthClient();
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
@@ -126,7 +128,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               onClick={handleLogout}
             >
               <LogOut className="h-5 w-5" />
-              <span>Logout</span>
+              <span>Sign out</span>
             </Button>
           </div>
         </nav>
