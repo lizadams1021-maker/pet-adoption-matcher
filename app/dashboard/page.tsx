@@ -82,59 +82,63 @@ export default function DashboardPage() {
   useEffect(() => {
     if (!selectedPet) return;
 
-    const fetchAdopters = async () => {
-      try {
-        setLoadingAdopters(true);
-
-        // 1️⃣ Traer info completa del pet
-        const petRes = await fetch(`/api/pets/${selectedPet.id}`);
-        const petData = await petRes.json();
-        if (!petRes.ok || !petData.pet) {
-          console.error("Failed to fetch full pet info:", petData.error);
-          return;
-        }
-        const fullPet = petData.pet;
-
-        // 2️⃣ Traer aplicaciones del pet
-        const res = await fetch(
-          `/api/applications?petId=${selectedPet.id}&page=${page}&limit=5`
-        );
-        const data = await res.json();
-
-        if (!res.ok) throw new Error(data.error || "Failed to fetch adopters");
-
-        // 3️⃣ Combinar aplicaciones con el pet completo
-        const applicationsWithPet = data.applications.map((app: any) => ({
-          user: app,
-          pet: fullPet,
-        }));
-
-        // 4️⃣ Calcular matches
-        const matchedApplications =
-          calculateApplicationMatches(applicationsWithPet);
-
-        // 5️⃣ Añadir score y razones a cada aplicación
-        const applicationsWithMatches = data.applications.map((app: any) => {
-          const match = matchedApplications.find((m) => m.userId === app.id);
-          return {
-            ...app,
-            score: match?.score ?? 0,
-            reasons: match?.reasons ?? [],
-            negativeReasons: match?.negativeReasons ?? [],
-          };
-        });
-
-        setAdopters(applicationsWithMatches);
-        setTotalPages(data.totalPages || 1);
-      } catch (error) {
-        console.error("[v0] Fetch adopters error:", error);
-      } finally {
-        setLoadingAdopters(false);
-      }
-    };
-
     fetchAdopters();
   }, [selectedPet, page]);
+
+  const fetchAdopters = async () => {
+    try {
+      setLoadingAdopters(true);
+
+      // 1️⃣ Traer info completa del pet
+      const petRes = await fetch(`/api/pets/${selectedPet.id}`);
+      const petData = await petRes.json();
+      if (!petRes.ok || !petData.pet) {
+        console.error("Failed to fetch full pet info:", petData.error);
+        return;
+      }
+      const fullPet = petData.pet;
+
+      // 2️⃣ Traer aplicaciones del pet
+      const res = await fetch(
+        `/api/applications?petId=${selectedPet.id}&page=${page}&limit=5`
+      );
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.error || "Failed to fetch adopters");
+
+      // 3️⃣ Combinar aplicaciones con el pet completo
+      const applicationsWithPet = data.applications.map((app: any) => ({
+        user: app,
+        pet: fullPet,
+      }));
+
+      // 4️⃣ Calcular matches
+      const matchedApplications =
+        calculateApplicationMatches(applicationsWithPet);
+
+      // 5️⃣ Añadir score y razones a cada aplicación
+      const applicationsWithMatches = data.applications.map((app: any) => {
+        const match = matchedApplications.find((m) => m.userId === app.id);
+        return {
+          ...app,
+          score: match?.score ?? 0,
+          reasons: match?.reasons ?? [],
+          negativeReasons: match?.negativeReasons ?? [],
+        };
+      });
+
+      setAdopters(applicationsWithMatches);
+      console.log(
+        "[Dashboard] Application with matches",
+        applicationsWithMatches
+      );
+      setTotalPages(data.totalPages || 1);
+    } catch (error) {
+      console.error("[v0] Fetch adopters error:", error);
+    } finally {
+      setLoadingAdopters(false);
+    }
+  };
 
   const handleReject = async (
     petId: string,
@@ -165,6 +169,62 @@ export default function DashboardPage() {
       Swal.fire({
         title: "Error",
         text: "There was an error rejecting the application. Please try again.",
+        icon: "error",
+        confirmButtonText: "OK",
+      });
+    }
+  };
+
+  const handleAccept = async (
+    petId: string,
+    adopterId: string,
+    adopterName: string
+  ) => {
+    const result = await Swal.fire({
+      title: "Confirm Adoption",
+      html: `
+      Are you sure you want to accept <strong>${adopterName}</strong> for this pet?<br>
+      This will mark the pet as adopted and remove all other applications.
+    `,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#16a34a",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, accept",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      const res = await fetch("/api/applications/accept", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ petId, adopterId }),
+      });
+
+      if (!res.ok) throw new Error("Failed to accept application");
+
+      Swal.fire({
+        title: "Application Accepted",
+        html: `You have accepted <strong>${adopterName}</strong> for adoption.`,
+        icon: "success",
+        confirmButtonText: "OK",
+      }).then(async () => {
+        // ✅ Actualizar la lista de adoptadores para esta mascota
+        await fetchAdopters();
+
+        // ✅ Actualizar el estado de la mascota en pets a 'adopted'
+        setPets((prevPets) =>
+          prevPets.map((p) =>
+            p.id === petId ? { ...p, status: "adopted" } : p
+          )
+        );
+      });
+    } catch (error) {
+      console.error("[v0] Accept error:", error);
+      Swal.fire({
+        title: "Error",
+        text: "There was an error accepting the application. Please try again.",
         icon: "error",
         confirmButtonText: "OK",
       });
@@ -290,13 +350,24 @@ export default function DashboardPage() {
               <div className="space-y-4">
                 {pets.map((pet) => {
                   const isSelected = selectedPet?.id === pet.id;
+                  const isAdopted = pet.status === "adopted";
+
                   return (
                     <button
                       key={pet.id}
                       onClick={() => setSelectedPet(pet)}
-                      className={`w-full flex items-center gap-4 p-4 rounded-lg border bg-card hover:bg-accent transition-colors text-left ${
-                        isSelected ? "ring-2 ring-primary" : ""
-                      }`}
+                      className={`w-full flex items-center gap-4 p-4 rounded-lg border transition-colors text-left
+              ${
+                isAdopted
+                  ? "bg-green-100 border-green-300"
+                  : "bg-card border-border"
+              }
+              ${
+                isSelected
+                  ? `ring-2 ${isAdopted ? "ring-green-500" : "ring-primary"}`
+                  : ""
+              }
+              hover:bg-accent`}
                     >
                       <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
                         <Image
@@ -311,7 +382,13 @@ export default function DashboardPage() {
                         <p className="text-sm text-muted-foreground">
                           {pet.breed}
                         </p>
-                        <p className="text-sm text-muted-foreground mt-1">
+                        <p
+                          className={`text-sm mt-1 ${
+                            isAdopted
+                              ? "text-green-700 font-semibold"
+                              : "text-muted-foreground"
+                          }`}
+                        >
                           {pet.status}
                         </p>
                       </div>
@@ -604,21 +681,41 @@ export default function DashboardPage() {
                             </div>
 
                             {/* Action Buttons */}
-                            <div className="gap-3">
-                              <Button
-                                variant="outline"
-                                className="w-full text-red-600 hover:text-red-700 bg-transparent"
-                                onClick={() =>
-                                  handleReject(
-                                    selectedPet.id,
-                                    adopter.id,
-                                    adopter.name
-                                  )
-                                }
-                              >
-                                Reject
-                              </Button>
-                            </div>
+                            {adopter.status === "accepted" ? (
+                              <div className="text-green-700 font-semibold text-center mt-2">
+                                Application accepted
+                              </div>
+                            ) : (
+                              <div className="flex gap-3">
+                                <Button
+                                  variant="outline"
+                                  className="flex-1 text-green-600 hover:text-green-700 bg-transparent"
+                                  onClick={() =>
+                                    handleAccept(
+                                      selectedPet.id,
+                                      adopter.id,
+                                      adopter.name
+                                    )
+                                  }
+                                >
+                                  Accept
+                                </Button>
+
+                                <Button
+                                  variant="outline"
+                                  className="flex-1 text-red-600 hover:text-red-700 bg-transparent"
+                                  onClick={() =>
+                                    handleReject(
+                                      selectedPet.id,
+                                      adopter.id,
+                                      adopter.name
+                                    )
+                                  }
+                                >
+                                  Reject
+                                </Button>
+                              </div>
+                            )}
                           </div>
                         );
                       })}
