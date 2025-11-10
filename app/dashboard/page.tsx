@@ -33,6 +33,7 @@ export default function DashboardPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loadingAdopters, setLoadingAdopters] = useState(false);
+  const [loadingStats, setLoadingStats] = useState<boolean>(false);
   const [stats, setStats] = useState({
     activePets: 0,
     newMatches: 0,
@@ -61,14 +62,6 @@ export default function DashboardPage() {
           setPets(petsData.pets);
           setSelectedPet(petsData.pets[0]);
         }
-
-        // Fetch stats
-        const statsRes = await fetch(`/api/stats?ownerId=${user.id}`);
-        const statsData = await statsRes.json();
-
-        if (statsRes.ok) {
-          setStats(statsData);
-        }
       } catch (error) {
         console.error("[v0] Fetch dashboard data error:", error);
       } finally {
@@ -78,6 +71,29 @@ export default function DashboardPage() {
 
     fetchData();
   }, [user, router, loading]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchStats = async () => {
+      try {
+        setLoadingStats(true);
+
+        const statsRes = await fetch(`/api/stats?ownerId=${user.id}`);
+        const statsData = await statsRes.json();
+
+        if (statsRes.ok) {
+          setStats(statsData);
+        }
+      } catch (error) {
+        console.error("[v0] Fetch stats error:", error);
+      } finally {
+        setLoadingStats(false);
+      }
+    };
+
+    fetchStats();
+  }, [user]);
 
   useEffect(() => {
     if (!selectedPet) return;
@@ -269,72 +285,80 @@ export default function DashboardPage() {
         </div>
 
         {/* Stat Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          {/* Active Pets */}
-          <div
-            className="bg-card rounded-lg border p-6 cursor-pointer hover:shadow-md transition"
-            onClick={() => router.push("/my-pets")}
-          >
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-purple-100 rounded-lg">
-                <Users className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <p className="text-3xl font-bold">{stats.activePets}</p>
-                <p className="text-sm text-muted-foreground">Active Pets</p>
-              </div>
+        {loadingStats ? (
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+              <p className="text-muted-foreground">Loading dashboard...</p>
             </div>
           </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            {/* Active Pets */}
+            <div
+              className="bg-card rounded-lg border p-6 cursor-pointer hover:shadow-md transition"
+              onClick={() => router.push("/my-pets")}
+            >
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-purple-100 rounded-lg">
+                  <Users className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <p className="text-3xl font-bold">{stats.activePets}</p>
+                  <p className="text-sm text-muted-foreground">Active Pets</p>
+                </div>
+              </div>
+            </div>
 
-          {/* New Matches */}
-          <div
-            className="bg-card rounded-lg border p-6 cursor-pointer hover:shadow-md transition"
-            onClick={() => router.push("/matches")}
-          >
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-green-100 rounded-lg">
-                <Heart className="h-6 w-6 text-green-600" />
-              </div>
-              <div>
-                <p className="text-3xl font-bold">{stats.newMatches}</p>
-                <p className="text-sm text-muted-foreground">New Matches</p>
+            {/* New Matches */}
+            <div
+              className="bg-card rounded-lg border p-6 cursor-pointer hover:shadow-md transition"
+              onClick={() => router.push("/matches")}
+            >
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-green-100 rounded-lg">
+                  <Heart className="h-6 w-6 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-3xl font-bold">{stats.newMatches}</p>
+                  <p className="text-sm text-muted-foreground">New Matches</p>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Pending Apps */}
-          <div
-            className="bg-card rounded-lg border p-6 cursor-pointer hover:shadow-md transition"
-            onClick={() => router.push("/my-applications")}
-          >
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-yellow-100 rounded-lg">
-                <Briefcase className="h-6 w-6 text-yellow-600" />
-              </div>
-              <div>
-                <p className="text-3xl font-bold">{stats.pendingApps}</p>
-                <p className="text-sm text-muted-foreground">Pending Apps</p>
+            {/* Pending Apps */}
+            <div
+              className="bg-card rounded-lg border p-6 cursor-pointer hover:shadow-md transition"
+              onClick={() => router.push("/my-applications")}
+            >
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-yellow-100 rounded-lg">
+                  <Briefcase className="h-6 w-6 text-yellow-600" />
+                </div>
+                <div>
+                  <p className="text-3xl font-bold">{stats.pendingApps}</p>
+                  <p className="text-sm text-muted-foreground">Pending Apps</p>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* This Week */}
-          <div
-            className="bg-card rounded-lg border p-6 cursor-pointer hover:shadow-md transition"
-            onClick={() => router.push("/matches")}
-            // Puedes ajustar la ruta si quieres otra vista
-          >
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <TrendingUp className="h-6 w-6 text-blue-600" />
-              </div>
-              <div>
-                <p className="text-3xl font-bold">{stats.thisWeek}</p>
-                <p className="text-sm text-muted-foreground">This Week</p>
+            {/* This Week */}
+            <div
+              className="bg-card rounded-lg border p-6 cursor-pointer hover:shadow-md transition"
+              onClick={() => router.push("/matches")}
+            >
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-blue-100 rounded-lg">
+                  <TrendingUp className="h-6 w-6 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-3xl font-bold">{stats.thisWeek}</p>
+                  <p className="text-sm text-muted-foreground">This Week</p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-[400px_1fr] gap-6">
           {/* Left Column - My Pets */}
