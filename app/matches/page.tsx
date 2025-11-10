@@ -77,25 +77,32 @@ export default function MatchesPage() {
   useEffect(() => {
     if (!matches.length) return;
 
-    let pending = matches.length;
     setLoadingApplied(true);
-    const updatedSet = new Set<string>();
 
-    matches.forEach(async (pet) => {
+    const checkApplications = async () => {
       try {
+        const petIds = matches.map((pet) => pet.id);
+        const queryParams = petIds.map((id) => `petId=${id}`).join("&");
+
         const res = await fetch(
-          `/api/applications/check?userId=${user.id}&petId=${pet.id}`
+          `/api/applications/check?userId=${user.id}&${queryParams}`
         );
         const data = await res.json();
-        if (data.hasApplied) updatedSet.add(pet.id);
-        setAppliedPets(new Set(updatedSet));
+
+        const updatedSet = new Set<string>();
+        Object.entries(data).forEach(([petId, hasApplied]) => {
+          if (hasApplied) updatedSet.add(petId);
+        });
+
+        setAppliedPets(updatedSet);
       } catch (err) {
-        console.error(err);
+        console.error("Error checking applications:", err);
       } finally {
-        pending--;
-        if (pending === 0) setLoadingApplied(false); // hide spinner cuando todos terminen
+        setLoadingApplied(false);
       }
-    });
+    };
+
+    checkApplications();
   }, [matches, user]);
 
   const handleApply = async (
