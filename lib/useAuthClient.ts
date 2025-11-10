@@ -89,8 +89,6 @@ export function useAuthClient() {
       }
 
       try {
-        console.log("Access tokennnnn:", token);
-
         const res = await fetch("/api/me", {
           headers: { Authorization: `Bearer ${token}` },
         });

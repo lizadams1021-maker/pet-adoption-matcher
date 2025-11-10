@@ -110,12 +110,8 @@ export default function ProfilePage() {
     // Load user profile data
     const loadProfile = async () => {
       try {
-        console.log("User", user.id);
         if (user) {
           const userData = user;
-
-          console.log("[v0] User Data", userData);
-
           setFormData({
             firstName: userData.first_name || "",
             lastName: userData.last_name || "",
@@ -243,12 +239,9 @@ export default function ProfilePage() {
   };
 
   const handleSave = async () => {
-    console.log("[v0] Starting profile save...");
-
     // Validate form
     const validationErrors = validateProfileForm(formData);
     if (validationErrors.length > 0) {
-      console.log("[v0] Validation failed:", validationErrors);
       const errorMap: Record<string, string> = {};
       validationErrors.forEach((err) => {
         errorMap[err.field] = err.message;
@@ -262,9 +255,6 @@ export default function ProfilePage() {
     setErrors({});
 
     try {
-      console.log("[v0] Sending profile update request...");
-      console.log("[v0] form data", formData);
-
       const response = await fetch("/api/user/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -275,12 +265,8 @@ export default function ProfilePage() {
         }),
       });
 
-      console.log("[v0] Response status:", response.status);
-      console.log("[v0] Full response", response);
-
       if (response.ok) {
         const data = await response.json();
-        console.log("[v0] Profile saved successfully");
         setSaved(true);
         setTimeout(() => setSaved(false), 3000);
 
@@ -289,14 +275,9 @@ export default function ProfilePage() {
         );
         if (reloadResponse.ok) {
           const reloadData = await reloadResponse.json();
-          console.log(
-            "[v0] Profile reloaded successfully, data persisted:",
-            !!reloadData.user
-          );
         }
       } else {
         const error = await response.json();
-        console.log("[v0] Save failed:", error);
         if (error.errors) {
           const errorMap: Record<string, string> = {};
           error.errors.forEach((err: any) => {

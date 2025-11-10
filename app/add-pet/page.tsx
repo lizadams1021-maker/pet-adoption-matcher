@@ -60,7 +60,6 @@ export default function AddPetPage() {
 
     setUploading(true);
     try {
-      console.log("[v0] Starting image upload:", file.name);
       const formDataObj = new FormData();
       formDataObj.append("file", file);
 
@@ -69,18 +68,14 @@ export default function AddPetPage() {
         body: formDataObj,
       });
 
-      console.log("[v0] Upload response status:", response.status);
-
       if (!response.ok) {
         let errorMessage = "Failed to upload image";
         try {
           const error = await response.json();
           errorMessage = error.error || errorMessage;
-          console.log("[v0] Upload error:", error);
         } catch (e) {
           // Response is not JSON, try to get text
           const text = await response.text();
-          console.log("[v0] Non-JSON error response:", text);
           errorMessage = text || errorMessage;
         }
         alert(errorMessage);
@@ -88,10 +83,6 @@ export default function AddPetPage() {
       }
 
       const data = await response.json();
-      console.log(
-        "[v0] Upload successful, imageUrl length:",
-        data.imageUrl?.length
-      );
       setFormData((prev) => ({ ...prev, imageUrl: data.imageUrl }));
     } catch (error) {
       console.error("[v0] Image upload error:", error);
@@ -130,9 +121,6 @@ export default function AddPetPage() {
       description: formData.description || null,
       imageUrl: formData.imageUrl || null,
     };
-
-    console.log("New pet", newPet);
-
     await addPet(newPet);
     router.push("/my-pets");
   };

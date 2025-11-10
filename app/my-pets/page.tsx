@@ -77,8 +77,6 @@ export default function MyPetsPage() {
           setUserPets([]);
           return;
         }
-
-        console.log("My pets", data.pets);
         setUserPets(data.pets || []);
       } catch (err) {
         console.error("Error fetching pets:", err);
@@ -134,7 +132,6 @@ export default function MyPetsPage() {
 
     setUploading(true);
     try {
-      console.log("[v0] Starting pet image upload:", file.name);
       const formDataObj = new FormData();
       formDataObj.append("file", file);
 
@@ -143,18 +140,14 @@ export default function MyPetsPage() {
         body: formDataObj,
       });
 
-      console.log("[v0] Pet upload response status:", response.status);
-
       if (!response.ok) {
         let errorMessage = "Failed to upload image";
         try {
           const error = await response.json();
           errorMessage = error.error || errorMessage;
-          console.log("[v0] Pet upload error:", error);
         } catch (e) {
           // Response is not JSON, try to get text
           const text = await response.text();
-          console.log("[v0] Non-JSON error response:", text);
           errorMessage = text || errorMessage;
         }
         alert(errorMessage);
@@ -162,10 +155,6 @@ export default function MyPetsPage() {
       }
 
       const data = await response.json();
-      console.log(
-        "[v0] Pet upload successful, imageUrl length:",
-        data.imageUrl?.length
-      );
       setEditFormData((prev: any) => ({ ...prev, imageUrl: data.imageUrl }));
     } catch (error) {
       console.error("[v0] Image upload error:", error);

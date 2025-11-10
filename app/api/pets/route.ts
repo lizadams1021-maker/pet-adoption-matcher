@@ -8,9 +8,10 @@ export async function GET(request: NextRequest) {
     const excludeOwnerId = searchParams.get("excludeOwnerId");
 
     const limit = Number(searchParams.get("limit")) || 10;
-    const offset = Number(searchParams.get("offset")) || 0;
+    const offset = Number(searchParams.get("page")) || 0;
 
     let pets;
+    let totalCountResult;
 
     if (ownerId) {
       pets = await sql`
@@ -33,6 +34,12 @@ export async function GET(request: NextRequest) {
         ORDER BY p.created_at DESC
         LIMIT ${limit} OFFSET ${offset}
       `;
+
+      totalCountResult = await sql`
+        SELECT COUNT(*) AS count
+        FROM pets
+        WHERE owner_id = ${ownerId}
+      `;
     } else if (excludeOwnerId) {
       pets = await sql`
         SELECT 
@@ -49,6 +56,12 @@ export async function GET(request: NextRequest) {
         ORDER BY p.created_at DESC
         LIMIT ${limit} OFFSET ${offset}
       `;
+
+      totalCountResult = await sql`
+        SELECT COUNT(*) AS count
+        FROM pets
+        WHERE owner_id != ${excludeOwnerId}
+      `;
     } else {
       pets = await sql`
         SELECT 
@@ -64,15 +77,24 @@ export async function GET(request: NextRequest) {
         ORDER BY p.created_at DESC
         LIMIT ${limit} OFFSET ${offset}
       `;
+
+      totalCountResult = await sql`
+        SELECT COUNT(*) AS count
+        FROM pets
+      `;
     }
 
-    return NextResponse.json({ pets });
+    const totalCount = Number(totalCountResult[0]?.count || 0);
+
+    return NextResponse.json({ pets, totalCount });
   } catch (error) {
     console.error("[v0] Fetch pets error:", error);
-    return NextResponse.json({ error: "Failed to fetch pets" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch pets" },
+      { status: 500 }
+    );
   }
 }
-
 
 
 export async function POST(request: NextRequest) {

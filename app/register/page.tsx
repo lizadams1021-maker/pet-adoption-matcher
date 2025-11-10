@@ -16,10 +16,12 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setLoading(true); // 🔥 empieza la carga
 
     try {
       const res = await fetch("/api/auth/register", {
@@ -36,11 +38,16 @@ export default function RegisterPage() {
       }
 
       const data = await res.json();
+
+      // limpiar sessionStorage y guardar el token nuevo
+      sessionStorage.clear();
       sessionStorage.setItem("accessToken", data.accessToken);
 
       router.push("/profile");
     } catch (err) {
       setError("Something went wrong. Please try again.");
+    } finally {
+      setLoading(false); // ✅ termina la carga
     }
   };
 
@@ -96,8 +103,16 @@ export default function RegisterPage() {
 
           {error && <p className="text-sm text-destructive">{error}</p>}
 
-          <Button type="submit" className="w-full">
-            Create Account
+          <Button
+            type="submit"
+            className="w-full flex items-center justify-center gap-2"
+            disabled={loading}
+          >
+            {loading ? (
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            ) : (
+              "Create Account"
+            )}
           </Button>
         </form>
 
