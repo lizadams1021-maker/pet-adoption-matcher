@@ -51,6 +51,8 @@ export function PetCard({
           return;
         }
 
+        console.log("Full data", data.pet);
+
         if (!isCancelled) {
           setFullPet(data.pet);
 
@@ -105,7 +107,7 @@ export function PetCard({
           </h3>
         </Link>
         <p className="text-sm text-muted-foreground mb-3">
-          {pet.breed} • {pet.age} {pet.age === 1 ? "yr" : "yrs"} • {pet.gender}
+          {pet.breed} • {pet.age_group}
         </p>
 
         <div className="flex flex-wrap gap-1.5 mb-4">
