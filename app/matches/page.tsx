@@ -81,17 +81,22 @@ export default function MatchesPage() {
         const petIds = matches.map((pet) => pet.id);
         const queryParams = petIds.map((id) => `petId=${id}`).join("&");
 
-        const res = await fetch(
-          `/api/applications/check?userId=${user.id}&${queryParams}`
-        );
-        const data = await res.json();
+        if (user) {
+          const res = await fetch(
+            `/api/applications/check?userId=${user.id}&${queryParams}`
+          );
+          const data = await res.json();
 
-        const updatedSet = new Set<string>();
-        Object.entries(data).forEach(([petId, hasApplied]) => {
-          if (hasApplied) updatedSet.add(petId);
-        });
+          const updatedSet = new Set<string>();
+          Object.entries(data).forEach(([petId, hasApplied]) => {
+            if (hasApplied) updatedSet.add(petId);
+          });
 
-        setAppliedPets(updatedSet);
+          setAppliedPets(updatedSet);
+        } else {
+          console.error("[Authentication] User is not logged in:");
+          router.push("/login");
+        }
       } catch (err) {
         console.error("Error checking applications:", err);
       } finally {
