@@ -10,7 +10,6 @@ import {
   useState,
 } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/auth-context";
 import { AppLayout } from "@/components/app-layout";
 import { Users, Heart, TrendingUp, X } from "lucide-react";
 import Image from "next/image";
@@ -392,7 +391,7 @@ export default function DashboardPage() {
               }
               hover:bg-accent`}
                     >
-                      <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
+                      <div className="relative w-20 h-20 rounded-lg overflow-hidden shrink-0">
                         <Image
                           src={pet.image_url || "/placeholder.svg"}
                           alt={pet.name}
@@ -470,7 +469,7 @@ export default function DashboardPage() {
                             {/* Adopter Header */}
                             <div className="flex items-start justify-between mb-6">
                               <div className="flex items-center gap-4">
-                                <div className="relative w-16 h-16 rounded-full overflow-hidden flex-shrink-0 bg-muted">
+                                <div className="relative w-16 h-16 rounded-full overflow-hidden shrink-0 bg-muted">
                                   {adopter.image_url ? (
                                     <Image
                                       src={
@@ -506,7 +505,7 @@ export default function DashboardPage() {
                             <div className="grid grid-cols-2 gap-6 mb-6">
                               <div>
                                 <div className="flex items-start gap-2 text-sm">
-                                  <Phone className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                                  <Phone className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
                                   <div>
                                     <p className="text-muted-foreground text-xs mb-1">
                                       Phone
@@ -521,7 +520,7 @@ export default function DashboardPage() {
                               </div>
                               <div>
                                 <div className="flex items-start gap-2 text-sm">
-                                  <Mail className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                                  <Mail className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
                                   <div>
                                     <p className="text-muted-foreground text-xs mb-1">
                                       Email
@@ -534,7 +533,7 @@ export default function DashboardPage() {
                               </div>
                               <div className="col-span-2">
                                 <div className="flex items-start gap-2 text-sm">
-                                  <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                                  <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
                                   <div>
                                     <p className="text-muted-foreground text-xs mb-1">
                                       Address
@@ -558,7 +557,7 @@ export default function DashboardPage() {
                               </div>
                               <div>
                                 <div className="flex items-start gap-2 text-sm">
-                                  <Home className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                                  <Home className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
                                   <div>
                                     <p className="text-muted-foreground text-xs mb-1">
                                       Housing
@@ -573,7 +572,7 @@ export default function DashboardPage() {
                               </div>
                               <div>
                                 <div className="flex items-start gap-2 text-sm">
-                                  <Briefcase className="h-4 w-4 text-muted-foreground mt-0.5 flex-shrink-0" />
+                                  <Briefcase className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
                                   <div>
                                     <p className="text-muted-foreground text-xs mb-1">
                                       Experience
@@ -629,7 +628,7 @@ export default function DashboardPage() {
                                       key={idx}
                                       className="flex items-start gap-2 text-sm"
                                     >
-                                      <Check className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                                      <Check className="h-4 w-4 text-green-600 mt-0.5 shrink-0" />
                                       <span className="text-muted-foreground">
                                         {reason}
                                       </span>
@@ -682,7 +681,7 @@ export default function DashboardPage() {
                                           key={idx}
                                           className="flex items-start gap-2 text-sm"
                                         >
-                                          <X className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" />
+                                          <X className="h-4 w-4 text-red-600 mt-0.5 shrink-0" />
                                           <span className="text-muted-foreground">
                                             {reason}
                                           </span>

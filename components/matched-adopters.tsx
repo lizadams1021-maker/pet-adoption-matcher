@@ -1,8 +1,16 @@
-import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { MapPin, Home, Briefcase, Users, Check, Sparkles, PawPrint } from "lucide-react"
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  MapPin,
+  Home,
+  Briefcase,
+  Users,
+  Check,
+  Sparkles,
+  PawPrint,
+} from "lucide-react";
 
 const adopters = [
   {
@@ -40,7 +48,7 @@ const adopters = [
     daysAgo: "3 days ago",
     status: "Pending Review",
   },
-]
+];
 
 export function MatchedAdopters() {
   return (
@@ -50,10 +58,13 @@ export function MatchedAdopters() {
           <PawPrint className="w-5 h-5 text-purple-600" />
         </div>
         <div>
-          <h2 className="text-lg font-semibold text-foreground">Matched Adopters for Max</h2>
+          <h2 className="text-lg font-semibold text-foreground">
+            Matched Adopters for Max
+          </h2>
           <p className="text-sm text-muted-foreground">
-            German Shepherd Mix • 3 years • <span className="text-green-600 font-medium">Available</span> • ✨ 3 new
-            matches today
+            German Shepherd Mix • 3 years •{" "}
+            <span className="text-green-600 font-medium">Available</span> • ✨ 3
+            new matches today
           </p>
         </div>
       </div>
@@ -80,7 +91,9 @@ export function MatchedAdopters() {
                         #{adopter.rank} Match
                       </Badge>
                     </div>
-                    <h3 className="text-lg font-semibold text-foreground">{adopter.name}</h3>
+                    <h3 className="text-lg font-semibold text-foreground">
+                      {adopter.name}
+                    </h3>
                     {adopter.verified && (
                       <div className="flex items-center gap-1 mt-1">
                         <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-md font-medium">
@@ -104,28 +117,36 @@ export function MatchedAdopters() {
                     <MapPin className="w-4 h-4" />
                     <span className="font-medium">Location</span>
                   </div>
-                  <p className="text-sm text-foreground pl-6">{adopter.location}</p>
+                  <p className="text-sm text-foreground pl-6">
+                    {adopter.location}
+                  </p>
                 </div>
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Home className="w-4 h-4" />
                     <span className="font-medium">Housing</span>
                   </div>
-                  <p className="text-sm text-foreground pl-6">{adopter.housing}</p>
+                  <p className="text-sm text-foreground pl-6">
+                    {adopter.housing}
+                  </p>
                 </div>
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Briefcase className="w-4 h-4" />
                     <span className="font-medium">Experience</span>
                   </div>
-                  <p className="text-sm text-foreground pl-6">{adopter.experience}</p>
+                  <p className="text-sm text-foreground pl-6">
+                    {adopter.experience}
+                  </p>
                 </div>
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Users className="w-4 h-4" />
                     <span className="font-medium">Family</span>
                   </div>
-                  <p className="text-sm text-foreground pl-6">{adopter.family}</p>
+                  <p className="text-sm text-foreground pl-6">
+                    {adopter.family}
+                  </p>
                 </div>
               </div>
 
@@ -139,8 +160,10 @@ export function MatchedAdopters() {
                   <div className="space-y-2">
                     {adopter.reasons.map((reason, idx) => (
                       <div key={idx} className="flex items-start gap-2">
-                        <Check className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
-                        <span className="text-sm text-foreground">{reason}</span>
+                        <Check className="w-4 h-4 text-green-600 mt-0.5 shrink-0" />
+                        <span className="text-sm text-foreground">
+                          {reason}
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -151,7 +174,9 @@ export function MatchedAdopters() {
               <div className="flex items-center justify-between pt-4 border-t border-border">
                 <div className="text-sm text-muted-foreground">
                   Applied {adopter.appliedDate} • {adopter.daysAgo}
-                  <span className="ml-4 font-medium text-foreground">{adopter.status}</span>
+                  <span className="ml-4 font-medium text-foreground">
+                    {adopter.status}
+                  </span>
                 </div>
               </div>
 
@@ -166,7 +191,10 @@ export function MatchedAdopters() {
                 <Button variant="outline" className="w-full bg-transparent">
                   Schedule Visit
                 </Button>
-                <Button variant="outline" className="w-full text-destructive hover:text-destructive bg-transparent">
+                <Button
+                  variant="outline"
+                  className="w-full text-destructive hover:text-destructive bg-transparent"
+                >
                   Reject
                 </Button>
               </div>
@@ -175,5 +203,5 @@ export function MatchedAdopters() {
         ))}
       </div>
     </div>
-  )
+  );
 }

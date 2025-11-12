@@ -155,7 +155,7 @@ export default function AddPetPage() {
           <div className="space-y-4">
             <Label>Pet Photo</Label>
             <div className="flex items-center gap-6">
-              <div className="relative h-32 w-32 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+              <div className="relative h-32 w-32 rounded-lg overflow-hidden bg-muted shrink-0">
                 {formData.imageUrl ? (
                   <Image
                     src={formData.imageUrl || "/placeholder.svg"}

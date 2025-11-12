@@ -3,7 +3,6 @@
 import type React from "react";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -106,7 +105,6 @@ export default function ProfilePage() {
       router.push("/login");
       return;
     }
-
     // Load user profile data
     const loadProfile = async () => {
       try {
@@ -310,14 +308,7 @@ export default function ProfilePage() {
 
   const updateUser = (updatedData: Partial<typeof user>) => {
     if (!user) return;
-
-    // Actualiza el objeto user existente con los nuevos datos
     const newUser = { ...user, ...updatedData };
-
-    // Actualiza el estado local si tienes uno para user (opcional)
-    // setUser(newUser);
-
-    // Guarda el usuario actualizado en sessionStorage
     sessionStorage.setItem("user", JSON.stringify(newUser));
   };
 
@@ -366,7 +357,7 @@ export default function ProfilePage() {
           <div className="space-y-4">
             <h2 className="text-xl font-semibold">Profile Photo</h2>
             <div className="flex items-center gap-6">
-              <div className="relative h-32 w-32 rounded-full overflow-hidden bg-muted flex-shrink-0">
+              <div className="relative h-32 w-32 rounded-full overflow-hidden bg-muted shrink-0">
                 {profileImage ? (
                   <Image
                     src={profileImage || "/placeholder.svg"}

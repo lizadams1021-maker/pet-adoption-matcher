@@ -202,7 +202,7 @@ export default function MyPetsPage() {
 
   const handleCancelEdit = () => {
     setEditingPet(null);
-    setEditFormData({});
+    setEditFormData({} as typeof editFormData);
   };
 
   const handleChange = (field: string, value: any) => {
@@ -267,7 +267,7 @@ export default function MyPetsPage() {
                       <div className="space-y-4">
                         <Label>Pet Photo</Label>
                         <div className="flex items-center gap-6">
-                          <div className="relative h-32 w-32 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                          <div className="relative h-32 w-32 rounded-lg overflow-hidden bg-muted shrink-0">
                             {editFormData.imageUrl ? (
                               <Image
                                 src={
@@ -674,7 +674,7 @@ export default function MyPetsPage() {
                   </div>
                 ) : (
                   <div className="bg-card rounded-lg border p-6 flex gap-6">
-                    <div className="relative h-32 w-32 rounded-lg overflow-hidden flex-shrink-0">
+                    <div className="relative h-32 w-32 rounded-lg overflow-hidden shrink-0">
                       <Image
                         src={pet.image_url || "/placeholder.svg"}
                         alt={pet.name}
