@@ -105,7 +105,6 @@ export default function ProfilePage() {
       router.push("/login");
       return;
     }
-
     // Load user profile data
     const loadProfile = async () => {
       try {
@@ -309,14 +308,7 @@ export default function ProfilePage() {
 
   const updateUser = (updatedData: Partial<typeof user>) => {
     if (!user) return;
-
-    // Actualiza el objeto user existente con los nuevos datos
     const newUser = { ...user, ...updatedData };
-
-    // Actualiza el estado local si tienes uno para user (opcional)
-    // setUser(newUser);
-
-    // Guarda el usuario actualizado en sessionStorage
     sessionStorage.setItem("user", JSON.stringify(newUser));
   };
 
