@@ -365,7 +365,7 @@ export default function ProfilePage() {
           <div className="space-y-4">
             <h2 className="text-xl font-semibold">Profile Photo</h2>
             <div className="flex items-center gap-6">
-              <div className="relative h-32 w-32 rounded-full overflow-hidden bg-muted flex-shrink-0">
+              <div className="relative h-32 w-32 rounded-full overflow-hidden bg-muted shrink-0">
                 {profileImage ? (
                   <Image
                     src={profileImage || "/placeholder.svg"}
