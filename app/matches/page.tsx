@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getMatchesForUser } from "@/lib/matching-algorithm";
 import { AppLayout } from "@/components/app-layout";
 import { PetCard } from "@/components/pet-card";
 import Swal from "sweetalert2";

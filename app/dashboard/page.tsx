@@ -10,7 +10,6 @@ import {
   useState,
 } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/auth-context";
 import { AppLayout } from "@/components/app-layout";
 import { Users, Heart, TrendingUp, X } from "lucide-react";
 import Image from "next/image";
