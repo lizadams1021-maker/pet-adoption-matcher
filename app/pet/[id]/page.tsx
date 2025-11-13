@@ -47,11 +47,7 @@ export default function PetDetailPage() {
     fetchPet();
   }, [user, params.id, router, loading]);
 
-  if (!user || loadingPage) {
-    return null;
-  }
-
-  if (error || !pet) {
+  if (error && !pet) {
     return (
       <AppLayout>
         <div className="max-w-4xl">
@@ -76,6 +72,19 @@ export default function PetDetailPage() {
                 Add New Pet
               </Button>
             </div>
+          </div>
+        </div>
+      </AppLayout>
+    );
+  }
+
+  if (loadingPage || loading) {
+    return (
+      <AppLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+            <p className="text-muted-foreground">Loading pet data...</p>
           </div>
         </div>
       </AppLayout>
