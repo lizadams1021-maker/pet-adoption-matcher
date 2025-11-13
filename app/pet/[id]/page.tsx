@@ -31,6 +31,7 @@ export default function PetDetailPage() {
 
         if (response.ok) {
           const data = await response.json();
+          console.log("[Pet details] Pet data", data.pet);
           setPet(data.pet);
         } else {
           const errorData = await response.json();
@@ -114,8 +115,17 @@ export default function PetDetailPage() {
               <div>
                 <h1 className="text-4xl font-bold mb-2">{pet.name}</h1>
                 <p className="text-xl text-muted-foreground">
-                  {pet.breed} • {pet.age_group} • {pet.type}
+                  {pet.breed} •{" "}
+                  {pet.age_group.charAt(0).toUpperCase() +
+                    pet.age_group.slice(1)}{" "}
+                  • {pet.type.charAt(0).toUpperCase() + pet.type.slice(1)}
                 </p>
+
+                {pet.owner_name && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Posted by {pet.owner_name}
+                  </p>
+                )}
               </div>
               <Badge className="bg-green-100 text-green-700 border-green-200 capitalize">
                 {pet.status}
@@ -138,10 +148,6 @@ export default function PetDetailPage() {
               <div>
                 <h2 className="text-xl font-semibold mb-3">Characteristics</h2>
                 <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-muted-foreground">Size</p>
-                    <p className="font-medium capitalize">{pet.size}</p>
-                  </div>
                   <div>
                     <p className="text-sm text-muted-foreground">
                       Weight Range
