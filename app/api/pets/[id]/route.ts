@@ -8,8 +8,12 @@ export async function GET(req: NextRequest) {
     const petId = segments[segments.length - 1];
 
     const result = await sql`
-      SELECT * FROM pets 
-      WHERE id = ${petId}
+      SELECT 
+        pets.*, 
+        users.name AS owner_name
+      FROM pets
+      JOIN users ON pets.owner_id = users.id
+      WHERE pets.id = ${petId}
       LIMIT 1
     `;
 
