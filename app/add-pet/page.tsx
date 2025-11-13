@@ -383,7 +383,11 @@ export default function AddPetPage() {
           </div>
 
           <div className="space-y-4">
-            <div className="flex items-center space-x-2">
+            <Label className="text-base font-semibold">
+              Adoption Requirements
+            </Label>
+
+            <div className="flex items-center space-x-2 mt-2">
               <Checkbox
                 id="adoptableOutOfState"
                 checked={formData.adoptableOutOfState}
@@ -391,7 +395,7 @@ export default function AddPetPage() {
                   handleChange("adoptableOutOfState", checked)
                 }
               />
-              <Label>Can this pet be adopted out of state?</Label>
+              <Label>This pet can be adopted out of state.</Label>
             </div>
 
             <div className="flex items-center space-x-2">
@@ -400,7 +404,7 @@ export default function AddPetPage() {
                 checked={formData.onlyPet}
                 onCheckedChange={(checked) => handleChange("onlyPet", checked)}
               />
-              <Label>Does this pet need to be the only pet?</Label>
+              <Label>Needs to be the only pet.</Label>
             </div>
 
             <div className="flex items-center space-x-2">
@@ -411,7 +415,7 @@ export default function AddPetPage() {
                   handleChange("requiresFencedYard", checked)
                 }
               />
-              <Label>Does this pet require a fenced yard?</Label>
+              <Label>This pet requires a fenced yard.</Label>
             </div>
 
             <div className="flex items-center space-x-2">
@@ -422,10 +426,12 @@ export default function AddPetPage() {
                   handleChange("needsCompany", checked)
                 }
               />
-              <Label>Does this pet need someone home often?</Label>
+              <Label>
+                This pet needs someone who is home more often than not.
+              </Label>
             </div>
 
-            <Label>Compatibility</Label>
+            <Label className="text-base font-semibold">Compatibility</Label>
             <div className="space-y-3 mt-2">
               <div className="flex items-center space-x-2">
                 <Checkbox
@@ -484,7 +490,7 @@ export default function AddPetPage() {
             <Label htmlFor="description">Description</Label>
             <textarea
               id="description"
-              className="w-full min-h-[120px] px-3 py-2 rounded-md border border-input bg-background"
+              className="w-full min-h-[120px] px-3 py-2 rounded-md border border-input bg-background text-sm"
               value={formData.description}
               onChange={(e) => handleChange("description", e.target.value)}
               placeholder="Tell us about this pet's personality, habits, and special needs..."
