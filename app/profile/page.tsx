@@ -116,7 +116,7 @@ export default function ProfilePage() {
             email: userData.email || user.email,
             homePhone: userData.home_phone || "",
             cellPhone: userData.cell_phone || "",
-            gender: userData.gender || "",
+            gender: userData.gender || "M",
             birthday: userData.birthday || "",
             addressLine: userData.address_line || "",
             city: userData.city || "",
@@ -237,7 +237,6 @@ export default function ProfilePage() {
   };
 
   const handleSave = async () => {
-    // Validate form
     const validationErrors = validateProfileForm(formData);
     if (validationErrors.length > 0) {
       const errorMap: Record<string, string> = {};
@@ -265,15 +264,22 @@ export default function ProfilePage() {
 
       if (response.ok) {
         const data = await response.json();
+
+        // mostrar guardado
         setSaved(true);
         setTimeout(() => setSaved(false), 3000);
 
-        const reloadResponse = await fetch(
-          `/api/user/profile?userId=${user?.id}`
-        );
-        if (reloadResponse.ok) {
-          const reloadData = await reloadResponse.json();
-        }
+        // aquí usas el usuario REAL que viene de la DB
+        updateUser(data.user);
+
+        // opcional: recargar desde GET si quieres sobreescribir totalmente
+        /*
+      const reloadResponse = await fetch(`/api/user/profile?userId=${user?.id}`);
+      if (reloadResponse.ok) {
+        const reloadData = await reloadResponse.json();
+        updateUser(reloadData.user);
+      }
+      */
       } else {
         const error = await response.json();
         if (error.errors) {
@@ -285,12 +291,11 @@ export default function ProfilePage() {
         }
         alert("Failed to save profile: " + (error.error || "Unknown error"));
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("[v0] Save profile error:", error);
       alert("Failed to save profile: " + String(error));
     } finally {
       setSaving(false);
-      updateUser(formData);
     }
   };
 
@@ -309,6 +314,7 @@ export default function ProfilePage() {
   const updateUser = (updatedData: Partial<typeof user>) => {
     if (!user) return;
     const newUser = { ...user, ...updatedData };
+    console.log("New user", newUser);
     sessionStorage.setItem("user", JSON.stringify(newUser));
   };
 
