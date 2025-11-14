@@ -95,6 +95,8 @@ export default function AddPetPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!user || loading) return;
+
     const newPet = {
       name: formData.name,
       type: formData.type,
@@ -120,9 +122,28 @@ export default function AddPetPage() {
       specialNeeds: formData.specialNeeds || null,
       description: formData.description || null,
       imageUrl: formData.imageUrl || null,
+      ownerId: user.id,
     };
-    await addPet(newPet);
-    router.push("/my-pets");
+
+    try {
+      const res = await fetch("/api/pets", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newPet),
+      });
+
+      if (!res.ok) {
+        console.error("Error creating pet");
+        return;
+      }
+
+      const data = await res.json();
+      router.push("/my-pets");
+    } catch (error) {
+      console.error("Error sending form:", error);
+    }
   };
 
   const handleChange = (field: string, value: any) => {
