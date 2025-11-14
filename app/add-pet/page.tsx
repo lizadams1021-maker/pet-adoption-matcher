@@ -3,6 +3,7 @@
 import type React from "react";
 
 import { US_STATES } from "@/lib/us-states-cities";
+import { DOG_BREEDS, CAT_BREEDS } from "@/lib/breeds";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
@@ -53,6 +54,12 @@ export default function AddPetPage() {
     comfortableHoursAlone: "",
     ownerExperienceRequired: "",
   });
+  const breedOptions =
+    formData.type === "dog"
+      ? DOG_BREEDS
+      : formData.type === "cat"
+      ? CAT_BREEDS
+      : ["Other / Not applicable"];
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -242,12 +249,22 @@ export default function AddPetPage() {
 
             <div className="space-y-2">
               <Label htmlFor="breed">Breed *</Label>
-              <Input
-                id="breed"
+
+              <Select
                 value={formData.breed}
-                onChange={(e) => handleChange("breed", e.target.value)}
-                required
-              />
+                onValueChange={(value) => handleChange("breed", value)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {breedOptions.map((breed) => (
+                    <SelectItem key={breed} value={breed}>
+                      {breed}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
@@ -281,23 +298,6 @@ export default function AddPetPage() {
                   <SelectItem value="small">Small (0-25 lbs)</SelectItem>
                   <SelectItem value="medium">Medium (25-60 lbs)</SelectItem>
                   <SelectItem value="large">Large (60+ lbs)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="size">Size *</Label>
-              <Select
-                value={formData.size}
-                onValueChange={(value) => handleChange("size", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="small">Small</SelectItem>
-                  <SelectItem value="medium">Medium</SelectItem>
-                  <SelectItem value="large">Large</SelectItem>
                 </SelectContent>
               </Select>
             </div>
