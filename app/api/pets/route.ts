@@ -103,8 +103,6 @@ export async function GET(request: NextRequest) {
   }
 }
 
-
-
 export async function POST(request: NextRequest) {
   try {
     const petData = await request.json()
@@ -174,7 +172,6 @@ export async function POST(request: NextRequest) {
   }
 }
 
-
 export async function PUT(request: NextRequest) {
   try {
     const { petId, updates } = await request.json();
@@ -217,7 +214,6 @@ export async function PUT(request: NextRequest) {
     );
   }
 }
-
 
 export async function DELETE(request: NextRequest) {
   try {
