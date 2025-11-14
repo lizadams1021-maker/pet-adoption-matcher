@@ -36,6 +36,8 @@ export default function MatchesPage() {
       try {
         if (pageToLoad === 0) setLoadingInitial(true);
         else setLoadingMore(true);
+        console.log("Page to load", pageToLoad);
+        console.log("Limit", limit);
         const res = await fetch(
           `/api/pets?excludeOwnerId=${user.id}&page=${pageToLoad}&limit=${limit}`
         );

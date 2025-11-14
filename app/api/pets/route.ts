@@ -7,8 +7,9 @@ export async function GET(request: NextRequest) {
     const ownerId = searchParams.get("ownerId");
     const excludeOwnerId = searchParams.get("excludeOwnerId");
 
-    const limit = Number(searchParams.get("limit")) || 10;
-    const offset = Number(searchParams.get("page")) || 0;
+    const limit = Number(searchParams.get("limit")) || 6;
+    const page = Number(searchParams.get("page")) || 0;
+    const offset = page * limit;
 
     let pets;
     let totalCountResult;
