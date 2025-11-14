@@ -143,10 +143,6 @@ export default function DashboardPage() {
       });
 
       setAdopters(applicationsWithMatches);
-      console.log(
-        "[Dashboard] Application with matches",
-        applicationsWithMatches
-      );
       setTotalPages(data.totalPages || 1);
     } catch (error) {
       console.error("[v0] Fetch adopters error:", error);

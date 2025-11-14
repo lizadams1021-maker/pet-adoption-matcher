@@ -314,7 +314,6 @@ export default function ProfilePage() {
   const updateUser = (updatedData: Partial<typeof user>) => {
     if (!user) return;
     const newUser = { ...user, ...updatedData };
-    console.log("New user", newUser);
     sessionStorage.setItem("user", JSON.stringify(newUser));
   };
 

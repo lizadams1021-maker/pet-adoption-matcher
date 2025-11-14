@@ -36,8 +36,6 @@ export default function MatchesPage() {
       try {
         if (pageToLoad === 0) setLoadingInitial(true);
         else setLoadingMore(true);
-
-        console.log("[fetchPets] Applying fetching. Page to load", pageToLoad);
         const res = await fetch(
           `/api/pets?excludeOwnerId=${user.id}&page=${pageToLoad}&limit=${limit}`
         );
@@ -46,8 +44,6 @@ export default function MatchesPage() {
         if (!res.ok) throw new Error(data.error || "Failed to fetch pets");
 
         const newPets = data.pets || [];
-
-        console.log("[Fetch] Pets", newPets);
 
         setMatches(newPets);
 

@@ -36,9 +36,6 @@ export function PetCard({
   // Full pet info fetch
   useEffect(() => {
     if (!pet?.id) return;
-
-    console.log("[Matches info] Pet", pet);
-
     let isCancelled = false; // para evitar actualizar estado si se desmonta
 
     const fetchAndCalculateMatch = async () => {
@@ -52,8 +49,6 @@ export function PetCard({
           console.error("Error fetching pet:", data.error);
           return;
         }
-
-        console.log("Full data", data.pet);
 
         if (!isCancelled) {
           setFullPet(data.pet);

@@ -228,9 +228,6 @@ export function calculateCompatibility(user: any, pet: any): MatchResult {
   const negativeReasons: string[] = [];
   const maxScore = 100;
 
-  console.log("User data: ", user);
-  console.log("pet data: ", pet);
-
   // --------------------
   // Children compatibility
   // --------------------
