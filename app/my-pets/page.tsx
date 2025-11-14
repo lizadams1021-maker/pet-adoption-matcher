@@ -490,25 +490,6 @@ export default function MyPetsPage() {
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="edit-size">Size *</Label>
-                          <Select
-                            value={editFormData.size}
-                            onValueChange={(value) =>
-                              handleChange("size", value)
-                            }
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="small">Small</SelectItem>
-                              <SelectItem value="medium">Medium</SelectItem>
-                              <SelectItem value="large">Large</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div className="space-y-2">
                           <Label htmlFor="edit-energyLevel">
                             Energy Level *
                           </Label>
