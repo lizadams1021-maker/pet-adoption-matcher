@@ -1456,7 +1456,7 @@ export default function ProfilePage() {
 
           {/* Action Buttons */}
           <div className="flex gap-3 pt-4">
-            <Button onClick={handleSave} className="flex-1" disabled={saving}>
+            <Button onClick={handleSave} disabled={saving}>
               {saving ? "Saving..." : saved ? "Saved!" : "Save Profile"}
             </Button>
             <Button variant="outline" onClick={() => router.push("/matches")}>
