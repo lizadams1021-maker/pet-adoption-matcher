@@ -37,6 +37,8 @@ export function PetCard({
   useEffect(() => {
     if (!pet?.id) return;
 
+    console.log("[Matches info] Pet", pet);
+
     let isCancelled = false; // para evitar actualizar estado si se desmonta
 
     const fetchAndCalculateMatch = async () => {
@@ -133,8 +135,8 @@ export function PetCard({
             <span className="font-medium capitalize">{pet.energy_level}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-muted-foreground">Size:</span>
-            <span className="font-medium capitalize">{pet.size}</span>
+            <span className="text-muted-foreground">Weight Range:</span>
+            <span className="font-medium capitalize">{pet.weight_range}</span>
           </div>
         </div>
 

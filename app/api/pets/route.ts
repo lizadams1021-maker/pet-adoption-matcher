@@ -24,6 +24,7 @@ export async function GET(request: NextRequest) {
           p.type,
           p.energy_level, 
           p.size, 
+          p.weight_range,
           p.good_with_children,
           p.good_with_pets,
           p.status,
@@ -51,7 +52,7 @@ export async function GET(request: NextRequest) {
           p.age_group,
           p.temperament, 
           p.energy_level, 
-          p.size, 
+          p.weight_range, 
           u.name AS owner_name
         FROM pets p
         JOIN users u ON p.owner_id = u.id

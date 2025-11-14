@@ -250,6 +250,7 @@ export default function MyPetsPage() {
     };
 
     try {
+      console.log("Data to edit", updates);
       const res = await fetch("/api/pets", {
         method: "PUT",
         headers: {
