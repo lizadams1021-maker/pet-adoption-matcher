@@ -604,7 +604,7 @@ export default function MyPetsPage() {
                               handleChange("adoptableOutOfState", checked)
                             }
                           />
-                          <Label>Can this pet be adopted out of state?</Label>
+                          <Label>This pet can be adopted out of state.</Label>
                         </div>
 
                         <div className="flex items-center space-x-2">
@@ -615,7 +615,7 @@ export default function MyPetsPage() {
                               handleChange("onlyPet", checked)
                             }
                           />
-                          <Label>Does this pet need to be the only pet?</Label>
+                          <Label>Needs to be the only pet.</Label>
                         </div>
 
                         <div className="flex items-center space-x-2">
@@ -626,7 +626,7 @@ export default function MyPetsPage() {
                               handleChange("requiresFencedYard", checked)
                             }
                           />
-                          <Label>Does this pet require a fenced yard?</Label>
+                          <Label>This pet requires a fenced yard.</Label>
                         </div>
 
                         <div className="flex items-center space-x-2">
@@ -637,7 +637,10 @@ export default function MyPetsPage() {
                               handleChange("needsCompany", checked)
                             }
                           />
-                          <Label>Does this pet need someone home often?</Label>
+                          <Label>
+                            This pet needs someone who is home more often than
+                            not.
+                          </Label>
                         </div>
                         <Label>Compatibility</Label>
                         <div className="space-y-3">
