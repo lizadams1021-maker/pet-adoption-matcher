@@ -1039,12 +1039,12 @@ export default function ProfilePage() {
                     <SelectValue placeholder="Select age" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="under 2">Under 2 years</SelectItem>
-                    <SelectItem value="2-5">2-5 years</SelectItem>
-                    <SelectItem value="5-7">5-7 years</SelectItem>
-                    <SelectItem value="7-10">7-10 years</SelectItem>
-                    <SelectItem value="senior">Senior (10+ years)</SelectItem>
-                    <SelectItem value="any">Any age</SelectItem>
+                    <SelectItem value="puppy">
+                      Puppy/Kitten (0-1 year)
+                    </SelectItem>
+                    <SelectItem value="young">Young (1-3 years)</SelectItem>
+                    <SelectItem value="adult">Adult (3-7 years)</SelectItem>
+                    <SelectItem value="senior">Senior (7+ years)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1058,11 +1058,9 @@ export default function ProfilePage() {
                     <SelectValue placeholder="Select weight" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="under 25">Under 25 lbs</SelectItem>
-                    <SelectItem value="25-45">25-45 lbs</SelectItem>
-                    <SelectItem value="45-65">45-65 lbs</SelectItem>
-                    <SelectItem value="65+">65+ lbs</SelectItem>
-                    <SelectItem value="any">Any weight</SelectItem>
+                    <SelectItem value="small">Small (0-25 lbs)</SelectItem>
+                    <SelectItem value="medium">Medium (25-60 lbs)</SelectItem>
+                    <SelectItem value="large">Large (60+ lbs)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1077,9 +1075,8 @@ export default function ProfilePage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="low">Low</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="moderate">Moderate</SelectItem>
                     <SelectItem value="high">High</SelectItem>
-                    <SelectItem value="any">Any</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

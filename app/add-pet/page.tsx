@@ -350,7 +350,8 @@ export default function AddPetPage() {
                   <SelectValue placeholder="Select" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="0-8">0–8 hours</SelectItem>
+                  <SelectItem value="0-4">0–8 hours</SelectItem>
+                  <SelectItem value="4-8">4–8 hours</SelectItem>
                   <SelectItem value="8-12">8–12 hours</SelectItem>
                   <SelectItem value="12+">12+ hours</SelectItem>
                 </SelectContent>
