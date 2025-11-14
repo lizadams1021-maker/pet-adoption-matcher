@@ -1,4 +1,4 @@
-import type { User, Pet } from "./mock-data"
+
 
 export interface MatchScore {
   petId: string
@@ -402,58 +402,3 @@ export function calculateCompatibility(user: any, pet: any): MatchResult {
 }
 
 
-function calculateHousingScore(housingType: string, spaceNeeds: string): number {
-  const compatibility: Record<string, Record<string, number>> = {
-    apartment: {
-      "apartment-ok": 25,
-      "house-preferred": 15,
-      "yard-required": 5,
-    },
-    "house-no-yard": {
-      "apartment-ok": 25,
-      "house-preferred": 25,
-      "yard-required": 10,
-    },
-    "house-with-yard": {
-      "apartment-ok": 25,
-      "house-preferred": 25,
-      "yard-required": 25,
-    },
-    farm: {
-      "apartment-ok": 25,
-      "house-preferred": 25,
-      "yard-required": 25,
-    },
-  }
-  return compatibility[housingType]?.[spaceNeeds] || 10
-}
-
-function calculateActivityScore(activityLevel: string, energyLevel: string): number {
-  const compatibility: Record<string, Record<string, number>> = {
-    low: {
-      low: 20,
-      moderate: 12,
-      high: 5,
-    },
-    moderate: {
-      low: 15,
-      moderate: 20,
-      high: 15,
-    },
-    high: {
-      low: 10,
-      moderate: 15,
-      high: 20,
-    },
-  }
-  return compatibility[activityLevel]?.[energyLevel] || 10
-}
-
-export function getMatchesForUser(user: User, pets: Pet[]): (Pet & { matchScore: MatchScore })[] {
-  const matches = pets.map((pet) => ({
-    ...pet,
-    matchScore: calculateCompatibility(user, pet),
-  }))
-
-  return matches.sort((a, b) => b.matchScore.score - a.matchScore.score)
-}

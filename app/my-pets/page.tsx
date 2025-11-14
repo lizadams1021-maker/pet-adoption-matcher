@@ -23,6 +23,7 @@ import { Pencil, Trash2, X, Upload } from "lucide-react";
 import { useAuthClient } from "@/lib/useAuthClient";
 import Swal from "sweetalert2";
 import { CAT_BREEDS, DOG_BREEDS } from "@/lib/breeds";
+import { US_STATES } from "@/lib/us-states-cities";
 
 export default function MyPetsPage() {
   const { user, loading } = useAuthClient();
@@ -582,14 +583,21 @@ export default function MyPetsPage() {
 
                         <div className="space-y-2">
                           <Label htmlFor="state">State</Label>
-                          <Input
-                            id="state"
-                            placeholder="e.g., Texas"
+                          <Select
                             value={editFormData.state}
-                            onChange={(e) =>
-                              handleChange("state", e.target.value)
-                            }
-                          />
+                            onValueChange={(v) => handleChange("state", v)}
+                          >
+                            <SelectTrigger id="state">
+                              <SelectValue placeholder="Select state" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {US_STATES.map((state) => (
+                                <SelectItem key={state.code} value={state.code}>
+                                  {state.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
                       </div>
 
