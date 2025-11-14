@@ -228,6 +228,9 @@ export function calculateCompatibility(user: any, pet: any): MatchResult {
   const negativeReasons: string[] = [];
   const maxScore = 100;
 
+  console.log("User data: ", user);
+  console.log("pet data: ", pet);
+
   // --------------------
   // Children compatibility
   // --------------------
@@ -358,7 +361,7 @@ export function calculateCompatibility(user: any, pet: any): MatchResult {
   // Pet compatibility with user's pets (ok_with_animals)
   // --------------------
   if (pet.ok_with_animals !== null) {
-    if (user.has_pets && pet.ok_with_animals) {
+    if (user.has_pets) {
       score += 5;
       reasons.push("Pet is compatible with other animals.");
     } else if (user.has_pets && !pet.ok_with_animals) {
