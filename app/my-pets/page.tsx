@@ -22,6 +22,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Pencil, Trash2, X, Upload } from "lucide-react";
 import { useAuthClient } from "@/lib/useAuthClient";
 import Swal from "sweetalert2";
+import { CAT_BREEDS, DOG_BREEDS } from "@/lib/breeds";
 
 export default function MyPetsPage() {
   const { user, loading } = useAuthClient();
@@ -56,6 +57,12 @@ export default function MyPetsPage() {
     ownerExperienceRequired: "",
   });
   const [uploading, setUploading] = useState(false);
+  const editBreedOptions =
+    editFormData.type === "dog"
+      ? DOG_BREEDS
+      : editFormData.type === "cat"
+      ? CAT_BREEDS
+      : ["Other / Not applicable"];
 
   useEffect(() => {
     if (loading) return;
@@ -407,14 +414,24 @@ export default function MyPetsPage() {
 
                         <div className="space-y-2">
                           <Label htmlFor="edit-breed">Breed *</Label>
-                          <Input
-                            id="edit-breed"
+
+                          <Select
                             value={editFormData.breed}
-                            onChange={(e) =>
-                              handleChange("breed", e.target.value)
+                            onValueChange={(value) =>
+                              handleChange("breed", value)
                             }
-                            required
-                          />
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {editBreedOptions.map((breed) => (
+                                <SelectItem key={breed} value={breed}>
+                                  {breed}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
 
                         <div className="space-y-2">
