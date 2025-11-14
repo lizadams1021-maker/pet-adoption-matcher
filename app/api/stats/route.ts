@@ -34,11 +34,20 @@ export async function GET(request: NextRequest) {
     `
     const pendingApps = Number(pendingAppsResult[0].count)
 
+    const thisWeekResult = await sql`
+      SELECT COUNT(*) AS count
+      FROM user_pet_applications upa
+      JOIN pets p ON upa.pet_id = p.id
+      WHERE p.owner_id != ${ownerId}
+      AND upa.created_at >= NOW() - INTERVAL '7 days'
+    `;
+    const thisWeek = Number(thisWeekResult[0].count);
+
     return NextResponse.json({
       activePets,
       newMatches,
       pendingApps,
-      thisWeek: newMatches,
+      thisWeek,
     })
   } catch (error) {
     console.error("[v0] Fetch stats error:", error)
