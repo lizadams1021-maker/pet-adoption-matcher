@@ -36,7 +36,6 @@ export function PetCard({
   // Full pet info fetch
   useEffect(() => {
     if (!pet?.id) return;
-
     let isCancelled = false; // para evitar actualizar estado si se desmonta
 
     const fetchAndCalculateMatch = async () => {
@@ -50,8 +49,6 @@ export function PetCard({
           console.error("Error fetching pet:", data.error);
           return;
         }
-
-        console.log("Full data", data.pet);
 
         if (!isCancelled) {
           setFullPet(data.pet);
@@ -133,8 +130,8 @@ export function PetCard({
             <span className="font-medium capitalize">{pet.energy_level}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-muted-foreground">Size:</span>
-            <span className="font-medium capitalize">{pet.size}</span>
+            <span className="text-muted-foreground">Weight Range:</span>
+            <span className="font-medium capitalize">{pet.weight_range}</span>
           </div>
         </div>
 

@@ -21,10 +21,12 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { Pencil, Trash2, X, Upload } from "lucide-react";
 import { useAuthClient } from "@/lib/useAuthClient";
+import Swal from "sweetalert2";
+import { CAT_BREEDS, DOG_BREEDS } from "@/lib/breeds";
+import { US_STATES } from "@/lib/us-states-cities";
 
 export default function MyPetsPage() {
   const { user, loading } = useAuthClient();
-  const { getUserPets, deletePet, updatePet } = useAuth();
   const router = useRouter();
   const [loadingPage, setLoading] = useState(true);
   const [userPets, setUserPets] = useState<any[]>([]);
@@ -56,6 +58,12 @@ export default function MyPetsPage() {
     ownerExperienceRequired: "",
   });
   const [uploading, setUploading] = useState(false);
+  const editBreedOptions =
+    editFormData.type === "dog"
+      ? DOG_BREEDS
+      : editFormData.type === "cat"
+      ? CAT_BREEDS
+      : ["Other / Not applicable"];
 
   useEffect(() => {
     if (loading) return;
@@ -65,10 +73,14 @@ export default function MyPetsPage() {
       return;
     }
 
-    const fetchPets = async () => {
-      try {
-        setLoading(true);
+    fetchPets();
+  }, [user, router, loading]);
 
+  const fetchPets = async () => {
+    try {
+      setLoading(true);
+
+      if (user) {
         const res = await fetch(`/api/pets?ownerId=${user.id}`);
         const data = await res.json();
 
@@ -78,52 +90,93 @@ export default function MyPetsPage() {
           return;
         }
         setUserPets(data.pets || []);
-      } catch (err) {
-        console.error("Error fetching pets:", err);
-        setUserPets([]);
-      } finally {
-        setLoading(false);
       }
-    };
-
-    fetchPets();
-  }, [user, router, getUserPets, loading]);
-
-  const handleDelete = async (petId: string) => {
-    if (confirm("Are you sure you want to delete this pet?")) {
-      await deletePet(petId);
-      const pets = await getUserPets();
-      setUserPets(pets || []);
+    } catch (err) {
+      console.error("Error fetching pets:", err);
+      setUserPets([]);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleEdit = (pet: any) => {
-    setEditingPet(pet);
-    setEditFormData({
-      name: pet.name || "",
-      type: pet.type || "dog",
-      breed: pet.breed || "",
-      ageGroup: pet.age_group || "adult",
-      weightRange: pet.weight_range || "medium",
-      energyLevel: pet.energy_level || "moderate",
-      size: pet.size || "medium",
-      goodWithKids: pet.good_with_children || false,
-      goodWithCats: pet.good_with_pets || false,
-      goodWithDogs: pet.good_with_pets || false,
-      houseTrained: pet.house_trained || false,
-      specialNeeds: pet.special_needs || "",
-      description: pet.description || "",
-      imageUrl: pet.image_url || "",
-      // New fields:
-      state: pet.state || "",
-      adoptableOutOfState: pet.adoptableOutOfState || false,
-      onlyPet: pet.only_pet || false,
-      okWithAnimals: pet.ok_with_animals || [], // ["dog", "cat"]
-      requiresFencedYard: pet.requires_fenced_yard || false,
-      needsCompany: pet.needs_company || false,
-      comfortableHoursAlone: pet.comfortable_hours_alone || "",
-      ownerExperienceRequired: pet.owner_experience_required || "",
+  const handleDelete = async (petId: string) => {
+    const result = await Swal.fire({
+      title: "Delete pet?",
+      text: "This action cannot be undone.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Yes, delete",
+      cancelButtonText: "Cancel",
     });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      const res = await fetch(`/api/pets?petId=${petId}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        console.error("Failed to delete pet");
+        Swal.fire("Error", "The pet could not be deleted.", "error");
+        return;
+      }
+
+      Swal.fire("Deleted", "The pet has been removed.", "success");
+
+      await fetchPets();
+    } catch (error) {
+      console.error("Delete error:", error);
+      Swal.fire("Error", "An unexpected error occurred.", "error");
+    }
+  };
+
+  const handleEdit = async (pet: any) => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/pets/${pet.id}`, {
+        method: "GET",
+      });
+
+      if (!res.ok) {
+        console.error("Error al traer los datos del pet.");
+        return;
+      }
+
+      const data = await res.json();
+      const fullPet = data.pet;
+
+      setEditingPet(fullPet);
+
+      setEditFormData({
+        name: fullPet.name || "",
+        type: fullPet.type || "dog",
+        breed: fullPet.breed || "",
+        ageGroup: fullPet.age_group || "adult",
+        weightRange: fullPet.weight_range || "medium",
+        energyLevel: fullPet.energy_level || "moderate",
+        size: fullPet.size || "medium",
+        goodWithKids: fullPet.good_with_children || false,
+        goodWithCats: fullPet.good_with_pets || false,
+        goodWithDogs: fullPet.good_with_pets || false,
+        houseTrained: fullPet.house_trained || false,
+        specialNeeds: fullPet.special_needs || "",
+        description: fullPet.description || "",
+        imageUrl: fullPet.image_url || "",
+        state: fullPet.state || "",
+        adoptableOutOfState: fullPet.adoptable_out_of_state || false,
+        onlyPet: fullPet.only_pet || false,
+        okWithAnimals: fullPet.ok_with_animals || [],
+        requiresFencedYard: fullPet.requires_fenced_yard || false,
+        needsCompany: fullPet.needs_company || false,
+        comfortableHoursAlone: fullPet.comfortable_hours_alone || "",
+        ownerExperienceRequired: fullPet.owner_experience_required || "",
+      });
+    } catch (error) {
+      console.error("Error:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -165,38 +218,56 @@ export default function MyPetsPage() {
   };
 
   const handleSaveEdit = async () => {
-    if (editingPet) {
-      const updates = {
-        name: editFormData.name,
-        type: editFormData.type,
-        breed: editFormData.breed,
-        ageGroup: editFormData.ageGroup,
-        weightRange: editFormData.weightRange,
-        energyLevel: editFormData.energyLevel,
-        size: editFormData.size,
-        temperament: [],
-        goodWithChildren: editFormData.goodWithKids,
-        goodWithPets: editFormData.goodWithCats || editFormData.goodWithDogs,
-        houseTrained: editFormData.houseTrained,
-        specialNeeds: editFormData.specialNeeds || null,
-        description: editFormData.description || null,
-        imageUrl: editFormData.imageUrl || null,
-        state: editFormData.state || null,
-        adoptable_out_of_state: editFormData.adoptableOutOfState || false,
-        only_pet: editFormData.onlyPet || false,
-        ok_with_animals: editFormData.okWithAnimals?.length
-          ? editFormData.okWithAnimals
-          : null,
-        requires_fenced_yard: editFormData.requiresFencedYard || false,
-        needs_company: editFormData.needsCompany || false,
-        comfortable_hours_alone: editFormData.comfortableHoursAlone || null,
-        owner_experience_required: editFormData.ownerExperienceRequired || null,
-      };
+    if (!editingPet) return;
 
-      await updatePet(editingPet.id, updates);
-      const pets = await getUserPets();
-      setUserPets(pets || []);
+    const updates = {
+      name: editFormData.name,
+      type: editFormData.type,
+      breed: editFormData.breed,
+      ageGroup: editFormData.ageGroup,
+      weightRange: editFormData.weightRange,
+      energyLevel: editFormData.energyLevel,
+      size: editFormData.size,
+      temperament: [],
+      goodWithChildren: editFormData.goodWithKids,
+      goodWithPets: editFormData.goodWithCats || editFormData.goodWithDogs,
+      houseTrained: editFormData.houseTrained,
+      specialNeeds: editFormData.specialNeeds || null,
+      description: editFormData.description || null,
+      imageUrl: editFormData.imageUrl || null,
+      state: editFormData.state || null,
+      adoptable_out_of_state: editFormData.adoptableOutOfState || false,
+      only_pet: editFormData.onlyPet || false,
+      ok_with_animals: editFormData.okWithAnimals?.length
+        ? editFormData.okWithAnimals
+        : null,
+      requires_fenced_yard: editFormData.requiresFencedYard || false,
+      needs_company: editFormData.needsCompany || false,
+      comfortable_hours_alone: editFormData.comfortableHoursAlone || null,
+      owner_experience_required: editFormData.ownerExperienceRequired || null,
+    };
+
+    try {
+      const res = await fetch("/api/pets", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          petId: editingPet.id,
+          updates,
+        }),
+      });
+
+      if (!res.ok) {
+        console.error("Error updating pet");
+        return;
+      }
+
+      fetchPets();
       setEditingPet(null);
+    } catch (error) {
+      console.error("Error handling editing:", error);
     }
   };
 
@@ -342,14 +413,24 @@ export default function MyPetsPage() {
 
                         <div className="space-y-2">
                           <Label htmlFor="edit-breed">Breed *</Label>
-                          <Input
-                            id="edit-breed"
+
+                          <Select
                             value={editFormData.breed}
-                            onChange={(e) =>
-                              handleChange("breed", e.target.value)
+                            onValueChange={(value) =>
+                              handleChange("breed", value)
                             }
-                            required
-                          />
+                          >
+                            <SelectTrigger>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {editBreedOptions.map((breed) => (
+                                <SelectItem key={breed} value={breed}>
+                                  {breed}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
 
                         <div className="space-y-2">
@@ -403,25 +484,6 @@ export default function MyPetsPage() {
                               <SelectItem value="large">
                                 Large (60+ lbs)
                               </SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="edit-size">Size *</Label>
-                          <Select
-                            value={editFormData.size}
-                            onValueChange={(value) =>
-                              handleChange("size", value)
-                            }
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="small">Small</SelectItem>
-                              <SelectItem value="medium">Medium</SelectItem>
-                              <SelectItem value="large">Large</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -519,14 +581,21 @@ export default function MyPetsPage() {
 
                         <div className="space-y-2">
                           <Label htmlFor="state">State</Label>
-                          <Input
-                            id="state"
-                            placeholder="e.g., Texas"
+                          <Select
                             value={editFormData.state}
-                            onChange={(e) =>
-                              handleChange("state", e.target.value)
-                            }
-                          />
+                            onValueChange={(v) => handleChange("state", v)}
+                          >
+                            <SelectTrigger id="state">
+                              <SelectValue placeholder="Select state" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {US_STATES.map((state) => (
+                                <SelectItem key={state.code} value={state.code}>
+                                  {state.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
                         </div>
                       </div>
 
@@ -539,7 +608,7 @@ export default function MyPetsPage() {
                               handleChange("adoptableOutOfState", checked)
                             }
                           />
-                          <Label>Can this pet be adopted out of state?</Label>
+                          <Label>This pet can be adopted out of state.</Label>
                         </div>
 
                         <div className="flex items-center space-x-2">
@@ -550,7 +619,7 @@ export default function MyPetsPage() {
                               handleChange("onlyPet", checked)
                             }
                           />
-                          <Label>Does this pet need to be the only pet?</Label>
+                          <Label>Needs to be the only pet.</Label>
                         </div>
 
                         <div className="flex items-center space-x-2">
@@ -561,7 +630,7 @@ export default function MyPetsPage() {
                               handleChange("requiresFencedYard", checked)
                             }
                           />
-                          <Label>Does this pet require a fenced yard?</Label>
+                          <Label>This pet requires a fenced yard.</Label>
                         </div>
 
                         <div className="flex items-center space-x-2">
@@ -572,7 +641,10 @@ export default function MyPetsPage() {
                               handleChange("needsCompany", checked)
                             }
                           />
-                          <Label>Does this pet need someone home often?</Label>
+                          <Label>
+                            This pet needs someone who is home more often than
+                            not.
+                          </Label>
                         </div>
                         <Label>Compatibility</Label>
                         <div className="space-y-3">

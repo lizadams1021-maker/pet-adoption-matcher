@@ -7,8 +7,9 @@ export async function GET(request: NextRequest) {
     const ownerId = searchParams.get("ownerId");
     const excludeOwnerId = searchParams.get("excludeOwnerId");
 
-    const limit = Number(searchParams.get("limit")) || 10;
-    const offset = Number(searchParams.get("page")) || 0;
+    const limit = Number(searchParams.get("limit")) || 6;
+    const page = Number(searchParams.get("page")) || 0;
+    const offset = page * limit;
 
     let pets;
     let totalCountResult;
@@ -24,6 +25,7 @@ export async function GET(request: NextRequest) {
           p.type,
           p.energy_level, 
           p.size, 
+          p.weight_range,
           p.good_with_children,
           p.good_with_pets,
           p.status,
@@ -51,7 +53,7 @@ export async function GET(request: NextRequest) {
           p.age_group,
           p.temperament, 
           p.energy_level, 
-          p.size, 
+          p.weight_range, 
           u.name AS owner_name
         FROM pets p
         JOIN users u ON p.owner_id = u.id
@@ -102,8 +104,6 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
-
 
 export async function POST(request: NextRequest) {
   try {
@@ -174,7 +174,6 @@ export async function POST(request: NextRequest) {
   }
 }
 
-
 export async function PUT(request: NextRequest) {
   try {
     const { petId, updates } = await request.json();
@@ -217,7 +216,6 @@ export async function PUT(request: NextRequest) {
     );
   }
 }
-
 
 export async function DELETE(request: NextRequest) {
   try {

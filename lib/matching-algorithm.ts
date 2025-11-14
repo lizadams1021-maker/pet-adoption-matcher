@@ -1,4 +1,4 @@
-import type { User, Pet } from "./mock-data"
+
 
 export interface MatchScore {
   petId: string
@@ -18,6 +18,15 @@ type MatchResult = {
   reasons: string[];
   negativeReasons: string[];
 };
+
+export function parseHoursRange(range: string | null): number | null {
+  if (!range) return null;
+  if (range.endsWith("+")) {
+    return parseInt(range.replace("+", ""), 10);
+  }
+  const parts = range.split("-").map(Number);
+  return parts[0]; // tomamos el valor mínimo del rango
+}
 
 export function calculateApplicationMatches(applications: Application[]): MatchResult[] {
   return applications.map(({ user, pet }) => {
@@ -167,22 +176,24 @@ export function calculateApplicationMatches(applications: Application[]): MatchR
     // --------------------
     // Needs company / alone time
     // --------------------
-    if (pet.needs_company) {
-      if (user.works_outside_home && user.hours_home_alone !== null && user.hours_home_alone <= 4) {
+      const userHours = parseHoursRange(user.hours_home_alone);
+      const petHours = parseHoursRange(pet.comfortable_hours_alone);
+
+      if (
+        user.works_outside_home &&
+        userHours !== null &&
+        petHours !== null &&
+        userHours <= petHours
+      ) {
         score += 5;
-        reasons.push("User's home situation provides company for the pet.");
+        reasons.push(
+          `User's home situation provides company for ${pet.name} (user: ${userHours}h, pet comfortable: ${petHours}h).`
+        );
       } else {
-        negativeReasons.push("Pet may not get enough company at user's home.");
+        negativeReasons.push(
+          `${pet.name} may not get enough company at user's home (user: ${userHours}h, pet comfortable: ${petHours}h).`
+        );
       }
-    }
-    if (pet.comfortable_hours_alone !== null) {
-      if (user.hours_home_alone !== null && user.hours_home_alone <= pet.comfortable_hours_alone) {
-        score += 5;
-        reasons.push("User's schedule aligns with pet's comfort being alone.");
-      } else {
-        negativeReasons.push("User may be away too long for pet's comfort.");
-      }
-    }
 
     // --------------------
     // Owner experience required
@@ -347,7 +358,7 @@ export function calculateCompatibility(user: any, pet: any): MatchResult {
   // Pet compatibility with user's pets (ok_with_animals)
   // --------------------
   if (pet.ok_with_animals !== null) {
-    if (user.has_pets && pet.ok_with_animals) {
+    if (user.has_pets) {
       score += 5;
       reasons.push("Pet is compatible with other animals.");
     } else if (user.has_pets && !pet.ok_with_animals) {
@@ -358,22 +369,24 @@ export function calculateCompatibility(user: any, pet: any): MatchResult {
   // --------------------
   // Needs company / alone time
   // --------------------
-  if (pet.needs_company) {
-    if (user.works_outside_home && user.hours_home_alone !== null && user.hours_home_alone <= 4) {
+    const userHours = parseHoursRange(user.hours_home_alone);
+    const petHours = parseHoursRange(pet.comfortable_hours_alone);
+
+    if (
+      user.works_outside_home &&
+      userHours !== null &&
+      petHours !== null &&
+      userHours <= petHours
+    ) {
       score += 5;
-      reasons.push("User's home situation provides company for the pet.");
+      reasons.push(
+        `User's home situation provides company for ${pet.name} (user: ${userHours}h, pet comfortable: ${petHours}h).`
+      );
     } else {
-      negativeReasons.push("Pet may not get enough company at user's home.");
+      negativeReasons.push(
+        `${pet.name} may not get enough company at user's home (user: ${userHours}h, pet comfortable: ${petHours}h).`
+      );
     }
-  }
-  if (pet.comfortable_hours_alone !== null) {
-    if (user.hours_home_alone !== null && user.hours_home_alone <= pet.comfortable_hours_alone) {
-      score += 5;
-      reasons.push("User's schedule aligns with pet's comfort being alone.");
-    } else {
-      negativeReasons.push("User may be away too long for pet's comfort.");
-    }
-  }
 
   // --------------------
   // Owner experience required
@@ -399,61 +412,8 @@ export function calculateCompatibility(user: any, pet: any): MatchResult {
     reasons,
     negativeReasons,
   };
+  
 }
 
 
-function calculateHousingScore(housingType: string, spaceNeeds: string): number {
-  const compatibility: Record<string, Record<string, number>> = {
-    apartment: {
-      "apartment-ok": 25,
-      "house-preferred": 15,
-      "yard-required": 5,
-    },
-    "house-no-yard": {
-      "apartment-ok": 25,
-      "house-preferred": 25,
-      "yard-required": 10,
-    },
-    "house-with-yard": {
-      "apartment-ok": 25,
-      "house-preferred": 25,
-      "yard-required": 25,
-    },
-    farm: {
-      "apartment-ok": 25,
-      "house-preferred": 25,
-      "yard-required": 25,
-    },
-  }
-  return compatibility[housingType]?.[spaceNeeds] || 10
-}
 
-function calculateActivityScore(activityLevel: string, energyLevel: string): number {
-  const compatibility: Record<string, Record<string, number>> = {
-    low: {
-      low: 20,
-      moderate: 12,
-      high: 5,
-    },
-    moderate: {
-      low: 15,
-      moderate: 20,
-      high: 15,
-    },
-    high: {
-      low: 10,
-      moderate: 15,
-      high: 20,
-    },
-  }
-  return compatibility[activityLevel]?.[energyLevel] || 10
-}
-
-export function getMatchesForUser(user: User, pets: Pet[]): (Pet & { matchScore: MatchScore })[] {
-  const matches = pets.map((pet) => ({
-    ...pet,
-    matchScore: calculateCompatibility(user, pet),
-  }))
-
-  return matches.sort((a, b) => b.matchScore.score - a.matchScore.score)
-}

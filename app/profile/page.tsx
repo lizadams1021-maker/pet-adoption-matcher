@@ -116,7 +116,7 @@ export default function ProfilePage() {
             email: userData.email || user.email,
             homePhone: userData.home_phone || "",
             cellPhone: userData.cell_phone || "",
-            gender: userData.gender || "",
+            gender: userData.gender || "M",
             birthday: userData.birthday || "",
             addressLine: userData.address_line || "",
             city: userData.city || "",
@@ -237,7 +237,6 @@ export default function ProfilePage() {
   };
 
   const handleSave = async () => {
-    // Validate form
     const validationErrors = validateProfileForm(formData);
     if (validationErrors.length > 0) {
       const errorMap: Record<string, string> = {};
@@ -265,15 +264,22 @@ export default function ProfilePage() {
 
       if (response.ok) {
         const data = await response.json();
+
+        // mostrar guardado
         setSaved(true);
         setTimeout(() => setSaved(false), 3000);
 
-        const reloadResponse = await fetch(
-          `/api/user/profile?userId=${user?.id}`
-        );
-        if (reloadResponse.ok) {
-          const reloadData = await reloadResponse.json();
-        }
+        // aquí usas el usuario REAL que viene de la DB
+        updateUser(data.user);
+
+        // opcional: recargar desde GET si quieres sobreescribir totalmente
+        /*
+      const reloadResponse = await fetch(`/api/user/profile?userId=${user?.id}`);
+      if (reloadResponse.ok) {
+        const reloadData = await reloadResponse.json();
+        updateUser(reloadData.user);
+      }
+      */
       } else {
         const error = await response.json();
         if (error.errors) {
@@ -285,12 +291,11 @@ export default function ProfilePage() {
         }
         alert("Failed to save profile: " + (error.error || "Unknown error"));
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("[v0] Save profile error:", error);
       alert("Failed to save profile: " + String(error));
     } finally {
       setSaving(false);
-      updateUser(formData);
     }
   };
 
@@ -1033,12 +1038,12 @@ export default function ProfilePage() {
                     <SelectValue placeholder="Select age" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="under 2">Under 2 years</SelectItem>
-                    <SelectItem value="2-5">2-5 years</SelectItem>
-                    <SelectItem value="5-7">5-7 years</SelectItem>
-                    <SelectItem value="7-10">7-10 years</SelectItem>
-                    <SelectItem value="senior">Senior (10+ years)</SelectItem>
-                    <SelectItem value="any">Any age</SelectItem>
+                    <SelectItem value="puppy">
+                      Puppy/Kitten (0-1 year)
+                    </SelectItem>
+                    <SelectItem value="young">Young (1-3 years)</SelectItem>
+                    <SelectItem value="adult">Adult (3-7 years)</SelectItem>
+                    <SelectItem value="senior">Senior (7+ years)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1052,11 +1057,9 @@ export default function ProfilePage() {
                     <SelectValue placeholder="Select weight" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="under 25">Under 25 lbs</SelectItem>
-                    <SelectItem value="25-45">25-45 lbs</SelectItem>
-                    <SelectItem value="45-65">45-65 lbs</SelectItem>
-                    <SelectItem value="65+">65+ lbs</SelectItem>
-                    <SelectItem value="any">Any weight</SelectItem>
+                    <SelectItem value="small">Small (0-25 lbs)</SelectItem>
+                    <SelectItem value="medium">Medium (25-60 lbs)</SelectItem>
+                    <SelectItem value="large">Large (60+ lbs)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1071,9 +1074,8 @@ export default function ProfilePage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="low">Low</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="moderate">Moderate</SelectItem>
                     <SelectItem value="high">High</SelectItem>
-                    <SelectItem value="any">Any</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1450,7 +1452,7 @@ export default function ProfilePage() {
 
           {/* Action Buttons */}
           <div className="flex gap-3 pt-4">
-            <Button onClick={handleSave} className="flex-1" disabled={saving}>
+            <Button onClick={handleSave} disabled={saving}>
               {saving ? "Saving..." : saved ? "Saved!" : "Save Profile"}
             </Button>
             <Button variant="outline" onClick={() => router.push("/matches")}>
