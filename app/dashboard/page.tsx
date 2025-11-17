@@ -347,7 +347,7 @@ export default function DashboardPage() {
                 </div>
                 <div>
                   <p className="text-3xl font-bold">{stats.thisWeek - 1}</p>
-                  <p className="text-sm text-muted-foreground">New This Week</p>
+                  <p className="text-sm text-muted-foreground">This Week</p>
                 </div>
               </div>
             </div>

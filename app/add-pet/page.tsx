@@ -6,7 +6,7 @@ import { US_STATES } from "@/lib/us-states-cities";
 import { DOG_BREEDS, CAT_BREEDS } from "@/lib/breeds";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/auth-context";
+import Swal from "sweetalert2";
 import { AppLayout } from "@/components/app-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,7 +25,6 @@ import { useAuthClient } from "@/lib/useAuthClient";
 
 export default function AddPetPage() {
   const { user, loading } = useAuthClient();
-  const { addPet } = useAuth();
   const router = useRouter();
   const [uploading, setUploading] = useState(false);
   const [formData, setFormData] = useState({
@@ -77,15 +76,23 @@ export default function AddPetPage() {
 
       if (!response.ok) {
         let errorMessage = "Failed to upload image";
+
         try {
           const error = await response.json();
           errorMessage = error.error || errorMessage;
-        } catch (e) {
-          // Response is not JSON, try to get text
+        } catch {
+          // Response is not JSON
           const text = await response.text();
           errorMessage = text || errorMessage;
         }
-        alert(errorMessage);
+
+        // Mostrar error con SweetAlert2
+        Swal.fire({
+          icon: "error",
+          title: "Upload Error",
+          text: errorMessage,
+        });
+
         return;
       }
 
@@ -93,7 +100,11 @@ export default function AddPetPage() {
       setFormData((prev) => ({ ...prev, imageUrl: data.imageUrl }));
     } catch (error) {
       console.error("[v0] Image upload error:", error);
-      alert("Failed to upload image: " + String(error));
+      Swal.fire({
+        icon: "error",
+        title: "Upload Error",
+        text: "Failed to upload image: " + String(error),
+      });
     } finally {
       setUploading(false);
     }

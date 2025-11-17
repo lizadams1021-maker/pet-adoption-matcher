@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import Swal from "sweetalert2";
 import {
   Select,
   SelectContent,
@@ -215,14 +216,27 @@ export default function ProfilePage() {
 
       if (!response.ok) {
         let errorMessage = "Failed to upload image";
+
         try {
           const error = await response.json();
           errorMessage = error.error || errorMessage;
-        } catch (e) {
+
+          // Detecta si es error de tamaño
+          if (errorMessage.toLowerCase().includes("file too large")) {
+            errorMessage =
+              "The file is too large. Maximum allowed size exceeded.";
+          }
+        } catch {
           const text = await response.text();
           errorMessage = text || errorMessage;
         }
-        alert(errorMessage);
+
+        Swal.fire({
+          icon: "error",
+          title: "Upload Error",
+          text: errorMessage,
+        });
+
         return;
       }
 
@@ -230,7 +244,11 @@ export default function ProfilePage() {
       setProfileImage(data.imageUrl);
     } catch (error) {
       console.error("[v0] Image upload error:", error);
-      alert("Failed to upload image: " + String(error));
+      Swal.fire({
+        icon: "error",
+        title: "Upload Error",
+        text: "Failed to upload image: " + String(error),
+      });
     } finally {
       setUploading(false);
     }
