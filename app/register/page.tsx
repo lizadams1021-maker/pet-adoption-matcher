@@ -20,7 +20,14 @@ export default function RegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    setLoading(true); // 🔥 load starts
+
+    // Validación local
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters long.");
+      return;
+    }
+
+    setLoading(true);
 
     try {
       const res = await fetch("/api/auth/register", {
@@ -38,7 +45,6 @@ export default function RegisterPage() {
 
       const data = await res.json();
 
-      // clean session storage en bring new token
       sessionStorage.clear();
       sessionStorage.setItem("accessToken", data.accessToken);
 
@@ -46,7 +52,7 @@ export default function RegisterPage() {
     } catch (err) {
       setError("Something went wrong. Please try again.");
     } finally {
-      setLoading(false); // ✅ termina la carga
+      setLoading(false);
     }
   };
 

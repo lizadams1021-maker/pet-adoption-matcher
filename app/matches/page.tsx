@@ -238,7 +238,7 @@ export default function MatchesPage() {
 
         {/* Paginador */}
         {!loadingInitial && totalPages > 1 && (
-          <div className="flex justify-center gap-4 mt-8">
+          <div className="flex items-center justify-center gap-4 mt-8">
             <Button
               variant="outline"
               disabled={page === 0}
