@@ -304,22 +304,6 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* New Matches */}
-            <div
-              className="bg-card rounded-lg border p-6 cursor-pointer hover:shadow-md transition"
-              onClick={() => router.push("/matches")}
-            >
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-green-100 rounded-lg">
-                  <Heart className="h-6 w-6 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-3xl font-bold">{stats.newMatches - 1}</p>
-                  <p className="text-sm text-muted-foreground">New Matches</p>
-                </div>
-              </div>
-            </div>
-
             {/* Pending Apps */}
             <div
               className="bg-card rounded-lg border p-6 cursor-pointer hover:shadow-md transition"
@@ -336,6 +320,22 @@ export default function DashboardPage() {
               </div>
             </div>
 
+            {/* New Matches */}
+            <div
+              className="bg-card rounded-lg border p-6 cursor-pointer hover:shadow-md transition"
+              onClick={() => router.push("/matches")}
+            >
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-green-100 rounded-lg">
+                  <Heart className="h-6 w-6 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-3xl font-bold">{stats.newMatches - 1}</p>
+                  <p className="text-sm text-muted-foreground">Matches</p>
+                </div>
+              </div>
+            </div>
+
             {/* This Week */}
             <div
               className="bg-card rounded-lg border p-6 cursor-pointer hover:shadow-md transition"
@@ -347,7 +347,7 @@ export default function DashboardPage() {
                 </div>
                 <div>
                   <p className="text-3xl font-bold">{stats.thisWeek - 1}</p>
-                  <p className="text-sm text-muted-foreground">This Week</p>
+                  <p className="text-sm text-muted-foreground">New This Week</p>
                 </div>
               </div>
             </div>

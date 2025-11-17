@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
         WHERE owner_id = ${ownerId}
       `;
     } else if (excludeOwnerId) {
-      // We exclude ownerId and not displaye adopted pets
+      // We exclude ownerId and not display adopted pets
       pets = await sql`
         SELECT 
           p.id, 
