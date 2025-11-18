@@ -27,6 +27,23 @@ export default function AddPetPage() {
   const { user, loading } = useAuthClient();
   const router = useRouter();
   const [uploading, setUploading] = useState(false);
+  const weightOptions = {
+    dog: [
+      { value: "small", label: "Small (0-25 lbs)" },
+      { value: "medium", label: "Medium (25-60 lbs)" },
+      { value: "large", label: "Large (60+ lbs)" },
+    ],
+    cat: [
+      { value: "small", label: "Small (0-10 lbs)" },
+      { value: "medium", label: "Medium (10-20 lbs)" },
+      { value: "large", label: "Large (20+ lbs)" },
+    ],
+    other: [
+      { value: "small", label: "Small" },
+      { value: "medium", label: "Medium" },
+      { value: "large", label: "Large" },
+    ],
+  };
   const [formData, setFormData] = useState({
     name: "",
     type: "dog",
@@ -169,6 +186,10 @@ export default function AddPetPage() {
   };
 
   useEffect(() => {
+    setFormData((prev) => ({ ...prev, weightRange: "" }));
+  }, [formData.type]);
+
+  useEffect(() => {
     if (loading) return;
 
     if (!user) {
@@ -301,14 +322,18 @@ export default function AddPetPage() {
               <Select
                 value={formData.weightRange}
                 onValueChange={(value) => handleChange("weightRange", value)}
+                disabled={!formData.type} // opcional: deshabilitar si no se selecciona tipo
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="small">Small (0-25 lbs)</SelectItem>
-                  <SelectItem value="medium">Medium (25-60 lbs)</SelectItem>
-                  <SelectItem value="large">Large (60+ lbs)</SelectItem>
+                  {formData.type &&
+                    weightOptions[formData.type].map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
