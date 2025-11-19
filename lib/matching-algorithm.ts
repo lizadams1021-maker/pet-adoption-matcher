@@ -189,10 +189,6 @@ export function calculateApplicationMatches(applications: Application[]): MatchR
         reasons.push(
           `User's home situation provides company for ${pet.name} (user: ${userHours}h, pet comfortable: ${petHours}h).`
         );
-      } else {
-        negativeReasons.push(
-          `${pet.name} may not get enough company at user's home (user: ${userHours}h, pet comfortable: ${petHours}h).`
-        );
       }
 
     // --------------------
@@ -381,10 +377,6 @@ export function calculateCompatibility(user: any, pet: any): MatchResult {
       score += 5;
       reasons.push(
         `User's home situation provides company for ${pet.name} (user: ${userHours}h, pet comfortable: ${petHours}h).`
-      );
-    } else {
-      negativeReasons.push(
-        `${pet.name} may not get enough company at user's home (user: ${userHours}h, pet comfortable: ${petHours}h).`
       );
     }
 
