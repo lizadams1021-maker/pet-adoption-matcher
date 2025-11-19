@@ -133,23 +133,7 @@ export function calculateApplicationMatches(applications: Application[]): MatchR
     if (user.preferred_weight && user.preferred_weight === pet.weight_range) {
       score += 5;
       reasons.push("Pet's weight matches user's preference.");
-    }
-
-    // --------------------
-    // Temperament
-    // --------------------
-    const temperamentMatches = pet.temperament.filter((t: string) =>
-      (user.preferred_temperament || []).includes(t)
-    ).length;
-    const temperamentScore = Math.min(10, temperamentMatches * 3);
-    score += temperamentScore;
-    if (temperamentScore >= 6) {
-      reasons.push("Pet temperament aligns well with user's preference.");
-    } else if (temperamentScore > 0) {
-      reasons.push("Pet temperament partially matches user's preference.");
-    } else {
-      negativeReasons.push("Pet temperament may not match user's preference.");
-    }
+    }  
 
     // --------------------
     // Only pet requirement
@@ -188,10 +172,6 @@ export function calculateApplicationMatches(applications: Application[]): MatchR
         score += 5;
         reasons.push(
           `User's home situation provides company for ${pet.name} (user: ${userHours}h, pet comfortable: ${petHours}h).`
-        );
-      } else {
-        negativeReasons.push(
-          `${pet.name} may not get enough company at user's home (user: ${userHours}h, pet comfortable: ${petHours}h).`
         );
       }
 
@@ -329,22 +309,6 @@ export function calculateCompatibility(user: any, pet: any): MatchResult {
   }
 
   // --------------------
-  // Temperament
-  // --------------------
-  const temperamentMatches = pet.temperament.filter((t: string) =>
-    (user.preferred_temperament || []).includes(t)
-  ).length;
-  const temperamentScore = Math.min(10, temperamentMatches * 3);
-  score += temperamentScore;
-  if (temperamentScore >= 6) {
-    reasons.push("Pet temperament aligns well with user's preference.");
-  } else if (temperamentScore > 0) {
-    reasons.push("Pet temperament partially matches user's preference.");
-  } else {
-    negativeReasons.push("Pet temperament may not match user's preference.");
-  }
-
-  // --------------------
   // Only pet requirement
   // --------------------
   if (pet.only_pet && user.has_pets) {
@@ -381,10 +345,6 @@ export function calculateCompatibility(user: any, pet: any): MatchResult {
       score += 5;
       reasons.push(
         `User's home situation provides company for ${pet.name} (user: ${userHours}h, pet comfortable: ${petHours}h).`
-      );
-    } else {
-      negativeReasons.push(
-        `${pet.name} may not get enough company at user's home (user: ${userHours}h, pet comfortable: ${petHours}h).`
       );
     }
 
