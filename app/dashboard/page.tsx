@@ -142,6 +142,7 @@ export default function DashboardPage() {
         };
       });
 
+      console.log("[Dashboard] Adopters: ", applicationsWithMatches);
       setAdopters(applicationsWithMatches);
       setTotalPages(data.totalPages || 1);
     } catch (error) {
@@ -304,22 +305,6 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* New Matches */}
-            <div
-              className="bg-card rounded-lg border p-6 cursor-pointer hover:shadow-md transition"
-              onClick={() => router.push("/matches")}
-            >
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-green-100 rounded-lg">
-                  <Heart className="h-6 w-6 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-3xl font-bold">{stats.newMatches - 1}</p>
-                  <p className="text-sm text-muted-foreground">New Matches</p>
-                </div>
-              </div>
-            </div>
-
             {/* Pending Apps */}
             <div
               className="bg-card rounded-lg border p-6 cursor-pointer hover:shadow-md transition"
@@ -332,6 +317,22 @@ export default function DashboardPage() {
                 <div>
                   <p className="text-3xl font-bold">{stats.pendingApps}</p>
                   <p className="text-sm text-muted-foreground">Pending Apps</p>
+                </div>
+              </div>
+            </div>
+
+            {/* New Matches */}
+            <div
+              className="bg-card rounded-lg border p-6 cursor-pointer hover:shadow-md transition"
+              onClick={() => router.push("/matches")}
+            >
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-green-100 rounded-lg">
+                  <Heart className="h-6 w-6 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-3xl font-bold">{stats.newMatches - 1}</p>
+                  <p className="text-sm text-muted-foreground">Matches</p>
                 </div>
               </div>
             </div>
@@ -514,6 +515,7 @@ export default function DashboardPage() {
                                   </div>
                                 </div>
                               </div>
+
                               <div>
                                 <div className="flex items-start gap-2 text-sm">
                                   <Mail className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
@@ -527,7 +529,8 @@ export default function DashboardPage() {
                                   </div>
                                 </div>
                               </div>
-                              <div className="col-span-2">
+
+                              <div>
                                 <div className="flex items-start gap-2 text-sm">
                                   <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
                                   <div>
@@ -551,6 +554,7 @@ export default function DashboardPage() {
                                   </div>
                                 </div>
                               </div>
+
                               <div>
                                 <div className="flex items-start gap-2 text-sm">
                                   <Home className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
@@ -561,20 +565,6 @@ export default function DashboardPage() {
                                     <p className="font-medium capitalize">
                                       {adopter.home_type ||
                                         adopter.housing_type ||
-                                        "Not specified"}
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
-                              <div>
-                                <div className="flex items-start gap-2 text-sm">
-                                  <Briefcase className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                                  <div>
-                                    <p className="text-muted-foreground text-xs mb-1">
-                                      Experience
-                                    </p>
-                                    <p className="font-medium capitalize">
-                                      {adopter.experience_level ||
                                         "Not specified"}
                                     </p>
                                   </div>

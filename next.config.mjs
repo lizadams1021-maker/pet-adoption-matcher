@@ -6,6 +6,7 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-}
+  devIndicators: false, // ✅ this hides the dev bubble
+};
 
-export default nextConfig
+export default nextConfig;
