@@ -6,7 +6,7 @@ import { US_STATES } from "@/lib/us-states-cities";
 import { DOG_BREEDS, CAT_BREEDS } from "@/lib/breeds";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/auth-context";
+import Swal from "sweetalert2";
 import { AppLayout } from "@/components/app-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,9 +25,25 @@ import { useAuthClient } from "@/lib/useAuthClient";
 
 export default function AddPetPage() {
   const { user, loading } = useAuthClient();
-  const { addPet } = useAuth();
   const router = useRouter();
   const [uploading, setUploading] = useState(false);
+  const weightOptions = {
+    dog: [
+      { value: "small", label: "Small (0-25 lbs)" },
+      { value: "medium", label: "Medium (25-60 lbs)" },
+      { value: "large", label: "Large (60+ lbs)" },
+    ],
+    cat: [
+      { value: "small", label: "Small (0-10 lbs)" },
+      { value: "medium", label: "Medium (10-20 lbs)" },
+      { value: "large", label: "Large (20+ lbs)" },
+    ],
+    other: [
+      { value: "small", label: "Small" },
+      { value: "medium", label: "Medium" },
+      { value: "large", label: "Large" },
+    ],
+  };
   const [formData, setFormData] = useState({
     name: "",
     type: "dog",
@@ -77,15 +93,23 @@ export default function AddPetPage() {
 
       if (!response.ok) {
         let errorMessage = "Failed to upload image";
+
         try {
           const error = await response.json();
           errorMessage = error.error || errorMessage;
-        } catch (e) {
-          // Response is not JSON, try to get text
+        } catch {
+          // Response is not JSON
           const text = await response.text();
           errorMessage = text || errorMessage;
         }
-        alert(errorMessage);
+
+        // Mostrar error con SweetAlert2
+        Swal.fire({
+          icon: "error",
+          title: "Upload Error",
+          text: errorMessage,
+        });
+
         return;
       }
 
@@ -93,7 +117,11 @@ export default function AddPetPage() {
       setFormData((prev) => ({ ...prev, imageUrl: data.imageUrl }));
     } catch (error) {
       console.error("[v0] Image upload error:", error);
-      alert("Failed to upload image: " + String(error));
+      Swal.fire({
+        icon: "error",
+        title: "Upload Error",
+        text: "Failed to upload image: " + String(error),
+      });
     } finally {
       setUploading(false);
     }
@@ -156,6 +184,10 @@ export default function AddPetPage() {
   const handleChange = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
+
+  useEffect(() => {
+    setFormData((prev) => ({ ...prev, weightRange: "" }));
+  }, [formData.type]);
 
   useEffect(() => {
     if (loading) return;
@@ -290,14 +322,18 @@ export default function AddPetPage() {
               <Select
                 value={formData.weightRange}
                 onValueChange={(value) => handleChange("weightRange", value)}
+                disabled={!formData.type} // opcional: deshabilitar si no se selecciona tipo
               >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="small">Small (0-25 lbs)</SelectItem>
-                  <SelectItem value="medium">Medium (25-60 lbs)</SelectItem>
-                  <SelectItem value="large">Large (60+ lbs)</SelectItem>
+                  {formData.type &&
+                    weightOptions[formData.type].map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>

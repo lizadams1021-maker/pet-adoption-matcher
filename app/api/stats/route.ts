@@ -17,12 +17,12 @@ export async function GET(request: NextRequest) {
     `
     const activePets = Number(activePetsResult[0].count)
 
-    // Get new matches count (applications from last 7 days)
+    // Get new matches count (pets not owned by this user and still available)
     const newMatchesResult = await sql`
-      SELECT COUNT(*) as count 
-      FROM user_pet_applications upa
-      JOIN pets p ON upa.pet_id = p.id
-      WHERE p.owner_id != ${ownerId} 
+      SELECT COUNT(*) AS count
+      FROM pets
+      WHERE owner_id != ${ownerId} 
+        AND status != 'adopted'
     `
     const newMatches = Number(newMatchesResult[0].count)
 
@@ -34,14 +34,15 @@ export async function GET(request: NextRequest) {
     `
     const pendingApps = Number(pendingAppsResult[0].count)
 
+    // Get pets added in the last 7 days not owned by this user
     const thisWeekResult = await sql`
       SELECT COUNT(*) AS count
-      FROM user_pet_applications upa
-      JOIN pets p ON upa.pet_id = p.id
-      WHERE p.owner_id != ${ownerId}
-      AND upa.created_at >= NOW() - INTERVAL '7 days'
-    `;
-    const thisWeek = Number(thisWeekResult[0].count);
+      FROM pets
+      WHERE owner_id != ${ownerId} 
+        AND status != 'adopted'
+        AND created_at >= NOW() - INTERVAL '7 days'
+    `
+    const thisWeek = Number(thisWeekResult[0].count)
 
     return NextResponse.json({
       activePets,
