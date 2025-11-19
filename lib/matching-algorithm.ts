@@ -133,23 +133,7 @@ export function calculateApplicationMatches(applications: Application[]): MatchR
     if (user.preferred_weight && user.preferred_weight === pet.weight_range) {
       score += 5;
       reasons.push("Pet's weight matches user's preference.");
-    }
-
-    // --------------------
-    // Temperament
-    // --------------------
-    const temperamentMatches = pet.temperament.filter((t: string) =>
-      (user.preferred_temperament || []).includes(t)
-    ).length;
-    const temperamentScore = Math.min(10, temperamentMatches * 3);
-    score += temperamentScore;
-    if (temperamentScore >= 6) {
-      reasons.push("Pet temperament aligns well with user's preference.");
-    } else if (temperamentScore > 0) {
-      reasons.push("Pet temperament partially matches user's preference.");
-    } else {
-      negativeReasons.push("Pet temperament may not match user's preference.");
-    }
+    }  
 
     // --------------------
     // Only pet requirement
@@ -322,22 +306,6 @@ export function calculateCompatibility(user: any, pet: any): MatchResult {
   if (user.preferred_weight && user.preferred_weight === pet.weight_range) {
     score += 5;
     reasons.push("Pet's weight matches user's preference.");
-  }
-
-  // --------------------
-  // Temperament
-  // --------------------
-  const temperamentMatches = pet.temperament.filter((t: string) =>
-    (user.preferred_temperament || []).includes(t)
-  ).length;
-  const temperamentScore = Math.min(10, temperamentMatches * 3);
-  score += temperamentScore;
-  if (temperamentScore >= 6) {
-    reasons.push("Pet temperament aligns well with user's preference.");
-  } else if (temperamentScore > 0) {
-    reasons.push("Pet temperament partially matches user's preference.");
-  } else {
-    negativeReasons.push("Pet temperament may not match user's preference.");
   }
 
   // --------------------
