@@ -89,7 +89,9 @@ export default function MyPetsPage() {
           setUserPets([]);
           return;
         }
+        console.log("[My pets] pets from api:", data.pets);
         setUserPets(data.pets || []);
+        console.log("[My pets] pets:", userPets);
       }
     } catch (err) {
       console.error("Error fetching pets:", err);
@@ -798,7 +800,7 @@ export default function MyPetsPage() {
                         <div>
                           <span className="text-muted-foreground">Size:</span>
                           <span className="ml-2 font-medium capitalize">
-                            {pet.size}
+                            {pet.weight_range}
                           </span>
                         </div>
                         <div>
