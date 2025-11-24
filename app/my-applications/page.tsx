@@ -134,7 +134,7 @@ export default function MyApplicationsPage() {
                 className="border rounded-2xl p-4 shadow-sm hover:shadow-md transition"
               >
                 <img
-                  src={app.pet_image || "/placeholder.jpg"}
+                  src={app.pet_image || "/placeholder.svg"}
                   alt={app.pet_name}
                   className="w-full h-48 object-cover rounded-xl mb-3"
                 />
