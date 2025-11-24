@@ -46,12 +46,12 @@ export default function AddPetPage() {
   };
   const [formData, setFormData] = useState({
     name: "",
-    type: "dog",
+    type: "",
     breed: "",
-    ageGroup: "adult",
-    weightRange: "medium",
-    energyLevel: "moderate",
-    size: "medium",
+    ageGroup: "",
+    weightRange: "",
+    energyLevel: "",
+    size: "",
     goodWithKids: false,
     goodWithCats: false,
     goodWithDogs: false,
@@ -269,7 +269,7 @@ export default function AddPetPage() {
                 onValueChange={(value) => handleChange("type", value)}
               >
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Select" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="dog">Dog</SelectItem>
@@ -287,7 +287,7 @@ export default function AddPetPage() {
                 onValueChange={(value) => handleChange("breed", value)}
               >
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Select" />
                 </SelectTrigger>
                 <SelectContent>
                   {breedOptions.map((breed) => (
@@ -306,7 +306,7 @@ export default function AddPetPage() {
                 onValueChange={(value) => handleChange("ageGroup", value)}
               >
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Select" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="puppy">Puppy/Kitten (0-1 year)</SelectItem>
@@ -325,7 +325,7 @@ export default function AddPetPage() {
                 disabled={!formData.type} // opcional: deshabilitar si no se selecciona tipo
               >
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Select" />
                 </SelectTrigger>
                 <SelectContent>
                   {formData.type &&
@@ -345,7 +345,7 @@ export default function AddPetPage() {
                 onValueChange={(value) => handleChange("energyLevel", value)}
               >
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Select" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="low">Low</SelectItem>
@@ -364,7 +364,7 @@ export default function AddPetPage() {
                 }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select one or more" />
+                  <SelectValue placeholder="Select" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="dog">Dogs</SelectItem>
@@ -427,7 +427,7 @@ export default function AddPetPage() {
                 onValueChange={(v) => handleChange("state", v)}
               >
                 <SelectTrigger id="state">
-                  <SelectValue placeholder="Select state" />
+                  <SelectValue placeholder="Select" />
                 </SelectTrigger>
                 <SelectContent>
                   {US_STATES.map((state) => (
