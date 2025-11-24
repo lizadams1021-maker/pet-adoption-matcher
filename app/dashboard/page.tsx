@@ -331,7 +331,7 @@ export default function DashboardPage() {
                   <Heart className="h-6 w-6 text-green-600" />
                 </div>
                 <div>
-                  <p className="text-3xl font-bold">{stats.newMatches - 1}</p>
+                  <p className="text-3xl font-bold">{stats.newMatches}</p>
                   <p className="text-sm text-muted-foreground">Matches</p>
                 </div>
               </div>
@@ -347,7 +347,7 @@ export default function DashboardPage() {
                   <TrendingUp className="h-6 w-6 text-blue-600" />
                 </div>
                 <div>
-                  <p className="text-3xl font-bold">{stats.thisWeek - 1}</p>
+                  <p className="text-3xl font-bold">{stats.thisWeek}</p>
                   <p className="text-sm text-muted-foreground">This Week</p>
                 </div>
               </div>

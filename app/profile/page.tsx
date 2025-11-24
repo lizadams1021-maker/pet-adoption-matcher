@@ -1075,9 +1075,9 @@ export default function ProfilePage() {
                     <SelectValue placeholder="Select weight" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="small">Small (0-25 lbs)</SelectItem>
-                    <SelectItem value="medium">Medium (25-60 lbs)</SelectItem>
-                    <SelectItem value="large">Large (60+ lbs)</SelectItem>
+                    <SelectItem value="small">Small</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="large">Large</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
