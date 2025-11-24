@@ -27,6 +27,7 @@ export default function AddPetPage() {
   const { user, loading } = useAuthClient();
   const router = useRouter();
   const [uploading, setUploading] = useState(false);
+  const [submitting, setSubmiting] = useState(false);
   const weightOptions = {
     dog: [
       { value: "small", label: "Small (0-25 lbs)" },
@@ -69,6 +70,14 @@ export default function AddPetPage() {
     needsCompany: false,
     comfortableHoursAlone: "",
     ownerExperienceRequired: "",
+  });
+  const [errors, setErrors] = useState({
+    name: "",
+    type: "",
+    breed: "",
+    ageGroup: "",
+    weightRange: "",
+    energyLevel: "",
   });
   const breedOptions =
     formData.type === "dog"
@@ -129,6 +138,22 @@ export default function AddPetPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmiting(true);
+
+    const newErrors: any = {};
+
+    if (!formData.name) newErrors.name = "This field is required";
+    if (!formData.type) newErrors.type = "This field is required";
+    if (!formData.breed) newErrors.breed = "This field is required";
+    if (!formData.ageGroup) newErrors.ageGroup = "This field is required";
+    if (!formData.weightRange) newErrors.weightRange = "This field is required";
+    if (!formData.energyLevel) newErrors.energyLevel = "This field is required";
+
+    setErrors(newErrors);
+
+    if (Object.keys(newErrors).length > 0) {
+      return;
+    }
 
     if (!user || loading) return;
 
@@ -174,10 +199,12 @@ export default function AddPetPage() {
         return;
       }
 
-      const data = await res.json();
+      await res.json();
       router.push("/my-pets");
     } catch (error) {
       console.error("Error sending form:", error);
+    } finally {
+      setSubmiting(false);
     }
   };
 
@@ -253,17 +280,23 @@ export default function AddPetPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label htmlFor="name">Pet Name *</Label>
+              <Label htmlFor="name">
+                Pet Name <span className="text-red-500">*</span>
+              </Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) => handleChange("name", e.target.value)}
-                required
               />
+              {errors.name && (
+                <p className="text-sm text-red-500">{errors.type}</p>
+              )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="type">Type *</Label>
+              <Label htmlFor="type">
+                Type <span className="text-red-500">*</span>
+              </Label>
               <Select
                 value={formData.type}
                 onValueChange={(value) => handleChange("type", value)}
@@ -277,10 +310,15 @@ export default function AddPetPage() {
                   <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
               </Select>
+              {errors.type && (
+                <p className="text-sm text-red-500">{errors.type}</p>
+              )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="breed">Breed *</Label>
+              <Label htmlFor="breed">
+                Breed <span className="text-red-500">*</span>
+              </Label>
 
               <Select
                 value={formData.breed}
@@ -297,10 +335,15 @@ export default function AddPetPage() {
                   ))}
                 </SelectContent>
               </Select>
+              {errors.breed && (
+                <p className="text-sm text-red-500">{errors.type}</p>
+              )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="ageGroup">Age Group *</Label>
+              <Label htmlFor="ageGroup">
+                Age Group <span className="text-red-500">*</span>
+              </Label>
               <Select
                 value={formData.ageGroup}
                 onValueChange={(value) => handleChange("ageGroup", value)}
@@ -315,10 +358,15 @@ export default function AddPetPage() {
                   <SelectItem value="senior">Senior (7+ years)</SelectItem>
                 </SelectContent>
               </Select>
+              {errors.ageGroup && (
+                <p className="text-sm text-red-500">{errors.type}</p>
+              )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="weightRange">Weight Range *</Label>
+              <Label htmlFor="weightRange">
+                Weight Range <span className="text-red-500">*</span>
+              </Label>
               <Select
                 value={formData.weightRange}
                 onValueChange={(value) => handleChange("weightRange", value)}
@@ -336,10 +384,15 @@ export default function AddPetPage() {
                     ))}
                 </SelectContent>
               </Select>
+              {errors.weightRange && (
+                <p className="text-sm text-red-500">{errors.type}</p>
+              )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="energyLevel">Energy Level *</Label>
+              <Label htmlFor="energyLevel">
+                Energy Level <span className="text-red-500">*</span>
+              </Label>
               <Select
                 value={formData.energyLevel}
                 onValueChange={(value) => handleChange("energyLevel", value)}
@@ -353,6 +406,9 @@ export default function AddPetPage() {
                   <SelectItem value="high">High</SelectItem>
                 </SelectContent>
               </Select>
+              {errors.energyLevel && (
+                <p className="text-sm text-red-500">{errors.type}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -556,7 +612,10 @@ export default function AddPetPage() {
           </div>
 
           <div className="flex gap-3 pt-4">
-            <Button type="submit">Add Pet</Button>
+            <Button type="submit" disabled={submitting}>
+              {submitting ? "Adding..." : "Add Pet"}
+            </Button>
+
             <Button
               type="button"
               variant="outline"
@@ -565,6 +624,11 @@ export default function AddPetPage() {
               Cancel
             </Button>
           </div>
+          {Object.values(errors).some((e) => e) && (
+            <p className="text-sm text-red-500 mt-2">
+              Please fill all required fields before submitting.
+            </p>
+          )}
         </form>
       </div>
     </AppLayout>
