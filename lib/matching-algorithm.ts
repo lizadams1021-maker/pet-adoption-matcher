@@ -44,7 +44,7 @@ export function calculateApplicationMatches(applications: Application[]): MatchR
         reasons.push("Pet is good with children, matching user's household.");
       } else {
         score += 5;
-        reasons.push("Pet is good with children, user has no children.");
+        reasons.push("Pet is good with children");
       }
     } else if (user.children_count > 0) {
       negativeReasons.push("Pet may not be suitable for homes with children.");
@@ -217,7 +217,7 @@ export function calculateCompatibility(user: any, pet: any): MatchResult {
       reasons.push("Pet is good with children, matching user's household.");
     } else {
       score += 5;
-      reasons.push("Pet is good with children, user has no children.");
+      reasons.push("Pet is good with children");
     }
   } else if (user.children_count > 0) {
     negativeReasons.push("Pet may not be suitable for homes with children.");
