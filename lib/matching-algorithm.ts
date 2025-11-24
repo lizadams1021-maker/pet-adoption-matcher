@@ -178,12 +178,48 @@ export function calculateApplicationMatches(applications: Application[]): MatchR
     // --------------------
     // Owner experience required
     // --------------------
-    if (pet.owner_experience_required) {
-      if (user.adopted_before || user.ownedPetBefore) {
+    if (pet.owner_experience_required && pet.owner_experience_required !== "none") {
+      const required = pet.owner_experience_required;
+
+      // Base: experiencia previa mínima
+      const hasBasicExperience =
+        user.adopted_before || user.owned_pet_before;
+
+      if (!hasBasicExperience) {
+        negativeReasons.push("Pet may require an owner with prior experience.");
+      } else {
         score += 5;
         reasons.push("User has prior pet experience suitable for this pet.");
-      } else {
-        negativeReasons.push("Pet may require more experienced owner.");
+      }
+
+      // Nivel 2: SPECIAL NEEDS
+      if (required === "special needs") {
+        const meetsSpecialNeeds =
+          user.spayed_neutered && user.vaccinated;
+
+        if (meetsSpecialNeeds) {
+          score += 4;
+          reasons.push("User has experience caring for special needs pets.");
+        } else {
+          negativeReasons.push(
+            "Pet may require an owner experienced with special needs care."
+          );
+        }
+      }
+
+      // Nivel 3: BEHAVIOR MODIFICATION
+      if (required === "behavior modification") {
+        const meetsBehaviorTraining =
+          user.willing_behavior_training === true;
+
+        if (meetsBehaviorTraining) {
+          score += 4;
+          reasons.push("User is willing to work on behavior modification.");
+        } else {
+          negativeReasons.push(
+            "Pet may require an owner willing to work on behavior modification."
+          );
+        }
       }
     }
 
@@ -351,14 +387,51 @@ export function calculateCompatibility(user: any, pet: any): MatchResult {
   // --------------------
   // Owner experience required
   // --------------------
-  if (pet.owner_experience_required) {
-    if (user.adopted_before || user.ownedPetBefore) {
-      score += 5;
-      reasons.push("User has prior pet experience suitable for this pet.");
+  if (pet.owner_experience_required && pet.owner_experience_required !== "none") {
+  const required = pet.owner_experience_required;
+
+  // Base: experiencia previa mínima
+  const hasBasicExperience =
+    user.adopted_before || user.owned_pet_before;
+
+  if (!hasBasicExperience) {
+    negativeReasons.push("Pet may require an owner with prior experience.");
+  } else {
+    score += 5;
+    reasons.push("User has prior pet experience suitable for this pet.");
+  }
+
+  // Nivel 2: SPECIAL NEEDS
+  if (required === "special needs") {
+    const meetsSpecialNeeds =
+      user.spayed_neutered && user.vaccinated;
+
+    if (meetsSpecialNeeds) {
+      score += 4;
+      reasons.push("User has experience caring for special needs pets.");
     } else {
-      negativeReasons.push("Pet may require more experienced owner.");
+      negativeReasons.push(
+        "Pet may require an owner experienced with special needs care."
+      );
     }
   }
+
+  // Nivel 3: BEHAVIOR MODIFICATION
+  if (required === "behavior modification") {
+    const meetsBehaviorTraining =
+      user.willing_behavior_training === true;
+
+    if (meetsBehaviorTraining) {
+      score += 4;
+      reasons.push("User is willing to work on behavior modification.");
+    } else {
+      negativeReasons.push(
+        "Pet may require an owner willing to work on behavior modification."
+      );
+    }
+  }
+  }
+
 
   // --------------------
   // Cap max score
