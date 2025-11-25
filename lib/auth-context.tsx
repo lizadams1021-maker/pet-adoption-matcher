@@ -43,7 +43,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    const storedUser = sessionStorage.getItem("user");
+    const storedUser = localStorage.getItem("user");
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     }
@@ -60,7 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (response.ok) {
         const data = await response.json();
         setUser(data.user);
-        sessionStorage.setItem("currentUser", JSON.stringify(data.user));
+        localStorage.setItem("currentUser", JSON.stringify(data.user));
         return true;
       }
       return false;
@@ -72,7 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = () => {
     setUser(null);
-    sessionStorage.removeItem("currentUser");
+    localStorage.removeItem("currentUser");
   };
 
   const register = async (
@@ -90,7 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (response.ok) {
         const data = await response.json();
         setUser(data.user);
-        sessionStorage.setItem("currentUser", JSON.stringify(data.user));
+        localStorage.setItem("currentUser", JSON.stringify(data.user));
         return true;
       }
       return false;
@@ -113,7 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (response.ok) {
         const updatedUser = { ...user, preferences };
         setUser(updatedUser);
-        sessionStorage.setItem("currentUser", JSON.stringify(updatedUser));
+        localStorage.setItem("currentUser", JSON.stringify(updatedUser));
       }
     } catch (error) {
       console.error("[v0] Update preferences error:", error);
@@ -133,7 +133,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (response.ok) {
         const updatedUser = { ...user, imageUrl };
         setUser(updatedUser);
-        sessionStorage.setItem("currentUser", JSON.stringify(updatedUser));
+        localStorage.setItem("currentUser", JSON.stringify(updatedUser));
       }
     } catch (error) {
       console.error("[v0] Update profile image error:", error);
