@@ -37,8 +37,8 @@ export default function LoginPage() {
 
       const data = await res.json();
       // Save access token on memory
-      sessionStorage.clear();
-      sessionStorage.setItem("accessToken", data.accessToken);
+      localStorage.clear();
+      localStorage.setItem("accessToken", data.accessToken);
 
       router.push("/matches");
     } catch (err) {

@@ -44,7 +44,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     async function initAuth() {
-      let token = sessionStorage.getItem("accessToken");
+      let token = localStorage.getItem("accessToken");
       if (!token) {
         token = await refreshAccess();
       }

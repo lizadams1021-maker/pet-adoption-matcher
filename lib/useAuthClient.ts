@@ -69,8 +69,8 @@ export function useAuthClient() {
 
   useEffect(() => {
     async function initAuth() {
-      let token = sessionStorage.getItem("accessToken");
-      const storedUser = sessionStorage.getItem("user");
+      let token = localStorage.getItem("accessToken");
+      const storedUser = localStorage.getItem("user");
 
       if (storedUser && token) {
           setUser(JSON.parse(storedUser));
@@ -96,8 +96,8 @@ export function useAuthClient() {
         const data = await res.json();
         
         setUser(data.user);
-        sessionStorage.setItem("user", JSON.stringify(data.user));
-        sessionStorage.setItem("accessToken", token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+        localStorage.setItem("accessToken", token);
 
       } catch {
         setUser(null);
