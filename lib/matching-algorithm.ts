@@ -231,7 +231,7 @@ export function calculateApplicationMatches(applications: Application[]): MatchR
     return {
       petId: pet.id,
       userId: user.id,
-      score,
+      score: adjustScore(score),
       reasons,
       negativeReasons,
     };
@@ -441,12 +441,25 @@ export function calculateCompatibility(user: any, pet: any): MatchResult {
   return {
     petId: pet.id,
     userId: user.id,
-    score,
+    score: adjustScore(score),
     reasons,
     negativeReasons,
   };
   
 }
+
+export function adjustScore(score: number) {
+  if (score <= 35) {
+    return score;
+  }
+
+  if (score <= 50) {
+    return 35 + (score - 35) * 2;
+  }
+  return 90 + (score - 50) * 0.2;
+}
+
+
 
 
 

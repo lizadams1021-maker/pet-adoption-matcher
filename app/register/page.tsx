@@ -45,8 +45,8 @@ export default function RegisterPage() {
 
       const data = await res.json();
 
-      sessionStorage.clear();
-      sessionStorage.setItem("accessToken", data.accessToken);
+      localStorage.clear();
+      localStorage.setItem("accessToken", data.accessToken);
 
       router.push("/profile");
     } catch (err) {
