@@ -3,7 +3,7 @@
 import jwt from "jsonwebtoken";
 import { sql } from "@/lib/db";
 import crypto from "crypto";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 
 const ACCESS_SECRET = process.env.ACCESS_SECRET || "cambia-esto";
 const ACCESS_EXP = "15m";
@@ -77,7 +77,11 @@ export async function clearRefreshCookie() {
 
 
 export async function refreshAccess() {
-  const res = await fetch("/api/auth/refresh", {
+  const host = (await headers()).get("host");
+  const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
+  const base = `${protocol}://${host}`;
+
+  const res = await fetch(`${base}/api/auth/refresh`, {
     method: "POST",
     credentials: "include",
   });
@@ -85,7 +89,7 @@ export async function refreshAccess() {
 
   const data = await res.json();
   if (typeof window !== "undefined") {
-    sessionStorage.setItem("accessToken", data.accessToken);
+    localStorage.setItem("accessToken", data.accessToken);
   }
   return data.accessToken;
 }

@@ -332,7 +332,7 @@ export default function ProfilePage() {
   const updateUser = (updatedData: Partial<typeof user>) => {
     if (!user) return;
     const newUser = { ...user, ...updatedData };
-    sessionStorage.setItem("user", JSON.stringify(newUser));
+    localStorage.setItem("user", JSON.stringify(newUser));
   };
 
   const toggleArrayField = (field: keyof ProfileFormData, value: string) => {
