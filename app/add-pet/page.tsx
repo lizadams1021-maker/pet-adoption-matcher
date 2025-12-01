@@ -152,6 +152,7 @@ export default function AddPetPage() {
     setErrors(newErrors);
 
     if (Object.keys(newErrors).length > 0) {
+      setSubmiting(false);
       return;
     }
 
