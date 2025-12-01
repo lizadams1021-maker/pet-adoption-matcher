@@ -2,12 +2,19 @@
 
 import type React from "react";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { CheckCircle2, Circle } from "lucide-react";
 import Link from "next/link";
+import {
+  MIN_PASSWORD_LENGTH,
+  getPasswordChecks,
+  passwordStrengthScore,
+  validatePassword,
+} from "@/lib/password-policy";
 
 export default function RegisterPage() {
   const [name, setName] = useState("");
@@ -17,13 +24,29 @@ export default function RegisterPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
+  const passwordChecks = useMemo(() => getPasswordChecks(password), [password]);
+  const strength = useMemo(() => passwordStrengthScore(password), [password]);
+
+  const strengthLabel = strength >= 80 ? "Strong" : strength >= 50 ? "Moderate" : "Weak";
+  const strengthColor =
+    strength >= 80 ? "bg-emerald-500" : strength >= 50 ? "bg-amber-500" : "bg-destructive";
+
+  const requirements = [
+    { label: `At least ${MIN_PASSWORD_LENGTH} characters`, met: passwordChecks.hasMinLength },
+    { label: "One uppercase letter", met: passwordChecks.hasUppercase },
+    { label: "One lowercase letter", met: passwordChecks.hasLowercase },
+    { label: "One number", met: passwordChecks.hasNumber },
+    { label: "One special character", met: passwordChecks.hasSymbol },
+    { label: "Not a common password", met: passwordChecks.notCommon },
+  ];
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
-    // Validación local
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters long.");
+    const passwordIssues = validatePassword(password);
+    if (passwordIssues.length) {
+      setError(passwordIssues.join(" "));
       return;
     }
 
@@ -39,7 +62,8 @@ export default function RegisterPage() {
 
       if (!res.ok) {
         const data = await res.json();
-        setError(data.error || "Registration failed");
+        const serverError = Array.isArray(data.error) ? data.error.join(" ") : data.error;
+        setError(serverError || "Registration failed");
         return;
       }
 
@@ -102,8 +126,37 @@ export default function RegisterPage() {
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
               required
-              minLength={6}
+              minLength={MIN_PASSWORD_LENGTH}
             />
+          </div>
+
+          <div className="space-y-2 rounded-md border bg-muted/40 p-3 text-sm">
+            <div className="flex items-center justify-between text-xs uppercase tracking-wide text-muted-foreground">
+              <span>Password strength</span>
+              <span className={strengthColor ? `${strengthColor.replace("bg-", "text-")}` : ""}>
+                {strengthLabel}
+              </span>
+            </div>
+            <div className="h-2 w-full rounded-full bg-muted">
+              <div
+                className={`${strengthColor} h-full rounded-full transition-all`}
+                style={{ width: `${strength}%` }}
+                aria-hidden
+              />
+            </div>
+
+            <ul className="space-y-1 text-muted-foreground">
+              {requirements.map((req) => (
+                <li key={req.label} className="flex items-center gap-2">
+                  {req.met ? (
+                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                  ) : (
+                    <Circle className="h-4 w-4 text-muted-foreground" />
+                  )}
+                  <span className={req.met ? "text-foreground" : ""}>{req.label}</span>
+                </li>
+              ))}
+            </ul>
           </div>
 
           {error && <p className="text-sm text-destructive">{error}</p>}
