@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { AppLayout } from "@/components/app-layout";
@@ -24,6 +24,27 @@ import { useAuthClient } from "@/lib/useAuthClient";
 import Swal from "sweetalert2";
 import { CAT_BREEDS, DOG_BREEDS } from "@/lib/breeds";
 import { US_STATES } from "@/lib/us-states-cities";
+
+type AnimalType = "dog" | "cat" | "other";
+type WeightOption = { value: string; label: string };
+
+const weightOptions: Record<AnimalType, WeightOption[]> = {
+  dog: [
+    { value: "small", label: "Small (0-25 lbs)" },
+    { value: "medium", label: "Medium (25-60 lbs)" },
+    { value: "large", label: "Large (60+ lbs)" },
+  ],
+  cat: [
+    { value: "small", label: "Small (0-10 lbs)" },
+    { value: "medium", label: "Medium (10-20 lbs)" },
+    { value: "large", label: "Large (20+ lbs)" },
+  ],
+  other: [
+    { value: "small", label: "Small" },
+    { value: "medium", label: "Medium" },
+    { value: "large", label: "Large" },
+  ],
+};
 
 export default function MyPetsPage() {
   const { user, loading } = useAuthClient();
@@ -64,6 +85,11 @@ export default function MyPetsPage() {
       : editFormData.type === "cat"
       ? CAT_BREEDS
       : ["Other / Not applicable"];
+
+  const editWeightOptions = useMemo(() => {
+    const type = (editFormData.type || "dog") as AnimalType;
+    return weightOptions[type] ?? weightOptions.other;
+  }, [editFormData.type]);
 
   useEffect(() => {
     if (loading) return;
@@ -477,15 +503,11 @@ export default function MyPetsPage() {
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="small">
-                                Small (0-25 lbs)
-                              </SelectItem>
-                              <SelectItem value="medium">
-                                Medium (25-60 lbs)
-                              </SelectItem>
-                              <SelectItem value="large">
-                                Large (60+ lbs)
-                              </SelectItem>
+                              {editWeightOptions.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         </div>
