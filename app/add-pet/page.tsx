@@ -4,7 +4,7 @@ import type React from "react";
 
 import { US_STATES } from "@/lib/us-states-cities";
 import { DOG_BREEDS, CAT_BREEDS } from "@/lib/breeds";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Swal from "sweetalert2";
 import { AppLayout } from "@/components/app-layout";
@@ -28,7 +28,43 @@ export default function AddPetPage() {
   const router = useRouter();
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmiting] = useState(false);
-  const weightOptions = {
+  type AnimalType = "dog" | "cat" | "other";
+  type WeightOption = { value: string; label: string };
+  type PetFormData = {
+    name: string;
+    type: AnimalType | "";
+    breed: string;
+    ageGroup: string;
+    weightRange: string;
+    energyLevel: string;
+    size: string;
+    goodWithKids: boolean;
+    goodWithCats: boolean;
+    goodWithDogs: boolean;
+    houseTrained: boolean;
+    specialNeeds: string;
+    description: string;
+    imageUrl: string;
+    state: string;
+    adoptableOutOfState: boolean;
+    onlyPet: boolean;
+    okWithAnimals: string[];
+    requiresFencedYard: boolean;
+    needsCompany: boolean;
+    comfortableHoursAlone: string;
+    ownerExperienceRequired: string;
+  };
+
+  type PetFormErrors = {
+    name: string;
+    type: string;
+    breed: string;
+    ageGroup: string;
+    weightRange: string;
+    energyLevel: string;
+  };
+
+  const weightOptions: Record<AnimalType, WeightOption[]> = {
     dog: [
       { value: "small", label: "Small (0-25 lbs)" },
       { value: "medium", label: "Medium (25-60 lbs)" },
@@ -45,7 +81,8 @@ export default function AddPetPage() {
       { value: "large", label: "Large" },
     ],
   };
-  const [formData, setFormData] = useState({
+
+  const [formData, setFormData] = useState<PetFormData>({
     name: "",
     type: "",
     breed: "",
@@ -71,7 +108,7 @@ export default function AddPetPage() {
     comfortableHoursAlone: "",
     ownerExperienceRequired: "",
   });
-  const [errors, setErrors] = useState({
+  const [errors, setErrors] = useState<PetFormErrors>({
     name: "",
     type: "",
     breed: "",
@@ -79,6 +116,11 @@ export default function AddPetPage() {
     weightRange: "",
     energyLevel: "",
   });
+
+  const availableWeightOptions = useMemo(() => {
+    if (!formData.type) return [] as WeightOption[];
+    return weightOptions[formData.type as AnimalType];
+  }, [formData.type]);
   const breedOptions =
     formData.type === "dog"
       ? DOG_BREEDS
@@ -376,12 +418,11 @@ export default function AddPetPage() {
                   <SelectValue placeholder="Select" />
                 </SelectTrigger>
                 <SelectContent>
-                  {formData.type &&
-                    weightOptions[formData.type].map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
+                  {availableWeightOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               {errors.weightRange && (
@@ -497,9 +538,7 @@ export default function AddPetPage() {
           </div>
 
           <div className="space-y-4">
-            <Label className="text-base font-semibold">
-              Adoption Requirements
-            </Label>
+            <p className="text-base font-semibold">Additional Information</p>
 
             <div className="flex items-center space-x-2 mt-2">
               <Checkbox
@@ -545,7 +584,7 @@ export default function AddPetPage() {
               </Label>
             </div>
 
-            <Label className="text-base font-semibold">Compatibility</Label>
+            <p className="text-base font-semibold">Compatibility</p>
             <div className="space-y-3 mt-2">
               <div className="flex items-center space-x-2">
                 <Checkbox
@@ -604,7 +643,7 @@ export default function AddPetPage() {
             <Label htmlFor="description">Description</Label>
             <textarea
               id="description"
-              className="w-full min-h-[120px] px-3 py-2 rounded-md border border-input bg-background text-sm"
+              className="w-full min-h-[120px] px-3 py-2 rounded-md border border-input bg-background text-sm placeholder:text-sm"
               value={formData.description}
               onChange={(e) => handleChange("description", e.target.value)}
               placeholder="Tell us about this pet's personality, habits, and special needs..."

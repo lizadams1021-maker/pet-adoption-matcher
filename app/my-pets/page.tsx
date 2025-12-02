@@ -602,6 +602,7 @@ export default function MyPetsPage() {
                       </div>
 
                       <div className="space-y-4">
+                        <p className="text-base font-semibold">Additional Information</p>
                         <div className="flex items-center space-x-2">
                           <Checkbox
                             id="adoptableOutOfState"
@@ -648,7 +649,7 @@ export default function MyPetsPage() {
                             not.
                           </Label>
                         </div>
-                        <Label>Compatibility</Label>
+                        <p className="text-base font-semibold">Compatibility</p>
                         <div className="space-y-3">
                           <div className="flex items-center space-x-2">
                             <Checkbox
@@ -722,6 +723,7 @@ export default function MyPetsPage() {
                           onChange={(e) =>
                             handleChange("specialNeeds", e.target.value)
                           }
+                          className="placeholder:text-sm"
                         />
                       </div>
 
@@ -729,7 +731,7 @@ export default function MyPetsPage() {
                         <Label htmlFor="edit-description">Description</Label>
                         <textarea
                           id="edit-description"
-                          className="w-full min-h-[120px] px-3 py-2 rounded-md border border-input bg-background"
+                          className="w-full min-h-[120px] px-3 py-2 rounded-md border border-input bg-background text-sm placeholder:text-sm"
                           value={editFormData.description}
                           onChange={(e) =>
                             handleChange("description", e.target.value)
