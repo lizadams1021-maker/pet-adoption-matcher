@@ -22,6 +22,11 @@ import { Checkbox } from "@/components/ui/checkbox";
 import Image from "next/image";
 import { Upload } from "lucide-react";
 import { useAuthClient } from "@/lib/useAuthClient";
+import {
+  IMAGE_SIZE_LIMIT_MESSAGE,
+  MAX_IMAGE_SIZE_BYTES,
+  MAX_IMAGE_SIZE_MB,
+} from "@/lib/constants";
 
 export default function AddPetPage() {
   const { user, loading } = useAuthClient();
@@ -132,6 +137,16 @@ export default function AddPetPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (file.size > MAX_IMAGE_SIZE_BYTES) {
+      Swal.fire({
+        icon: "warning",
+        title: "Image Too Large",
+        text: IMAGE_SIZE_LIMIT_MESSAGE,
+      });
+      e.target.value = "";
+      return;
+    }
+
     setUploading(true);
     try {
       const formDataObj = new FormData();
@@ -144,14 +159,21 @@ export default function AddPetPage() {
 
       if (!response.ok) {
         let errorMessage = "Failed to upload image";
+        const raw = await response.text().catch(() => "");
+        if (raw) {
+          try {
+            const parsed = JSON.parse(raw);
+            errorMessage = parsed.error || parsed.message || errorMessage;
+          } catch {
+            errorMessage = raw;
+          }
+        }
 
-        try {
-          const error = await response.json();
-          errorMessage = error.error || errorMessage;
-        } catch {
-          // Response is not JSON
-          const text = await response.text();
-          errorMessage = text || errorMessage;
+        if (
+          response.status === 400 &&
+          errorMessage.toLowerCase().includes("exceeds")
+        ) {
+          errorMessage = IMAGE_SIZE_LIMIT_MESSAGE;
         }
 
         // Mostrar error con SweetAlert2
@@ -160,6 +182,7 @@ export default function AddPetPage() {
           title: "Upload Error",
           text: errorMessage,
         });
+        e.target.value = "";
 
         return;
       }
@@ -314,7 +337,7 @@ export default function AddPetPage() {
                   />
                 </Label>
                 <p className="text-sm text-muted-foreground mt-2">
-                  JPEG or PNG, max 5MB
+                  JPEG or PNG, max {MAX_IMAGE_SIZE_MB}MB
                 </p>
               </div>
             </div>

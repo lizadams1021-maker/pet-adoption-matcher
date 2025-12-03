@@ -25,6 +25,11 @@ import {
   type ProfileFormData,
 } from "@/lib/profile-validation";
 import { useAuthClient } from "@/lib/useAuthClient";
+import {
+  IMAGE_SIZE_LIMIT_MESSAGE,
+  MAX_IMAGE_SIZE_BYTES,
+  MAX_IMAGE_SIZE_MB,
+} from "@/lib/constants";
 
 const formatDateForInput = (value?: string | Date | null) => {
   if (!value) return "";
@@ -238,6 +243,16 @@ export default function ProfilePage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (file.size > MAX_IMAGE_SIZE_BYTES) {
+      Swal.fire({
+        icon: "warning",
+        title: "Image Too Large",
+        text: IMAGE_SIZE_LIMIT_MESSAGE,
+      });
+      e.target.value = "";
+      return;
+    }
+
     setUploading(true);
     try {
       const formData = new FormData();
@@ -250,19 +265,21 @@ export default function ProfilePage() {
 
       if (!response.ok) {
         let errorMessage = "Failed to upload image";
-
-        try {
-          const error = await response.json();
-          errorMessage = error.error || errorMessage;
-
-          // Detecta si es error de tamaño
-          if (errorMessage.toLowerCase().includes("file too large")) {
-            errorMessage =
-              "The file is too large. Maximum allowed size exceeded.";
+        const raw = await response.text().catch(() => "");
+        if (raw) {
+          try {
+            const parsed = JSON.parse(raw);
+            errorMessage = parsed.error || parsed.message || errorMessage;
+          } catch {
+            errorMessage = raw;
           }
-        } catch {
-          const text = await response.text();
-          errorMessage = text || errorMessage;
+        }
+
+        if (
+          response.status === 400 &&
+          errorMessage.toLowerCase().includes("exceeds")
+        ) {
+          errorMessage = IMAGE_SIZE_LIMIT_MESSAGE;
         }
 
         Swal.fire({
@@ -270,6 +287,8 @@ export default function ProfilePage() {
           title: "Upload Error",
           text: errorMessage,
         });
+
+        e.target.value = "";
 
         return;
       }
@@ -438,7 +457,7 @@ export default function ProfilePage() {
                   />
                 </Label>
                 <p className="text-sm text-muted-foreground mt-2">
-                  JPEG or PNG, max 5MB
+                  JPEG or PNG, max {MAX_IMAGE_SIZE_MB}MB
                 </p>
               </div>
             </div>
