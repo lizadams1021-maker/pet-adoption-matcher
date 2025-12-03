@@ -1,6 +1,35 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { sql } from "@/lib/db"
 
+async function ensureSpecialNeedsColumnSupportsText() {
+  const columnInfo = await sql`
+    SELECT data_type
+    FROM information_schema.columns
+    WHERE table_schema = 'public'
+      AND table_name = 'pets'
+      AND column_name = 'special_needs'
+    LIMIT 1
+  `
+
+  const currentType = columnInfo[0]?.data_type
+
+  if (currentType && currentType !== "text") {
+    try {
+      await sql`
+        ALTER TABLE pets
+        ALTER COLUMN special_needs TYPE text
+        USING CASE
+          WHEN special_needs IS TRUE THEN 'Yes'
+          WHEN special_needs IS FALSE THEN 'No'
+          ELSE NULL
+        END
+      `
+    } catch (error) {
+      console.error("[DB] Failed to alter special_needs column type:", error)
+    }
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
@@ -107,6 +136,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    await ensureSpecialNeedsColumnSupportsText()
     const petData = await request.json()
     const petId = `pet-${Date.now()}`
 
@@ -176,6 +206,7 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
+    await ensureSpecialNeedsColumnSupportsText()
     const { petId, updates } = await request.json();
 
     await sql`
