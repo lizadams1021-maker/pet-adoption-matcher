@@ -230,6 +230,10 @@ export default function DashboardPage() {
             p.id === petId ? { ...p, status: "adopted" } : p
           )
         );
+
+        setSelectedPet((prev: typeof selectedPet) =>
+          prev && prev.id === petId ? { ...prev, status: "adopted" } : prev
+        );
       });
     } catch (error) {
       console.error("[v0] Accept error:", error);
@@ -259,9 +263,14 @@ export default function DashboardPage() {
     );
   }
 
-  const staticMatchReasons = [
-    "Experience level aligns with pet's needs",
-    "Housing situation is ideal for this pet",
+  const compatibilityTips = [
+    "Close proximity to the shelter",
+    "Similar activity level",
+    "Compatible housing situation",
+    "Experience with pets like yours",
+    "Stable financial situation",
+    "Schedule aligns with pet needs",
+    "Family composition is a good fit",
     "Activity level matches pet's energy requirements",
     "Family composition is compatible with pet's temperament",
   ];
@@ -457,6 +466,19 @@ export default function DashboardPage() {
                             year: "numeric",
                           }
                         );
+                        const normalizedStatus = adopter.status ?? "pending";
+                        const statusLabel =
+                          normalizedStatus === "accepted"
+                            ? "Accepted"
+                            : normalizedStatus === "rejected"
+                            ? "Rejected"
+                            : "Pending";
+                        const statusClasses =
+                          normalizedStatus === "accepted"
+                            ? "bg-green-100 text-green-700 border-green-200"
+                            : normalizedStatus === "rejected"
+                            ? "bg-red-100 text-red-700 border-red-200"
+                            : "";
 
                         return (
                           <div
@@ -685,11 +707,16 @@ export default function DashboardPage() {
                                 Applied {formattedDate} • {daysAgo}{" "}
                                 {daysAgo === 1 ? "day" : "days"} ago
                               </span>
-                              <Badge variant="outline">Pending</Badge>
+                              <Badge
+                                variant="outline"
+                                className={statusClasses}
+                              >
+                                {statusLabel}
+                              </Badge>
                             </div>
 
                             {/* Action Buttons */}
-                            {adopter.status === "accepted" ? (
+                            {normalizedStatus === "accepted" ? (
                               <div className="text-green-700 font-semibold text-center mt-2">
                                 Application accepted
                               </div>

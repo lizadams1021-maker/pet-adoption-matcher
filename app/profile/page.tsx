@@ -25,9 +25,26 @@ import {
   type ProfileFormData,
 } from "@/lib/profile-validation";
 import { useAuthClient } from "@/lib/useAuthClient";
+import {
+  IMAGE_SIZE_LIMIT_MESSAGE,
+  MAX_IMAGE_SIZE_BYTES,
+  MAX_IMAGE_SIZE_MB,
+} from "@/lib/constants";
+
+const formatDateForInput = (value?: string | Date | null) => {
+  if (!value) return "";
+  const isoString = typeof value === "string" ? value : value.toISOString();
+  return isoString.split("T")[0];
+};
+
+const ensureArray = (value?: string[] | string | null) => {
+  if (Array.isArray(value)) return value;
+  if (typeof value === "string" && value.length > 0) return [value];
+  return [];
+};
 
 export default function ProfilePage() {
-  const { user, loading } = useAuthClient();
+  const { user, loading, updateUser } = useAuthClient();
   const router = useRouter();
   const [loadingPage, setLoadingPage] = useState(true);
   const [saved, setSaved] = useState(false);
@@ -99,110 +116,142 @@ export default function ProfilePage() {
   const [availableCities, setAvailableCities] = useState<string[]>([]);
   const [customCity, setCustomCity] = useState("");
 
+  const userId = user?.id;
+
   useEffect(() => {
     if (loading) return;
 
-    if (!user) {
+    if (!userId) {
       router.push("/login");
       return;
     }
-    // Load user profile data
+
+    const mapUserToForm = (userData: typeof user) => {
+      if (!userData) return;
+      setFormData({
+        firstName: userData.first_name || "",
+        lastName: userData.last_name || "",
+        email: userData.email || user.email,
+        homePhone: userData.home_phone || "",
+        cellPhone: userData.cell_phone || "",
+        gender: userData.gender || "Prefer not to answer",
+        birthday: formatDateForInput(userData.birthday as string),
+        addressLine: userData.address_line || "",
+        city: userData.city || "",
+        state: userData.state || "",
+        zipCode: userData.zip_code || "",
+        willingOutOfState: Boolean(userData.willing_out_of_state),
+        hasPets: Boolean(userData.has_pets),
+        petsTypes: ensureArray(userData.pets_types as string[]),
+        petsGoodWithOthers: Boolean(userData.pets_good_with_others),
+        hasFencedYard: Boolean(userData.has_fenced_yard),
+        homeType: userData.home_type || "",
+        landlordAllowsPets: Boolean(userData.landlord_allows_pets),
+        landlordPhone: userData.landlord_phone || "",
+        landlordEmail: userData.landlord_email || "",
+        associationRestrictions: Boolean(
+          userData.association_restrictions
+        ),
+        worksOutsideHome: Boolean(userData.works_outside_home),
+        hoursHomeAlone: userData.hours_home_alone || "",
+        wherePetsWhenAway: userData.where_pets_when_away || "",
+        hasChildren: Boolean(userData.has_children),
+        childrenCount: userData.children_count ?? 0,
+        childrenAges: userData.children_ages || "",
+        adultsInHome: userData.adults_in_home || 1,
+        homeActivityLevel: userData.home_activity_level || "",
+        petLiveLocation: userData.pet_live_location || "",
+        adoptionTimeline: userData.adoption_timeline || "",
+        preferredDogBreed: userData.preferred_dog_breed || "",
+        preferredCatType: userData.preferred_cat_type || "",
+        preferredAge: userData.preferred_age || "",
+        preferredWeight: userData.preferred_weight || "",
+        preferredTemperamentDetailed: ensureArray(
+          userData.preferred_temperament_detailed as string[]
+        ),
+        preferredEnergy: userData.preferred_energy || "",
+        undesiredCharacteristics: ensureArray(
+          userData.undesired_characteristics as string[]
+        ),
+        takePetsToVet: Boolean(userData.take_pets_to_vet),
+        vetName: userData.vet_name || "",
+        vetPhone: userData.vet_phone || "",
+        vetEmail: userData.vet_email || "",
+        reference1Name: userData.reference1_name || "",
+        reference1Phone: userData.reference1_phone || "",
+        reference1Email: userData.reference1_email || "",
+        reference2Name: userData.reference2_name || "",
+        reference2Phone: userData.reference2_phone || "",
+        reference2Email: userData.reference2_email || "",
+        adoptedBefore: Boolean(userData.adopted_before),
+        ownedPetBefore: Boolean(userData.owned_pet_before),
+        spayedNeutered: Boolean(userData.spayed_neutered),
+        vaccinated: Boolean(userData.vaccinated),
+        hadPetsNoLongerHave: userData.had_pets_no_longer_have || "",
+        willingBehaviorTraining: Boolean(userData.willing_behavior_training),
+        reasonsGiveUp: userData.reasons_give_up || "",
+        planForVetCosts: userData.plan_for_vet_costs || "",
+        additionalComments: userData.additional_comments || "",
+      });
+
+      setProfileImage(userData.image_url || "");
+
+      if (userData.state) {
+        const cities = getCitiesForState(userData.state);
+        setAvailableCities(cities);
+        if (userData.city && !cities.includes(userData.city)) {
+          setCustomCity(userData.city);
+        }
+      }
+    };
+
     const loadProfile = async () => {
       try {
-        if (user) {
-          const userData = user;
-          setFormData({
-            firstName: userData.first_name || "",
-            lastName: userData.last_name || "",
-            email: userData.email || user.email,
-            homePhone: userData.home_phone || "",
-            cellPhone: userData.cell_phone || "",
-            gender: userData.gender || "Prefer not to answer",
-            birthday: userData.birthday || "",
-            addressLine: userData.address_line || "",
-            city: userData.city || "",
-            state: userData.state || "",
-            zipCode: userData.zip_code || "",
-            willingOutOfState: userData.willing_out_of_state || false,
-            hasPets: userData.has_pets || false,
-            petsTypes: userData.pets_types || [],
-            petsGoodWithOthers: userData.pets_good_with_others || false,
-            hasFencedYard: userData.has_fenced_yard || false,
-            homeType: userData.home_type || "",
-            landlordAllowsPets: userData.landlord_allows_pets || false,
-            landlordPhone: userData.landlord_phone || "",
-            landlordEmail: userData.landlord_email || "",
-            associationRestrictions: userData.association_restrictions || false,
-            worksOutsideHome: userData.works_outside_home || false,
-            hoursHomeAlone: userData.hours_home_alone || "",
-            wherePetsWhenAway: userData.where_pets_when_away || "",
-            hasChildren: userData.has_children || false,
-            childrenCount: userData.children_count || 0,
-            childrenAges: userData.children_ages || "",
-            adultsInHome: userData.adults_in_home || 1,
-            homeActivityLevel: userData.home_activity_level || "",
-            petLiveLocation: userData.pet_live_location || "",
-            adoptionTimeline: userData.adoption_timeline || "",
-            preferredDogBreed: userData.preferred_dog_breed || "",
-            preferredCatType: userData.preferred_cat_type || "",
-            preferredAge: userData.preferred_age || "",
-            preferredWeight: userData.preferred_weight || "",
-            preferredTemperamentDetailed:
-              userData.preferred_temperament_detailed || [],
-            preferredEnergy: userData.preferred_energy || "",
-            undesiredCharacteristics: userData.undesired_characteristics || [],
-            takePetsToVet: userData.take_pets_to_vet || false,
-            vetName: userData.vet_name || "",
-            vetPhone: userData.vet_phone || "",
-            vetEmail: userData.vet_email || "",
-            reference1Name: userData.reference1_name || "",
-            reference1Phone: userData.reference1_phone || "",
-            reference1Email: userData.reference1_email || "",
-            reference2Name: userData.reference2_name || "",
-            reference2Phone: userData.reference2_phone || "",
-            reference2Email: userData.reference2_email || "",
-            adoptedBefore: userData.adopted_before || false,
-            ownedPetBefore: userData.owned_pet_before || false,
-            spayedNeutered: userData.spayed_neutered || false,
-            vaccinated: userData.vaccinated || false,
-            hadPetsNoLongerHave: userData.had_pets_no_longer_have || "",
-            willingBehaviorTraining:
-              userData.willing_behavior_training || false,
-            reasonsGiveUp: userData.reasons_give_up || "",
-            planForVetCosts: userData.plan_for_vet_costs || "",
-            additionalComments: userData.additional_comments || "",
-          });
+        setLoadingPage(true);
+        let latestUser = user;
 
-          setProfileImage(userData.image_url || "");
-
-          // Load cities for selected state
-          if (userData.state) {
-            setAvailableCities(getCitiesForState(userData.state));
-          }
-          setLoadingPage(false);
+        const res = await fetch(`/api/user/profile?userId=${userId}`);
+        if (res.ok) {
+          const data = await res.json();
+          latestUser = data.user;
+          updateUser?.(latestUser);
         }
+
+        mapUserToForm(latestUser);
       } catch (error) {
         console.error("[v0] Load profile error:", error);
+        mapUserToForm(user);
+      } finally {
+        setLoadingPage(false);
       }
     };
 
     loadProfile();
-  }, [user, router, loading]);
+  }, [userId, router, loading, updateUser]);
 
   useEffect(() => {
     if (formData.state) {
       const cities = getCitiesForState(formData.state);
       setAvailableCities(cities);
-      // Reset city if it's not in the new state's list
       if (formData.city && !cities.includes(formData.city)) {
-        setFormData((prev) => ({ ...prev, city: "" }));
+        setCustomCity(formData.city);
       }
     }
-  }, [formData.state]);
+  }, [formData.state, formData.city]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if (file.size > MAX_IMAGE_SIZE_BYTES) {
+      Swal.fire({
+        icon: "warning",
+        title: "Image Too Large",
+        text: IMAGE_SIZE_LIMIT_MESSAGE,
+      });
+      e.target.value = "";
+      return;
+    }
 
     setUploading(true);
     try {
@@ -216,19 +265,21 @@ export default function ProfilePage() {
 
       if (!response.ok) {
         let errorMessage = "Failed to upload image";
-
-        try {
-          const error = await response.json();
-          errorMessage = error.error || errorMessage;
-
-          // Detecta si es error de tamaño
-          if (errorMessage.toLowerCase().includes("file too large")) {
-            errorMessage =
-              "The file is too large. Maximum allowed size exceeded.";
+        const raw = await response.text().catch(() => "");
+        if (raw) {
+          try {
+            const parsed = JSON.parse(raw);
+            errorMessage = parsed.error || parsed.message || errorMessage;
+          } catch {
+            errorMessage = raw;
           }
-        } catch {
-          const text = await response.text();
-          errorMessage = text || errorMessage;
+        }
+
+        if (
+          response.status === 400 &&
+          errorMessage.toLowerCase().includes("exceeds")
+        ) {
+          errorMessage = IMAGE_SIZE_LIMIT_MESSAGE;
         }
 
         Swal.fire({
@@ -236,6 +287,8 @@ export default function ProfilePage() {
           title: "Upload Error",
           text: errorMessage,
         });
+
+        e.target.value = "";
 
         return;
       }
@@ -288,7 +341,7 @@ export default function ProfilePage() {
         setTimeout(() => setSaved(false), 3000);
 
         // aquí usas el usuario REAL que viene de la DB
-        updateUser(data.user);
+        updateUser?.(data.user);
 
         // opcional: recargar desde GET si quieres sobreescribir totalmente
         /*
@@ -327,12 +380,6 @@ export default function ProfilePage() {
         return newErrors;
       });
     }
-  };
-
-  const updateUser = (updatedData: Partial<typeof user>) => {
-    if (!user) return;
-    const newUser = { ...user, ...updatedData };
-    localStorage.setItem("user", JSON.stringify(newUser));
   };
 
   const toggleArrayField = (field: keyof ProfileFormData, value: string) => {
@@ -410,7 +457,7 @@ export default function ProfilePage() {
                   />
                 </Label>
                 <p className="text-sm text-muted-foreground mt-2">
-                  JPEG or PNG, max 5MB
+                  JPEG or PNG, max {MAX_IMAGE_SIZE_MB}MB
                 </p>
               </div>
             </div>

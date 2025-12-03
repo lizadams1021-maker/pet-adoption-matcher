@@ -3,6 +3,7 @@ export const DOG_BREEDS = [
   "German Shepherd",
   "Golden Retriever",
   "Bulldog",
+  "Pitbull",
   "Poodle",
   "Beagle",
   "Rottweiler",
@@ -19,6 +20,7 @@ export const DOG_BREEDS = [
   "Corgi",
   "Pomeranian",
   "Maltese",
+  "Mixed Breed",
 ];
 
 export const CAT_BREEDS = [
