@@ -24,6 +24,11 @@ import { useAuthClient } from "@/lib/useAuthClient";
 import Swal from "sweetalert2";
 import { CAT_BREEDS, DOG_BREEDS } from "@/lib/breeds";
 import { US_STATES } from "@/lib/us-states-cities";
+import {
+  IMAGE_SIZE_LIMIT_MESSAGE,
+  MAX_IMAGE_SIZE_BYTES,
+  MAX_IMAGE_SIZE_MB,
+} from "@/lib/constants";
 
 type AnimalType = "dog" | "cat" | "other";
 type WeightOption = { value: string; label: string };
@@ -211,6 +216,16 @@ export default function MyPetsPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (file.size > MAX_IMAGE_SIZE_BYTES) {
+      Swal.fire({
+        icon: "warning",
+        title: "Image Too Large",
+        text: IMAGE_SIZE_LIMIT_MESSAGE,
+      });
+      e.target.value = "";
+      return;
+    }
+
     setUploading(true);
     try {
       const formDataObj = new FormData();
@@ -223,15 +238,29 @@ export default function MyPetsPage() {
 
       if (!response.ok) {
         let errorMessage = "Failed to upload image";
-        try {
-          const error = await response.json();
-          errorMessage = error.error || errorMessage;
-        } catch (e) {
-          // Response is not JSON, try to get text
-          const text = await response.text();
-          errorMessage = text || errorMessage;
+        const raw = await response.text().catch(() => "");
+        if (raw) {
+          try {
+            const parsed = JSON.parse(raw);
+            errorMessage = parsed.error || parsed.message || errorMessage;
+          } catch {
+            errorMessage = raw;
+          }
         }
-        alert(errorMessage);
+
+        if (
+          response.status === 400 &&
+          errorMessage.toLowerCase().includes("exceeds")
+        ) {
+          errorMessage = IMAGE_SIZE_LIMIT_MESSAGE;
+        }
+
+        Swal.fire({
+          icon: "error",
+          title: "Upload Error",
+          text: errorMessage,
+        });
+        e.target.value = "";
         return;
       }
 
@@ -239,7 +268,11 @@ export default function MyPetsPage() {
       setEditFormData((prev: any) => ({ ...prev, imageUrl: data.imageUrl }));
     } catch (error) {
       console.error("[v0] Image upload error:", error);
-      alert("Failed to upload image: " + String(error));
+      Swal.fire({
+        icon: "error",
+        title: "Upload Error",
+        text: "Failed to upload image: " + String(error),
+      });
     } finally {
       setUploading(false);
     }
@@ -401,7 +434,7 @@ export default function MyPetsPage() {
                               />
                             </Label>
                             <p className="text-sm text-muted-foreground mt-2">
-                              JPEG or PNG, max 5MB
+                              JPEG or PNG, max {MAX_IMAGE_SIZE_MB}MB
                             </p>
                           </div>
                         </div>
