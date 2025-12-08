@@ -714,12 +714,12 @@ export default function MyPetsPage() {
                                 handleChange("goodWithKids", checked)
                               }
                             />
-                            <label
+                            <Label
                               htmlFor="edit-goodWithKids"
                               className="text-sm cursor-pointer"
                             >
                               Good with kids
-                            </label>
+                            </Label>
                           </div>
                           <div className="flex items-center space-x-2">
                             <Checkbox
@@ -729,12 +729,12 @@ export default function MyPetsPage() {
                                 handleChange("goodWithCats", checked)
                               }
                             />
-                            <label
+                            <Label
                               htmlFor="edit-goodWithCats"
                               className="text-sm cursor-pointer"
                             >
                               Good with cats
-                            </label>
+                            </Label>
                           </div>
                           <div className="flex items-center space-x-2">
                             <Checkbox
@@ -744,12 +744,12 @@ export default function MyPetsPage() {
                                 handleChange("goodWithDogs", checked)
                               }
                             />
-                            <label
+                            <Label
                               htmlFor="edit-goodWithDogs"
                               className="text-sm cursor-pointer"
                             >
                               Good with dogs
-                            </label>
+                            </Label>
                           </div>
                           <div className="flex items-center space-x-2">
                             <Checkbox
@@ -759,12 +759,12 @@ export default function MyPetsPage() {
                                 handleChange("houseTrained", checked)
                               }
                             />
-                            <label
+                            <Label
                               htmlFor="edit-houseTrained"
                               className="text-sm cursor-pointer"
                             >
                               House trained
-                            </label>
+                            </Label>
                           </div>
                         </div>
                       </div>
