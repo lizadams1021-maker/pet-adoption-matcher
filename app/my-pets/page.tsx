@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { AppLayout } from "@/components/app-layout";
@@ -24,6 +24,32 @@ import { useAuthClient } from "@/lib/useAuthClient";
 import Swal from "sweetalert2";
 import { CAT_BREEDS, DOG_BREEDS } from "@/lib/breeds";
 import { US_STATES } from "@/lib/us-states-cities";
+import {
+  IMAGE_SIZE_LIMIT_MESSAGE,
+  MAX_IMAGE_SIZE_BYTES,
+  MAX_IMAGE_SIZE_MB,
+} from "@/lib/constants";
+
+type AnimalType = "dog" | "cat" | "other";
+type WeightOption = { value: string; label: string };
+
+const weightOptions: Record<AnimalType, WeightOption[]> = {
+  dog: [
+    { value: "small", label: "Small (0-25 lbs)" },
+    { value: "medium", label: "Medium (25-60 lbs)" },
+    { value: "large", label: "Large (60+ lbs)" },
+  ],
+  cat: [
+    { value: "small", label: "Small (0-10 lbs)" },
+    { value: "medium", label: "Medium (10-20 lbs)" },
+    { value: "large", label: "Large (20+ lbs)" },
+  ],
+  other: [
+    { value: "small", label: "Small" },
+    { value: "medium", label: "Medium" },
+    { value: "large", label: "Large" },
+  ],
+};
 
 export default function MyPetsPage() {
   const { user, loading } = useAuthClient();
@@ -64,6 +90,11 @@ export default function MyPetsPage() {
       : editFormData.type === "cat"
       ? CAT_BREEDS
       : ["Other / Not applicable"];
+
+  const editWeightOptions = useMemo(() => {
+    const type = (editFormData.type || "dog") as AnimalType;
+    return weightOptions[type] ?? weightOptions.other;
+  }, [editFormData.type]);
 
   useEffect(() => {
     if (loading) return;
@@ -185,6 +216,16 @@ export default function MyPetsPage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (file.size > MAX_IMAGE_SIZE_BYTES) {
+      Swal.fire({
+        icon: "warning",
+        title: "Image Too Large",
+        text: IMAGE_SIZE_LIMIT_MESSAGE,
+      });
+      e.target.value = "";
+      return;
+    }
+
     setUploading(true);
     try {
       const formDataObj = new FormData();
@@ -197,15 +238,29 @@ export default function MyPetsPage() {
 
       if (!response.ok) {
         let errorMessage = "Failed to upload image";
-        try {
-          const error = await response.json();
-          errorMessage = error.error || errorMessage;
-        } catch (e) {
-          // Response is not JSON, try to get text
-          const text = await response.text();
-          errorMessage = text || errorMessage;
+        const raw = await response.text().catch(() => "");
+        if (raw) {
+          try {
+            const parsed = JSON.parse(raw);
+            errorMessage = parsed.error || parsed.message || errorMessage;
+          } catch {
+            errorMessage = raw;
+          }
         }
-        alert(errorMessage);
+
+        if (
+          response.status === 400 &&
+          errorMessage.toLowerCase().includes("exceeds")
+        ) {
+          errorMessage = IMAGE_SIZE_LIMIT_MESSAGE;
+        }
+
+        Swal.fire({
+          icon: "error",
+          title: "Upload Error",
+          text: errorMessage,
+        });
+        e.target.value = "";
         return;
       }
 
@@ -213,7 +268,11 @@ export default function MyPetsPage() {
       setEditFormData((prev: any) => ({ ...prev, imageUrl: data.imageUrl }));
     } catch (error) {
       console.error("[v0] Image upload error:", error);
-      alert("Failed to upload image: " + String(error));
+      Swal.fire({
+        icon: "error",
+        title: "Upload Error",
+        text: "Failed to upload image: " + String(error),
+      });
     } finally {
       setUploading(false);
     }
@@ -375,7 +434,7 @@ export default function MyPetsPage() {
                               />
                             </Label>
                             <p className="text-sm text-muted-foreground mt-2">
-                              JPEG or PNG, max 5MB
+                              JPEG or PNG, max {MAX_IMAGE_SIZE_MB}MB
                             </p>
                           </div>
                         </div>
@@ -477,15 +536,11 @@ export default function MyPetsPage() {
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="small">
-                                Small (0-25 lbs)
-                              </SelectItem>
-                              <SelectItem value="medium">
-                                Medium (25-60 lbs)
-                              </SelectItem>
-                              <SelectItem value="large">
-                                Large (60+ lbs)
-                              </SelectItem>
+                              {editWeightOptions.map((option) => (
+                                <SelectItem key={option.value} value={option.value}>
+                                  {option.label}
+                                </SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         </div>
@@ -602,6 +657,7 @@ export default function MyPetsPage() {
                       </div>
 
                       <div className="space-y-4">
+                        <p className="text-base font-semibold">Additional Information</p>
                         <div className="flex items-center space-x-2">
                           <Checkbox
                             id="adoptableOutOfState"
@@ -648,7 +704,7 @@ export default function MyPetsPage() {
                             not.
                           </Label>
                         </div>
-                        <Label>Compatibility</Label>
+                        <p className="text-base font-semibold">Compatibility</p>
                         <div className="space-y-3">
                           <div className="flex items-center space-x-2">
                             <Checkbox
@@ -658,12 +714,12 @@ export default function MyPetsPage() {
                                 handleChange("goodWithKids", checked)
                               }
                             />
-                            <label
+                            <Label
                               htmlFor="edit-goodWithKids"
                               className="text-sm cursor-pointer"
                             >
                               Good with kids
-                            </label>
+                            </Label>
                           </div>
                           <div className="flex items-center space-x-2">
                             <Checkbox
@@ -673,12 +729,12 @@ export default function MyPetsPage() {
                                 handleChange("goodWithCats", checked)
                               }
                             />
-                            <label
+                            <Label
                               htmlFor="edit-goodWithCats"
                               className="text-sm cursor-pointer"
                             >
                               Good with cats
-                            </label>
+                            </Label>
                           </div>
                           <div className="flex items-center space-x-2">
                             <Checkbox
@@ -688,12 +744,12 @@ export default function MyPetsPage() {
                                 handleChange("goodWithDogs", checked)
                               }
                             />
-                            <label
+                            <Label
                               htmlFor="edit-goodWithDogs"
                               className="text-sm cursor-pointer"
                             >
                               Good with dogs
-                            </label>
+                            </Label>
                           </div>
                           <div className="flex items-center space-x-2">
                             <Checkbox
@@ -703,12 +759,12 @@ export default function MyPetsPage() {
                                 handleChange("houseTrained", checked)
                               }
                             />
-                            <label
+                            <Label
                               htmlFor="edit-houseTrained"
                               className="text-sm cursor-pointer"
                             >
                               House trained
-                            </label>
+                            </Label>
                           </div>
                         </div>
                       </div>
@@ -722,6 +778,7 @@ export default function MyPetsPage() {
                           onChange={(e) =>
                             handleChange("specialNeeds", e.target.value)
                           }
+                          className="placeholder:text-sm"
                         />
                       </div>
 
@@ -729,7 +786,7 @@ export default function MyPetsPage() {
                         <Label htmlFor="edit-description">Description</Label>
                         <textarea
                           id="edit-description"
-                          className="w-full min-h-[120px] px-3 py-2 rounded-md border border-input bg-background"
+                          className="w-full min-h-[120px] px-3 py-2 rounded-md border border-input bg-background text-sm placeholder:text-sm"
                           value={editFormData.description}
                           onChange={(e) =>
                             handleChange("description", e.target.value)

@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
+import { MAX_IMAGE_SIZE_BYTES, MAX_IMAGE_SIZE_MB } from "@/lib/constants"
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,9 +17,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate file size (5MB limit)
-    const maxSize = 5 * 1024 * 1024 // 5MB
-    if (file.size > maxSize) {
-      return NextResponse.json({ error: "File size exceeds 5MB limit" }, { status: 400 })
+    if (file.size > MAX_IMAGE_SIZE_BYTES) {
+      return NextResponse.json({ error: `File size exceeds ${MAX_IMAGE_SIZE_MB}MB limit` }, { status: 400 })
     }
 
     const bytes = await file.arrayBuffer()

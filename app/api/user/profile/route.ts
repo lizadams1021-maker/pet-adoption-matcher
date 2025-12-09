@@ -43,6 +43,7 @@ export async function PUT(request: NextRequest) {
       worksOutsideHome: "works_outside_home",
       hoursHomeAlone: "hours_home_alone",
       wherePetsWhenAway: "where_pets_when_away",
+      hasChildren: "has_children",
       childrenCount: "children_count",
       childrenAges: "children_ages",
       adultsInHome: "adults_in_home",
