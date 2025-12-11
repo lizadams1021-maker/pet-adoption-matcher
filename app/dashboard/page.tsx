@@ -41,6 +41,29 @@ export default function DashboardPage() {
   });
   const [loadingPage, setLoading] = useState(true);
 
+  const getStatusVisuals = (status?: string) => {
+    const normalized = (status ?? "").toLowerCase();
+
+    if (normalized === "adopted") {
+      return {
+        listText: "text-green-700 font-semibold",
+        headerText: "text-green-600 font-medium capitalize",
+      };
+    }
+
+    if (normalized === "in progress") {
+      return {
+        listText: "text-amber-600 font-semibold",
+        headerText: "text-amber-600 font-medium capitalize",
+      };
+    }
+
+    return {
+      listText: "text-muted-foreground",
+      headerText: "text-muted-foreground font-medium capitalize",
+    };
+  };
+
   useEffect(() => {
     if (loading) return;
 
@@ -376,7 +399,10 @@ export default function DashboardPage() {
               <div className="space-y-4">
                 {pets.map((pet) => {
                   const isSelected = selectedPet?.id === pet.id;
-                  const isAdopted = pet.status === "adopted";
+                  const normalizedStatus = (pet.status ?? "").toLowerCase();
+                  const isAdopted = normalizedStatus === "adopted";
+                  const isInProgress = normalizedStatus === "in progress";
+                  const statusVisuals = getStatusVisuals(pet.status);
 
                   return (
                     <button
@@ -386,6 +412,8 @@ export default function DashboardPage() {
               ${
                 isAdopted
                   ? "bg-green-100 border-green-300"
+                  : isInProgress
+                  ? "bg-amber-50 border-amber-200"
                   : "bg-card border-border"
               }
               ${
@@ -408,13 +436,7 @@ export default function DashboardPage() {
                         <p className="text-sm text-muted-foreground">
                           {pet.breed}
                         </p>
-                        <p
-                          className={`text-sm mt-1 ${
-                            isAdopted
-                              ? "text-green-700 font-semibold"
-                              : "text-muted-foreground"
-                          }`}
-                        >
+                        <p className={`text-sm mt-1 ${statusVisuals.listText}`}>
                           {pet.status}
                         </p>
                       </div>
@@ -430,6 +452,9 @@ export default function DashboardPage() {
             <div>
               {selectedPet && (
                 <>
+                  {(() => {
+                    return null;
+                  })()}
                   <div className="flex items-center gap-2 mb-6">
                     <Heart className="h-5 w-5 text-primary" />
                     <h2 className="text-xl font-semibold">
@@ -439,7 +464,11 @@ export default function DashboardPage() {
                   <div className="mb-4 text-sm text-muted-foreground">
                     <span className="font-medium">{selectedPet.breed}</span> •{" "}
                     {selectedPet.age_group} •{" "}
-                    <span className="text-green-600 font-medium capitalize">
+                    <span
+                      className={
+                        getStatusVisuals(selectedPet.status).headerText
+                      }
+                    >
                       {selectedPet.status}
                     </span>{" "}
                     •{" "}
