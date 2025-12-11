@@ -192,11 +192,9 @@ export default function DashboardPage() {
     adopterName: string
   ) => {
     const result = await Swal.fire({
-      title: "Confirm Adoption",
+      title: "Please Confirm",
       html: `
-      Are you sure you want to accept <strong>${adopterName}</strong> for this pet?<br>
-      This will mark the pet as adopted and remove all other applications.
-    `,
+      We'll send <strong>${adopterName}</strong> a message to continue with your adoption application process.<br>`,
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#16a34a",
@@ -227,12 +225,12 @@ export default function DashboardPage() {
         // ✅ Update pet status to 'adopted'
         setPets((prevPets) =>
           prevPets.map((p) =>
-            p.id === petId ? { ...p, status: "adopted" } : p
+            p.id === petId ? { ...p, status: "in progress" } : p
           )
         );
 
         setSelectedPet((prev: typeof selectedPet) =>
-          prev && prev.id === petId ? { ...prev, status: "adopted" } : prev
+          prev && prev.id === petId ? { ...prev, status: "in progress" } : prev
         );
       });
     } catch (error) {
