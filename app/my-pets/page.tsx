@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { AppLayout } from "@/components/app-layout";
@@ -51,11 +51,18 @@ const weightOptions: Record<AnimalType, WeightOption[]> = {
   ],
 };
 
+const PETS_PAGE_SIZE = 6;
+
 export default function MyPetsPage() {
   const { user, loading } = useAuthClient();
   const router = useRouter();
   const [loadingPage, setLoading] = useState(true);
   const [userPets, setUserPets] = useState<any[]>([]);
+  const [petPage, setPetPage] = useState(0);
+  const [petTotalPages, setPetTotalPages] = useState(1);
+  const [petTotalCount, setPetTotalCount] = useState(0);
+  const [hasMorePets, setHasMorePets] = useState(false);
+  const [loadingPets, setLoadingPets] = useState(false);
   const [editingPet, setEditingPet] = useState<any | null>(null);
   const [editFormData, setEditFormData] = useState({
     name: "",
@@ -96,6 +103,70 @@ export default function MyPetsPage() {
     return weightOptions[type] ?? weightOptions.other;
   }, [editFormData.type]);
 
+  const fetchPets = useCallback(
+    async (pageToLoad = 0) => {
+      if (!user) return;
+      const isInitialPage = pageToLoad === 0;
+
+      if (isInitialPage) {
+        setHasMorePets(false);
+        setPetTotalCount(0);
+      }
+
+      setLoadingPets(true);
+
+      try {
+        const res = await fetch(
+          `/api/pets?ownerId=${user.id}&page=${pageToLoad}&limit=${PETS_PAGE_SIZE}`
+        );
+        const data = await res.json();
+
+        if (!res.ok) {
+          console.error("Failed to fetch pets:", data.error);
+          if (isInitialPage) {
+            setUserPets([]);
+          }
+          return;
+        }
+
+        const incomingPets = data.pets ?? [];
+        const totalCount =
+          typeof data.totalCount === "number"
+            ? data.totalCount
+            : incomingPets.length;
+        const computedTotalPages = Math.max(
+          1,
+          Math.ceil(totalCount / PETS_PAGE_SIZE)
+        );
+
+        setPetTotalCount(totalCount);
+        setPetTotalPages(computedTotalPages);
+        setPetPage(pageToLoad);
+        setHasMorePets(pageToLoad + 1 < computedTotalPages);
+
+        setUserPets((prev) =>
+          pageToLoad === 0 ? incomingPets : [...prev, ...incomingPets]
+        );
+      } catch (err) {
+        console.error("Error fetching pets:", err);
+        if (isInitialPage) {
+          setUserPets([]);
+        }
+      } finally {
+        setLoadingPets(false);
+        if (isInitialPage) {
+          setLoading(false);
+        }
+      }
+    },
+    [user?.id]
+  );
+
+  const handleLoadMorePets = useCallback(() => {
+    if (loadingPets || !hasMorePets) return;
+    fetchPets(petPage + 1);
+  }, [fetchPets, hasMorePets, loadingPets, petPage]);
+
   useEffect(() => {
     if (loading) return;
 
@@ -104,33 +175,14 @@ export default function MyPetsPage() {
       return;
     }
 
-    fetchPets();
-  }, [user, router, loading]);
-
-  const fetchPets = async () => {
-    try {
-      setLoading(true);
-
-      if (user) {
-        const res = await fetch(`/api/pets?ownerId=${user.id}`);
-        const data = await res.json();
-
-        if (!res.ok) {
-          console.error("Failed to fetch pets:", data.error);
-          setUserPets([]);
-          return;
-        }
-        console.log("[My pets] pets from api:", data.pets);
-        setUserPets(data.pets || []);
-        console.log("[My pets] pets:", userPets);
-      }
-    } catch (err) {
-      console.error("Error fetching pets:", err);
-      setUserPets([]);
-    } finally {
-      setLoading(false);
-    }
-  };
+    setUserPets([]);
+    setPetPage(0);
+    setPetTotalPages(1);
+    setHasMorePets(false);
+    setPetTotalCount(0);
+    setLoading(true);
+    fetchPets(0);
+  }, [user, router, loading, fetchPets]);
 
   const handleDelete = async (petId: string) => {
     const result = await Swal.fire({
@@ -902,6 +954,21 @@ export default function MyPetsPage() {
                 )}
               </div>
             ))}
+          </div>
+        )}
+        {hasMorePets && (
+          <div className="mt-8 flex flex-col items-center gap-2">
+            <Button
+              variant="outline"
+              className="w-full max-w-sm"
+              disabled={loadingPets}
+              onClick={handleLoadMorePets}
+            >
+              {loadingPets ? "Loading..." : "Load more pets"}
+            </Button>
+            <p className="text-xs text-muted-foreground text-center">
+              Showing {userPets.length} of {petTotalCount} pets
+            </p>
           </div>
         )}
       </div>
