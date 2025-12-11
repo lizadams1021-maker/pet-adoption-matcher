@@ -6,6 +6,7 @@ import {
   ReactElement,
   ReactNode,
   ReactPortal,
+  useCallback,
   useEffect,
   useState,
 } from "react";
@@ -23,11 +24,18 @@ import {
 import Swal from "sweetalert2";
 import { useAuthClient } from "@/lib/useAuthClient";
 
+const PETS_PAGE_SIZE = 6;
+
 export default function DashboardPage() {
   const { user, loading } = useAuthClient();
   const router = useRouter();
   const [selectedPet, setSelectedPet] = useState<any>(null);
   const [pets, setPets] = useState<any[]>([]);
+  const [petPage, setPetPage] = useState(0);
+  const [petTotalPages, setPetTotalPages] = useState(1);
+  const [hasMorePets, setHasMorePets] = useState(false);
+  const [loadingPets, setLoadingPets] = useState(false);
+  const [petTotalCount, setPetTotalCount] = useState(0);
   const [adopters, setAdopters] = useState<any[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -41,6 +49,90 @@ export default function DashboardPage() {
   });
   const [loadingPage, setLoading] = useState(true);
 
+  const getStatusVisuals = (status?: string) => {
+    const normalized = (status ?? "").toLowerCase();
+
+    if (normalized === "adopted") {
+      return {
+        listText: "text-green-700 font-semibold",
+        headerText: "text-green-600 font-medium capitalize",
+      };
+    }
+
+    if (normalized === "in progress") {
+      return {
+        listText: "text-amber-600 font-semibold",
+        headerText: "text-amber-600 font-medium capitalize",
+      };
+    }
+
+    return {
+      listText: "text-muted-foreground",
+      headerText: "text-muted-foreground font-medium capitalize",
+    };
+  };
+
+  const fetchPets = useCallback(
+    async (pageToLoad = 0) => {
+      if (!user) return;
+      const isInitialPage = pageToLoad === 0;
+
+      if (isInitialPage) {
+        setHasMorePets(false);
+        setPetTotalCount(0);
+      }
+
+      setLoadingPets(true);
+
+      try {
+        const res = await fetch(
+          `/api/pets?ownerId=${user.id}&page=${pageToLoad}&limit=${PETS_PAGE_SIZE}`
+        );
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || "Failed to fetch pets");
+        }
+
+        const incomingPets = data.pets ?? [];
+        const totalCount =
+          typeof data.totalCount === "number"
+            ? data.totalCount
+            : incomingPets.length;
+        const computedTotalPages = Math.max(
+          1,
+          Math.ceil(totalCount / PETS_PAGE_SIZE)
+        );
+
+        setPetTotalCount(totalCount);
+        setPetTotalPages(computedTotalPages);
+        setPetPage(pageToLoad);
+        setHasMorePets(pageToLoad + 1 < computedTotalPages);
+
+        setPets((prev) =>
+          pageToLoad === 0 ? incomingPets : [...prev, ...incomingPets]
+        );
+
+        if (isInitialPage && incomingPets.length > 0) {
+          setSelectedPet(incomingPets[0]);
+        }
+      } catch (error) {
+        console.error("[v0] Fetch pets error:", error);
+      } finally {
+        setLoadingPets(false);
+        if (isInitialPage) {
+          setLoading(false);
+        }
+      }
+    },
+    [user?.id]
+  );
+
+  const handleLoadMorePets = useCallback(() => {
+    if (loadingPets || !hasMorePets) return;
+    fetchPets(petPage + 1);
+  }, [fetchPets, hasMorePets, loadingPets, petPage]);
+
   useEffect(() => {
     if (loading) return;
 
@@ -49,27 +141,15 @@ export default function DashboardPage() {
       return;
     }
 
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-
-        // Fetch user's pets
-        const petsRes = await fetch(`/api/pets?ownerId=${user.id}`);
-        const petsData = await petsRes.json();
-
-        if (petsRes.ok && petsData.pets.length > 0) {
-          setPets(petsData.pets);
-          setSelectedPet(petsData.pets[0]);
-        }
-      } catch (error) {
-        console.error("[v0] Fetch dashboard data error:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [user, router, loading]);
+    setPets([]);
+    setSelectedPet(null);
+    setPetPage(0);
+    setPetTotalPages(1);
+    setHasMorePets(false);
+    setPetTotalCount(0);
+    setLoading(true);
+    fetchPets(0);
+  }, [user, router, loading, fetchPets]);
 
   useEffect(() => {
     if (!user) return;
@@ -192,11 +272,9 @@ export default function DashboardPage() {
     adopterName: string
   ) => {
     const result = await Swal.fire({
-      title: "Confirm Adoption",
+      title: "Please Confirm",
       html: `
-      Are you sure you want to accept <strong>${adopterName}</strong> for this pet?<br>
-      This will mark the pet as adopted and remove all other applications.
-    `,
+      We'll send <strong>${adopterName}</strong> a message to continue with your adoption application process.<br>`,
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#16a34a",
@@ -227,12 +305,12 @@ export default function DashboardPage() {
         // ✅ Update pet status to 'adopted'
         setPets((prevPets) =>
           prevPets.map((p) =>
-            p.id === petId ? { ...p, status: "adopted" } : p
+            p.id === petId ? { ...p, status: "in progress" } : p
           )
         );
 
         setSelectedPet((prev: typeof selectedPet) =>
-          prev && prev.id === petId ? { ...prev, status: "adopted" } : prev
+          prev && prev.id === petId ? { ...prev, status: "in progress" } : prev
         );
       });
     } catch (error) {
@@ -378,7 +456,10 @@ export default function DashboardPage() {
               <div className="space-y-4">
                 {pets.map((pet) => {
                   const isSelected = selectedPet?.id === pet.id;
-                  const isAdopted = pet.status === "adopted";
+                  const normalizedStatus = (pet.status ?? "").toLowerCase();
+                  const isAdopted = normalizedStatus === "adopted";
+                  const isInProgress = normalizedStatus === "in progress";
+                  const statusVisuals = getStatusVisuals(pet.status);
 
                   return (
                     <button
@@ -388,6 +469,8 @@ export default function DashboardPage() {
               ${
                 isAdopted
                   ? "bg-green-100 border-green-300"
+                  : isInProgress
+                  ? "bg-amber-50 border-amber-200"
                   : "bg-card border-border"
               }
               ${
@@ -410,19 +493,28 @@ export default function DashboardPage() {
                         <p className="text-sm text-muted-foreground">
                           {pet.breed}
                         </p>
-                        <p
-                          className={`text-sm mt-1 ${
-                            isAdopted
-                              ? "text-green-700 font-semibold"
-                              : "text-muted-foreground"
-                          }`}
-                        >
+                        <p className={`text-sm mt-1 ${statusVisuals.listText}`}>
                           {pet.status}
                         </p>
                       </div>
                     </button>
                   );
                 })}
+              </div>
+            )}
+            {hasMorePets && (
+              <div className="mt-4">
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  disabled={loadingPets}
+                  onClick={handleLoadMorePets}
+                >
+                  {loadingPets ? "Loading..." : "Load more pets"}
+                </Button>
+                <p className="text-xs text-muted-foreground text-center mt-2">
+                  Showing {pets.length} of {petTotalCount} pets
+                </p>
               </div>
             )}
           </div>
@@ -432,6 +524,9 @@ export default function DashboardPage() {
             <div>
               {selectedPet && (
                 <>
+                  {(() => {
+                    return null;
+                  })()}
                   <div className="flex items-center gap-2 mb-6">
                     <Heart className="h-5 w-5 text-primary" />
                     <h2 className="text-xl font-semibold">
@@ -441,7 +536,11 @@ export default function DashboardPage() {
                   <div className="mb-4 text-sm text-muted-foreground">
                     <span className="font-medium">{selectedPet.breed}</span> •{" "}
                     {selectedPet.age_group} •{" "}
-                    <span className="text-green-600 font-medium capitalize">
+                    <span
+                      className={
+                        getStatusVisuals(selectedPet.status).headerText
+                      }
+                    >
                       {selectedPet.status}
                     </span>{" "}
                     •{" "}

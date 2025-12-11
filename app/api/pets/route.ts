@@ -36,15 +36,19 @@ export async function GET(request: NextRequest) {
     const ownerId = searchParams.get("ownerId");
     const excludeOwnerId = searchParams.get("excludeOwnerId");
 
-    const limit = Number(searchParams.get("limit")) || 6;
-    const page = Number(searchParams.get("page")) || 0;
+    const defaultLimit = 5;
+    const limitParam = Number(searchParams.get("limit"));
+    const pageParam = Number(searchParams.get("page"));
+    const limit =
+      !Number.isNaN(limitParam) && limitParam > 0 ? limitParam : defaultLimit;
+    const page = !Number.isNaN(pageParam) && pageParam >= 0 ? pageParam : 0;
     const offset = page * limit;
 
     let pets;
     let totalCountResult;
 
     if (ownerId) {
-      // If has ownerId, we bring pets with no filter by status
+      // If ownerId is present, paginate pets for that owner
       pets = await sql`
         SELECT 
           p.id, 
@@ -68,7 +72,7 @@ export async function GET(request: NextRequest) {
       `;
 
       totalCountResult = await sql`
-        SELECT COUNT(*) AS count
+        SELECT COUNT(*)::int AS count
         FROM pets
         WHERE owner_id = ${ownerId}
       `;

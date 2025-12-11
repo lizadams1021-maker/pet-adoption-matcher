@@ -19,10 +19,10 @@ export async function POST(request: NextRequest) {
       WHERE user_id = ${adopterId} AND pet_id = ${petId}
     `;
 
-    // 2️⃣ Marcar pet as adopted
+    // 2️⃣ Mark pet as in progress while the adoption finalizes
     await sql`
       UPDATE pets
-      SET status = 'adopted'
+      SET status = 'in progress'
       WHERE id = ${petId}
     `;
 
