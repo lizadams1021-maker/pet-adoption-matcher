@@ -6,6 +6,7 @@ import {
   ReactElement,
   ReactNode,
   ReactPortal,
+  useCallback,
   useEffect,
   useState,
 } from "react";
@@ -23,11 +24,18 @@ import {
 import Swal from "sweetalert2";
 import { useAuthClient } from "@/lib/useAuthClient";
 
+const PETS_PAGE_SIZE = 6;
+
 export default function DashboardPage() {
   const { user, loading } = useAuthClient();
   const router = useRouter();
   const [selectedPet, setSelectedPet] = useState<any>(null);
   const [pets, setPets] = useState<any[]>([]);
+  const [petPage, setPetPage] = useState(0);
+  const [petTotalPages, setPetTotalPages] = useState(1);
+  const [hasMorePets, setHasMorePets] = useState(false);
+  const [loadingPets, setLoadingPets] = useState(false);
+  const [petTotalCount, setPetTotalCount] = useState(0);
   const [adopters, setAdopters] = useState<any[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -64,6 +72,67 @@ export default function DashboardPage() {
     };
   };
 
+  const fetchPets = useCallback(
+    async (pageToLoad = 0) => {
+      if (!user) return;
+      const isInitialPage = pageToLoad === 0;
+
+      if (isInitialPage) {
+        setHasMorePets(false);
+        setPetTotalCount(0);
+      }
+
+      setLoadingPets(true);
+
+      try {
+        const res = await fetch(
+          `/api/pets?ownerId=${user.id}&page=${pageToLoad}&limit=${PETS_PAGE_SIZE}`
+        );
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.error || "Failed to fetch pets");
+        }
+
+        const incomingPets = data.pets ?? [];
+        const totalCount =
+          typeof data.totalCount === "number"
+            ? data.totalCount
+            : incomingPets.length;
+        const computedTotalPages = Math.max(
+          1,
+          Math.ceil(totalCount / PETS_PAGE_SIZE)
+        );
+
+        setPetTotalCount(totalCount);
+        setPetTotalPages(computedTotalPages);
+        setPetPage(pageToLoad);
+        setHasMorePets(pageToLoad + 1 < computedTotalPages);
+
+        setPets((prev) =>
+          pageToLoad === 0 ? incomingPets : [...prev, ...incomingPets]
+        );
+
+        if (isInitialPage && incomingPets.length > 0) {
+          setSelectedPet(incomingPets[0]);
+        }
+      } catch (error) {
+        console.error("[v0] Fetch pets error:", error);
+      } finally {
+        setLoadingPets(false);
+        if (isInitialPage) {
+          setLoading(false);
+        }
+      }
+    },
+    [user?.id]
+  );
+
+  const handleLoadMorePets = useCallback(() => {
+    if (loadingPets || !hasMorePets) return;
+    fetchPets(petPage + 1);
+  }, [fetchPets, hasMorePets, loadingPets, petPage]);
+
   useEffect(() => {
     if (loading) return;
 
@@ -72,27 +141,15 @@ export default function DashboardPage() {
       return;
     }
 
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-
-        // Fetch user's pets
-        const petsRes = await fetch(`/api/pets?ownerId=${user.id}`);
-        const petsData = await petsRes.json();
-
-        if (petsRes.ok && petsData.pets.length > 0) {
-          setPets(petsData.pets);
-          setSelectedPet(petsData.pets[0]);
-        }
-      } catch (error) {
-        console.error("[v0] Fetch dashboard data error:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [user, router, loading]);
+    setPets([]);
+    setSelectedPet(null);
+    setPetPage(0);
+    setPetTotalPages(1);
+    setHasMorePets(false);
+    setPetTotalCount(0);
+    setLoading(true);
+    fetchPets(0);
+  }, [user, router, loading, fetchPets]);
 
   useEffect(() => {
     if (!user) return;
@@ -443,6 +500,21 @@ export default function DashboardPage() {
                     </button>
                   );
                 })}
+              </div>
+            )}
+            {hasMorePets && (
+              <div className="mt-4">
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  disabled={loadingPets}
+                  onClick={handleLoadMorePets}
+                >
+                  {loadingPets ? "Loading..." : "Load more pets"}
+                </Button>
+                <p className="text-xs text-muted-foreground text-center mt-2">
+                  Showing {pets.length} of {petTotalCount} pets
+                </p>
               </div>
             )}
           </div>
