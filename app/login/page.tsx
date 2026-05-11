@@ -1,48 +1,48 @@
-"use client";
+'use client';
 
-import type React from "react";
+import type React from 'react';
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import Link from "next/link";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import Link from 'next/link';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError("");
+    setError('');
     setLoading(true);
 
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
-        credentials: "include",
+        credentials: 'include',
       });
 
       if (!res.ok) {
         const data = await res.json();
-        setError(data.error || "Login failed");
+        setError(data.error || 'Login failed');
         return;
       }
 
       const data = await res.json();
       // Save access token on memory
       localStorage.clear();
-      localStorage.setItem("accessToken", data.accessToken);
+      localStorage.setItem('accessToken', data.accessToken);
 
-      router.push("/matches");
+      router.push('/matches');
     } catch (err) {
-      setError("Something went wrong. Please try again.");
+      setError('Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -52,12 +52,8 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-muted/30">
       <div className="w-full max-w-md p-8 bg-card rounded-lg border">
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-primary mb-2">
-            Pet Protect & Connect
-          </h1>
-          <p className="text-muted-foreground">
-            Sign in to find your perfect pet match
-          </p>
+          <h1 className="text-3xl font-bold text-primary mb-2">Pet Protect & Connect</h1>
+          <p className="text-muted-foreground">Sign in to find your perfect pet match</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -95,7 +91,7 @@ export default function LoginPage() {
             {loading ? (
               <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
             ) : (
-              "Sign In"
+              'Sign In'
             )}
           </Button>
         </form>

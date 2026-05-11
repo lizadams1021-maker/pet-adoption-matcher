@@ -1,53 +1,49 @@
-"use client";
+'use client';
 
-import type React from "react";
+import type React from 'react';
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/auth-context";
-import { AppLayout } from "@/components/app-layout";
-import Image from "next/image";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/auth-context';
+import { AppLayout } from '@/components/app-layout';
+import Image from 'next/image';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Pencil, Trash2, X, Upload } from "lucide-react";
-import { useAuthClient } from "@/lib/useAuthClient";
-import Swal from "sweetalert2";
-import { CAT_BREEDS, DOG_BREEDS } from "@/lib/breeds";
-import { US_STATES } from "@/lib/us-states-cities";
-import {
-  IMAGE_SIZE_LIMIT_MESSAGE,
-  MAX_IMAGE_SIZE_BYTES,
-  MAX_IMAGE_SIZE_MB,
-} from "@/lib/constants";
+} from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Pencil, Trash2, X, Upload } from 'lucide-react';
+import { useAuthClient } from '@/lib/useAuthClient';
+import Swal from 'sweetalert2';
+import { CAT_BREEDS, DOG_BREEDS } from '@/lib/breeds';
+import { US_STATES } from '@/lib/us-states-cities';
+import { IMAGE_SIZE_LIMIT_MESSAGE, MAX_IMAGE_SIZE_BYTES, MAX_IMAGE_SIZE_MB } from '@/lib/constants';
 
-type AnimalType = "dog" | "cat" | "other";
+type AnimalType = 'dog' | 'cat' | 'other';
 type WeightOption = { value: string; label: string };
 
 const weightOptions: Record<AnimalType, WeightOption[]> = {
   dog: [
-    { value: "small", label: "Small (0-25 lbs)" },
-    { value: "medium", label: "Medium (25-60 lbs)" },
-    { value: "large", label: "Large (60+ lbs)" },
+    { value: 'small', label: 'Small (0-25 lbs)' },
+    { value: 'medium', label: 'Medium (25-60 lbs)' },
+    { value: 'large', label: 'Large (60+ lbs)' },
   ],
   cat: [
-    { value: "small", label: "Small (0-10 lbs)" },
-    { value: "medium", label: "Medium (10-20 lbs)" },
-    { value: "large", label: "Large (20+ lbs)" },
+    { value: 'small', label: 'Small (0-10 lbs)' },
+    { value: 'medium', label: 'Medium (10-20 lbs)' },
+    { value: 'large', label: 'Large (20+ lbs)' },
   ],
   other: [
-    { value: "small", label: "Small" },
-    { value: "medium", label: "Medium" },
-    { value: "large", label: "Large" },
+    { value: 'small', label: 'Small' },
+    { value: 'medium', label: 'Medium' },
+    { value: 'large', label: 'Large' },
   ],
 };
 
@@ -65,41 +61,41 @@ export default function MyPetsPage() {
   const [loadingPets, setLoadingPets] = useState(false);
   const [editingPet, setEditingPet] = useState<any | null>(null);
   const [editFormData, setEditFormData] = useState({
-    name: "",
-    type: "dog",
-    breed: "",
-    ageGroup: "adult",
-    weightRange: "medium",
-    energyLevel: "moderate",
-    size: "medium",
+    name: '',
+    type: 'dog',
+    breed: '',
+    ageGroup: 'adult',
+    weightRange: 'medium',
+    energyLevel: 'moderate',
+    size: 'medium',
     goodWithKids: false,
     goodWithCats: false,
     goodWithDogs: false,
     houseTrained: false,
-    specialNeeds: "",
-    description: "",
-    imageUrl: "",
+    specialNeeds: '',
+    description: '',
+    imageUrl: '',
 
     // New fields:
-    state: "",
+    state: '',
     adoptableOutOfState: false,
     onlyPet: false,
     okWithAnimals: [], // ["dog", "cat"]
     requiresFencedYard: false,
     needsCompany: false,
-    comfortableHoursAlone: "",
-    ownerExperienceRequired: "",
+    comfortableHoursAlone: '',
+    ownerExperienceRequired: '',
   });
   const [uploading, setUploading] = useState(false);
   const editBreedOptions =
-    editFormData.type === "dog"
+    editFormData.type === 'dog'
       ? DOG_BREEDS
-      : editFormData.type === "cat"
-      ? CAT_BREEDS
-      : ["Other / Not applicable"];
+      : editFormData.type === 'cat'
+        ? CAT_BREEDS
+        : ['Other / Not applicable'];
 
   const editWeightOptions = useMemo(() => {
-    const type = (editFormData.type || "dog") as AnimalType;
+    const type = (editFormData.type || 'dog') as AnimalType;
     return weightOptions[type] ?? weightOptions.other;
   }, [editFormData.type]);
 
@@ -122,7 +118,7 @@ export default function MyPetsPage() {
         const data = await res.json();
 
         if (!res.ok) {
-          console.error("Failed to fetch pets:", data.error);
+          console.error('Failed to fetch pets:', data.error);
           if (isInitialPage) {
             setUserPets([]);
           }
@@ -131,24 +127,17 @@ export default function MyPetsPage() {
 
         const incomingPets = data.pets ?? [];
         const totalCount =
-          typeof data.totalCount === "number"
-            ? data.totalCount
-            : incomingPets.length;
-        const computedTotalPages = Math.max(
-          1,
-          Math.ceil(totalCount / PETS_PAGE_SIZE)
-        );
+          typeof data.totalCount === 'number' ? data.totalCount : incomingPets.length;
+        const computedTotalPages = Math.max(1, Math.ceil(totalCount / PETS_PAGE_SIZE));
 
         setPetTotalCount(totalCount);
         setPetTotalPages(computedTotalPages);
         setPetPage(pageToLoad);
         setHasMorePets(pageToLoad + 1 < computedTotalPages);
 
-        setUserPets((prev) =>
-          pageToLoad === 0 ? incomingPets : [...prev, ...incomingPets]
-        );
+        setUserPets((prev) => (pageToLoad === 0 ? incomingPets : [...prev, ...incomingPets]));
       } catch (err) {
-        console.error("Error fetching pets:", err);
+        console.error('Error fetching pets:', err);
         if (isInitialPage) {
           setUserPets([]);
         }
@@ -159,7 +148,7 @@ export default function MyPetsPage() {
         }
       }
     },
-    [user?.id]
+    [user]
   );
 
   const handleLoadMorePets = useCallback(() => {
@@ -171,7 +160,7 @@ export default function MyPetsPage() {
     if (loading) return;
 
     if (!user) {
-      router.push("/login");
+      router.push('/login');
       return;
     }
 
@@ -186,33 +175,33 @@ export default function MyPetsPage() {
 
   const handleDelete = async (petId: string) => {
     const result = await Swal.fire({
-      title: "Delete pet?",
-      text: "This action cannot be undone.",
-      icon: "warning",
+      title: 'Delete pet?',
+      text: 'This action cannot be undone.',
+      icon: 'warning',
       showCancelButton: true,
-      confirmButtonText: "Yes, delete",
-      cancelButtonText: "Cancel",
+      confirmButtonText: 'Yes, delete',
+      cancelButtonText: 'Cancel',
     });
 
     if (!result.isConfirmed) return;
 
     try {
       const res = await fetch(`/api/pets?petId=${petId}`, {
-        method: "DELETE",
+        method: 'DELETE',
       });
 
       if (!res.ok) {
-        console.error("Failed to delete pet");
-        Swal.fire("Error", "The pet could not be deleted.", "error");
+        console.error('Failed to delete pet');
+        Swal.fire('Error', 'The pet could not be deleted.', 'error');
         return;
       }
 
-      Swal.fire("Deleted", "The pet has been removed.", "success");
+      Swal.fire('Deleted', 'The pet has been removed.', 'success');
 
       await fetchPets();
     } catch (error) {
-      console.error("Delete error:", error);
-      Swal.fire("Error", "An unexpected error occurred.", "error");
+      console.error('Delete error:', error);
+      Swal.fire('Error', 'An unexpected error occurred.', 'error');
     }
   };
 
@@ -220,11 +209,11 @@ export default function MyPetsPage() {
     setLoading(true);
     try {
       const res = await fetch(`/api/pets/${pet.id}`, {
-        method: "GET",
+        method: 'GET',
       });
 
       if (!res.ok) {
-        console.error("Error al traer los datos del pet.");
+        console.error('Error al traer los datos del pet.');
         return;
       }
 
@@ -234,31 +223,31 @@ export default function MyPetsPage() {
       setEditingPet(fullPet);
 
       setEditFormData({
-        name: fullPet.name || "",
-        type: fullPet.type || "dog",
-        breed: fullPet.breed || "",
-        ageGroup: fullPet.age_group || "adult",
-        weightRange: fullPet.weight_range || "medium",
-        energyLevel: fullPet.energy_level || "moderate",
-        size: fullPet.size || "medium",
+        name: fullPet.name || '',
+        type: fullPet.type || 'dog',
+        breed: fullPet.breed || '',
+        ageGroup: fullPet.age_group || 'adult',
+        weightRange: fullPet.weight_range || 'medium',
+        energyLevel: fullPet.energy_level || 'moderate',
+        size: fullPet.size || 'medium',
         goodWithKids: fullPet.good_with_children || false,
         goodWithCats: fullPet.good_with_pets || false,
         goodWithDogs: fullPet.good_with_pets || false,
         houseTrained: fullPet.house_trained || false,
-        specialNeeds: fullPet.special_needs || "",
-        description: fullPet.description || "",
-        imageUrl: fullPet.image_url || "",
-        state: fullPet.state || "",
+        specialNeeds: fullPet.special_needs || '',
+        description: fullPet.description || '',
+        imageUrl: fullPet.image_url || '',
+        state: fullPet.state || '',
         adoptableOutOfState: fullPet.adoptable_out_of_state || false,
         onlyPet: fullPet.only_pet || false,
         okWithAnimals: fullPet.ok_with_animals || [],
         requiresFencedYard: fullPet.requires_fenced_yard || false,
         needsCompany: fullPet.needs_company || false,
-        comfortableHoursAlone: fullPet.comfortable_hours_alone || "",
-        ownerExperienceRequired: fullPet.owner_experience_required || "",
+        comfortableHoursAlone: fullPet.comfortable_hours_alone || '',
+        ownerExperienceRequired: fullPet.owner_experience_required || '',
       });
     } catch (error) {
-      console.error("Error:", error);
+      console.error('Error:', error);
     } finally {
       setLoading(false);
     }
@@ -270,27 +259,27 @@ export default function MyPetsPage() {
 
     if (file.size > MAX_IMAGE_SIZE_BYTES) {
       Swal.fire({
-        icon: "warning",
-        title: "Image Too Large",
+        icon: 'warning',
+        title: 'Image Too Large',
         text: IMAGE_SIZE_LIMIT_MESSAGE,
       });
-      e.target.value = "";
+      e.target.value = '';
       return;
     }
 
     setUploading(true);
     try {
       const formDataObj = new FormData();
-      formDataObj.append("file", file);
+      formDataObj.append('file', file);
 
-      const response = await fetch("/api/upload", {
-        method: "POST",
+      const response = await fetch('/api/upload', {
+        method: 'POST',
         body: formDataObj,
       });
 
       if (!response.ok) {
-        let errorMessage = "Failed to upload image";
-        const raw = await response.text().catch(() => "");
+        let errorMessage = 'Failed to upload image';
+        const raw = await response.text().catch(() => '');
         if (raw) {
           try {
             const parsed = JSON.parse(raw);
@@ -300,30 +289,27 @@ export default function MyPetsPage() {
           }
         }
 
-        if (
-          response.status === 400 &&
-          errorMessage.toLowerCase().includes("exceeds")
-        ) {
+        if (response.status === 400 && errorMessage.toLowerCase().includes('exceeds')) {
           errorMessage = IMAGE_SIZE_LIMIT_MESSAGE;
         }
 
         Swal.fire({
-          icon: "error",
-          title: "Upload Error",
+          icon: 'error',
+          title: 'Upload Error',
           text: errorMessage,
         });
-        e.target.value = "";
+        e.target.value = '';
         return;
       }
 
       const data = await response.json();
       setEditFormData((prev: any) => ({ ...prev, imageUrl: data.imageUrl }));
     } catch (error) {
-      console.error("[v0] Image upload error:", error);
+      console.error('[v0] Image upload error:', error);
       Swal.fire({
-        icon: "error",
-        title: "Upload Error",
-        text: "Failed to upload image: " + String(error),
+        icon: 'error',
+        title: 'Upload Error',
+        text: 'Failed to upload image: ' + String(error),
       });
     } finally {
       setUploading(false);
@@ -351,9 +337,7 @@ export default function MyPetsPage() {
       state: editFormData.state || null,
       adoptable_out_of_state: editFormData.adoptableOutOfState || false,
       only_pet: editFormData.onlyPet || false,
-      ok_with_animals: editFormData.okWithAnimals?.length
-        ? editFormData.okWithAnimals
-        : null,
+      ok_with_animals: editFormData.okWithAnimals?.length ? editFormData.okWithAnimals : null,
       requires_fenced_yard: editFormData.requiresFencedYard || false,
       needs_company: editFormData.needsCompany || false,
       comfortable_hours_alone: editFormData.comfortableHoursAlone || null,
@@ -361,10 +345,10 @@ export default function MyPetsPage() {
     };
 
     try {
-      const res = await fetch("/api/pets", {
-        method: "PUT",
+      const res = await fetch('/api/pets', {
+        method: 'PUT',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           petId: editingPet.id,
@@ -373,14 +357,14 @@ export default function MyPetsPage() {
       });
 
       if (!res.ok) {
-        console.error("Error updating pet");
+        console.error('Error updating pet');
         return;
       }
 
       fetchPets();
       setEditingPet(null);
     } catch (error) {
-      console.error("Error handling editing:", error);
+      console.error('Error handling editing:', error);
     }
   };
 
@@ -416,19 +400,13 @@ export default function MyPetsPage() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">My Pets</h1>
-          <p className="text-muted-foreground">
-            Manage your pets and their adoption status
-          </p>
+          <p className="text-muted-foreground">Manage your pets and their adoption status</p>
         </div>
 
         {userPets.length === 0 ? (
           <div className="text-center py-12 bg-card rounded-lg border">
-            <p className="text-muted-foreground mb-4">
-              You don't have any pets yet.
-            </p>
-            <Button onClick={() => router.push("/add-pet")}>
-              Add Your First Pet
-            </Button>
+            <p className="text-muted-foreground mb-4">You don't have any pets yet.</p>
+            <Button onClick={() => router.push('/add-pet')}>Add Your First Pet</Button>
           </div>
         ) : (
           <div className="space-y-6">
@@ -438,11 +416,7 @@ export default function MyPetsPage() {
                   <div className="bg-card rounded-lg border p-6">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-xl font-bold">Edit Pet</h3>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={handleCancelEdit}
-                      >
+                      <Button variant="ghost" size="icon" onClick={handleCancelEdit}>
                         <X className="h-5 w-5" />
                       </Button>
                     </div>
@@ -454,9 +428,7 @@ export default function MyPetsPage() {
                           <div className="relative h-32 w-32 rounded-lg overflow-hidden bg-muted shrink-0">
                             {editFormData.imageUrl ? (
                               <Image
-                                src={
-                                  editFormData.imageUrl || "/placeholder.svg"
-                                }
+                                src={editFormData.imageUrl || '/placeholder.svg'}
                                 alt="Pet preview"
                                 fill
                                 className="object-cover"
@@ -468,13 +440,10 @@ export default function MyPetsPage() {
                             )}
                           </div>
                           <div className="flex-1">
-                            <Label
-                              htmlFor="edit-pet-image"
-                              className="cursor-pointer"
-                            >
+                            <Label htmlFor="edit-pet-image" className="cursor-pointer">
                               <div className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 w-fit">
                                 <Upload className="h-4 w-4" />
-                                {uploading ? "Uploading..." : "Upload Photo"}
+                                {uploading ? 'Uploading...' : 'Upload Photo'}
                               </div>
                               <input
                                 id="edit-pet-image"
@@ -498,9 +467,7 @@ export default function MyPetsPage() {
                           <Input
                             id="edit-name"
                             value={editFormData.name}
-                            onChange={(e) =>
-                              handleChange("name", e.target.value)
-                            }
+                            onChange={(e) => handleChange('name', e.target.value)}
                             required
                           />
                         </div>
@@ -509,9 +476,7 @@ export default function MyPetsPage() {
                           <Label htmlFor="edit-type">Type *</Label>
                           <Select
                             value={editFormData.type}
-                            onValueChange={(value) =>
-                              handleChange("type", value)
-                            }
+                            onValueChange={(value) => handleChange('type', value)}
                           >
                             <SelectTrigger>
                               <SelectValue />
@@ -529,9 +494,7 @@ export default function MyPetsPage() {
 
                           <Select
                             value={editFormData.breed}
-                            onValueChange={(value) =>
-                              handleChange("breed", value)
-                            }
+                            onValueChange={(value) => handleChange('breed', value)}
                           >
                             <SelectTrigger>
                               <SelectValue />
@@ -550,39 +513,25 @@ export default function MyPetsPage() {
                           <Label htmlFor="edit-ageGroup">Age Group *</Label>
                           <Select
                             value={editFormData.ageGroup}
-                            onValueChange={(value) =>
-                              handleChange("ageGroup", value)
-                            }
+                            onValueChange={(value) => handleChange('ageGroup', value)}
                           >
                             <SelectTrigger>
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="puppy">
-                                Puppy/Kitten (0-1 year)
-                              </SelectItem>
-                              <SelectItem value="young">
-                                Young (1-3 years)
-                              </SelectItem>
-                              <SelectItem value="adult">
-                                Adult (3-7 years)
-                              </SelectItem>
-                              <SelectItem value="senior">
-                                Senior (7+ years)
-                              </SelectItem>
+                              <SelectItem value="puppy">Puppy/Kitten (0-1 year)</SelectItem>
+                              <SelectItem value="young">Young (1-3 years)</SelectItem>
+                              <SelectItem value="adult">Adult (3-7 years)</SelectItem>
+                              <SelectItem value="senior">Senior (7+ years)</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="edit-weightRange">
-                            Weight Range *
-                          </Label>
+                          <Label htmlFor="edit-weightRange">Weight Range *</Label>
                           <Select
                             value={editFormData.weightRange}
-                            onValueChange={(value) =>
-                              handleChange("weightRange", value)
-                            }
+                            onValueChange={(value) => handleChange('weightRange', value)}
                           >
                             <SelectTrigger>
                               <SelectValue />
@@ -598,14 +547,10 @@ export default function MyPetsPage() {
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="edit-energyLevel">
-                            Energy Level *
-                          </Label>
+                          <Label htmlFor="edit-energyLevel">Energy Level *</Label>
                           <Select
                             value={editFormData.energyLevel}
-                            onValueChange={(value) =>
-                              handleChange("energyLevel", value)
-                            }
+                            onValueChange={(value) => handleChange('energyLevel', value)}
                           >
                             <SelectTrigger>
                               <SelectValue />
@@ -621,9 +566,9 @@ export default function MyPetsPage() {
                         <div className="space-y-2">
                           <Label>Is this pet okay with other animals?</Label>
                           <Select
-                            value={editFormData.okWithAnimals.join(",")}
+                            value={editFormData.okWithAnimals.join(',')}
                             onValueChange={(value) =>
-                              handleChange("okWithAnimals", value.split(","))
+                              handleChange('okWithAnimals', value.split(','))
                             }
                           >
                             <SelectTrigger>
@@ -638,14 +583,10 @@ export default function MyPetsPage() {
                         </div>
 
                         <div className="space-y-2">
-                          <Label>
-                            How many hours can this pet be home alone?
-                          </Label>
+                          <Label>How many hours can this pet be home alone?</Label>
                           <Select
                             value={editFormData.comfortableHoursAlone}
-                            onValueChange={(value) =>
-                              handleChange("comfortableHoursAlone", value)
-                            }
+                            onValueChange={(value) => handleChange('comfortableHoursAlone', value)}
                           >
                             <SelectTrigger>
                               <SelectValue placeholder="Select" />
@@ -659,25 +600,19 @@ export default function MyPetsPage() {
                         </div>
 
                         <div className="space-y-2">
-                          <Label>
-                            Does this pet require an experienced owner?
-                          </Label>
+                          <Label>Does this pet require an experienced owner?</Label>
                           <Select
                             value={editFormData.ownerExperienceRequired}
                             onValueChange={(value) =>
-                              handleChange("ownerExperienceRequired", value)
+                              handleChange('ownerExperienceRequired', value)
                             }
                           >
                             <SelectTrigger>
                               <SelectValue placeholder="Select" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="none">
-                                No special experience
-                              </SelectItem>
-                              <SelectItem value="some experience">
-                                Some experience
-                              </SelectItem>
+                              <SelectItem value="none">No special experience</SelectItem>
+                              <SelectItem value="some experience">Some experience</SelectItem>
                               <SelectItem value="special needs">
                                 Experience with special needs
                               </SelectItem>
@@ -692,7 +627,7 @@ export default function MyPetsPage() {
                           <Label htmlFor="state">State</Label>
                           <Select
                             value={editFormData.state}
-                            onValueChange={(v) => handleChange("state", v)}
+                            onValueChange={(v) => handleChange('state', v)}
                           >
                             <SelectTrigger id="state">
                               <SelectValue placeholder="Select state" />
@@ -715,7 +650,7 @@ export default function MyPetsPage() {
                             id="adoptableOutOfState"
                             checked={editFormData.adoptableOutOfState}
                             onCheckedChange={(checked) =>
-                              handleChange("adoptableOutOfState", checked)
+                              handleChange('adoptableOutOfState', checked)
                             }
                           />
                           <Label>This pet can be adopted out of state.</Label>
@@ -725,9 +660,7 @@ export default function MyPetsPage() {
                           <Checkbox
                             id="onlyPet"
                             checked={editFormData.onlyPet}
-                            onCheckedChange={(checked) =>
-                              handleChange("onlyPet", checked)
-                            }
+                            onCheckedChange={(checked) => handleChange('onlyPet', checked)}
                           />
                           <Label>Needs to be the only pet.</Label>
                         </div>
@@ -737,7 +670,7 @@ export default function MyPetsPage() {
                             id="requiresFencedYard"
                             checked={editFormData.requiresFencedYard}
                             onCheckedChange={(checked) =>
-                              handleChange("requiresFencedYard", checked)
+                              handleChange('requiresFencedYard', checked)
                             }
                           />
                           <Label>This pet requires a fenced yard.</Label>
@@ -747,14 +680,9 @@ export default function MyPetsPage() {
                           <Checkbox
                             id="needsCompany"
                             checked={editFormData.needsCompany}
-                            onCheckedChange={(checked) =>
-                              handleChange("needsCompany", checked)
-                            }
+                            onCheckedChange={(checked) => handleChange('needsCompany', checked)}
                           />
-                          <Label>
-                            This pet needs someone who is home more often than
-                            not.
-                          </Label>
+                          <Label>This pet needs someone who is home more often than not.</Label>
                         </div>
                         <p className="text-base font-semibold">Compatibility</p>
                         <div className="space-y-3">
@@ -762,14 +690,9 @@ export default function MyPetsPage() {
                             <Checkbox
                               id="edit-goodWithKids"
                               checked={editFormData.goodWithKids}
-                              onCheckedChange={(checked) =>
-                                handleChange("goodWithKids", checked)
-                              }
+                              onCheckedChange={(checked) => handleChange('goodWithKids', checked)}
                             />
-                            <Label
-                              htmlFor="edit-goodWithKids"
-                              className="text-sm cursor-pointer"
-                            >
+                            <Label htmlFor="edit-goodWithKids" className="text-sm cursor-pointer">
                               Good with kids
                             </Label>
                           </div>
@@ -777,14 +700,9 @@ export default function MyPetsPage() {
                             <Checkbox
                               id="edit-goodWithCats"
                               checked={editFormData.goodWithCats}
-                              onCheckedChange={(checked) =>
-                                handleChange("goodWithCats", checked)
-                              }
+                              onCheckedChange={(checked) => handleChange('goodWithCats', checked)}
                             />
-                            <Label
-                              htmlFor="edit-goodWithCats"
-                              className="text-sm cursor-pointer"
-                            >
+                            <Label htmlFor="edit-goodWithCats" className="text-sm cursor-pointer">
                               Good with cats
                             </Label>
                           </div>
@@ -792,14 +710,9 @@ export default function MyPetsPage() {
                             <Checkbox
                               id="edit-goodWithDogs"
                               checked={editFormData.goodWithDogs}
-                              onCheckedChange={(checked) =>
-                                handleChange("goodWithDogs", checked)
-                              }
+                              onCheckedChange={(checked) => handleChange('goodWithDogs', checked)}
                             />
-                            <Label
-                              htmlFor="edit-goodWithDogs"
-                              className="text-sm cursor-pointer"
-                            >
+                            <Label htmlFor="edit-goodWithDogs" className="text-sm cursor-pointer">
                               Good with dogs
                             </Label>
                           </div>
@@ -807,14 +720,9 @@ export default function MyPetsPage() {
                             <Checkbox
                               id="edit-houseTrained"
                               checked={editFormData.houseTrained}
-                              onCheckedChange={(checked) =>
-                                handleChange("houseTrained", checked)
-                              }
+                              onCheckedChange={(checked) => handleChange('houseTrained', checked)}
                             />
-                            <Label
-                              htmlFor="edit-houseTrained"
-                              className="text-sm cursor-pointer"
-                            >
+                            <Label htmlFor="edit-houseTrained" className="text-sm cursor-pointer">
                               House trained
                             </Label>
                           </div>
@@ -827,9 +735,7 @@ export default function MyPetsPage() {
                           id="edit-specialNeeds"
                           placeholder="Any medical conditions or special requirements"
                           value={editFormData.specialNeeds}
-                          onChange={(e) =>
-                            handleChange("specialNeeds", e.target.value)
-                          }
+                          onChange={(e) => handleChange('specialNeeds', e.target.value)}
                           className="placeholder:text-sm"
                         />
                       </div>
@@ -840,9 +746,7 @@ export default function MyPetsPage() {
                           id="edit-description"
                           className="w-full min-h-[120px] px-3 py-2 rounded-md border border-input bg-background text-sm placeholder:text-sm"
                           value={editFormData.description}
-                          onChange={(e) =>
-                            handleChange("description", e.target.value)
-                          }
+                          onChange={(e) => handleChange('description', e.target.value)}
                           placeholder="Tell us about this pet's personality, habits, and special needs..."
                         />
                       </div>
@@ -859,7 +763,7 @@ export default function MyPetsPage() {
                   <div className="bg-card rounded-lg border p-6 flex gap-6">
                     <div className="relative h-32 w-32 rounded-lg overflow-hidden shrink-0">
                       <Image
-                        src={pet.image_url || "/placeholder.svg"}
+                        src={pet.image_url || '/placeholder.svg'}
                         alt={pet.name}
                         fill
                         className="object-cover"
@@ -869,18 +773,16 @@ export default function MyPetsPage() {
                     <div className="flex-1">
                       <div className="flex items-start justify-between mb-3">
                         <div>
-                          <h3 className="text-2xl font-bold mb-1">
-                            {pet.name}
-                          </h3>
+                          <h3 className="text-2xl font-bold mb-1">{pet.name}</h3>
                           <p className="text-muted-foreground">
                             {pet.breed} • {pet.age_group} • {pet.type}
                           </p>
                         </div>
                         <Badge
                           className={`capitalize border ${
-                            pet.status === "adopted"
-                              ? "bg-green-100 text-green-700 border-green-200"
-                              : "bg-gray-100 text-gray-600 border-gray-200"
+                            pet.status === 'adopted'
+                              ? 'bg-green-100 text-green-700 border-green-200'
+                              : 'bg-gray-100 text-gray-600 border-gray-200'
                           }`}
                         >
                           {pet.status}
@@ -889,11 +791,7 @@ export default function MyPetsPage() {
 
                       <div className="flex flex-wrap gap-2 mb-4">
                         {pet.temperament?.map((trait: string) => (
-                          <Badge
-                            key={trait}
-                            variant="secondary"
-                            className="capitalize"
-                          >
+                          <Badge key={trait} variant="secondary" className="capitalize">
                             {trait}
                           </Badge>
                         ))}
@@ -902,49 +800,33 @@ export default function MyPetsPage() {
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm mb-4">
                         <div>
                           <span className="text-muted-foreground">Energy:</span>
-                          <span className="ml-2 font-medium capitalize">
-                            {pet.energy_level}
-                          </span>
+                          <span className="ml-2 font-medium capitalize">{pet.energy_level}</span>
                         </div>
                         <div>
                           <span className="text-muted-foreground">Size:</span>
-                          <span className="ml-2 font-medium capitalize">
-                            {pet.weight_range}
+                          <span className="ml-2 font-medium capitalize">{pet.weight_range}</span>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">Good with kids:</span>
+                          <span className="ml-2 font-medium">
+                            {pet.good_with_children ? 'Yes' : 'No'}
                           </span>
                         </div>
                         <div>
-                          <span className="text-muted-foreground">
-                            Good with kids:
-                          </span>
+                          <span className="text-muted-foreground">Good with pets:</span>
                           <span className="ml-2 font-medium">
-                            {pet.good_with_children ? "Yes" : "No"}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">
-                            Good with pets:
-                          </span>
-                          <span className="ml-2 font-medium">
-                            {pet.good_with_pets ? "Yes" : "No"}
+                            {pet.good_with_pets ? 'Yes' : 'No'}
                           </span>
                         </div>
                       </div>
 
                       <div className="flex gap-3">
-                        <Button onClick={() => router.push(`/pet/${pet.id}`)}>
-                          View Details
-                        </Button>
-                        <Button
-                          variant="outline"
-                          onClick={() => handleEdit(pet)}
-                        >
+                        <Button onClick={() => router.push(`/pet/${pet.id}`)}>View Details</Button>
+                        <Button variant="outline" onClick={() => handleEdit(pet)}>
                           <Pencil className="h-4 w-4 mr-2" />
                           Edit Pet
                         </Button>
-                        <Button
-                          variant="outline"
-                          onClick={() => handleDelete(pet.id)}
-                        >
+                        <Button variant="outline" onClick={() => handleDelete(pet.id)}>
                           <Trash2 className="h-4 w-4 mr-2" />
                           Delete
                         </Button>
@@ -964,7 +846,7 @@ export default function MyPetsPage() {
               disabled={loadingPets}
               onClick={handleLoadMorePets}
             >
-              {loadingPets ? "Loading..." : "Load more pets"}
+              {loadingPets ? 'Loading...' : 'Load more pets'}
             </Button>
             <p className="text-xs text-muted-foreground text-center">
               Showing {userPets.length} of {petTotalCount} pets

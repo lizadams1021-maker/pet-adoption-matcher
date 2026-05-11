@@ -26,14 +26,19 @@ const DEFAULT_OPTIONS: LimiterOptions = {
   blockDurationMs: 15 * 60 * 1000, // 15 minutes
 };
 
-const limiterStore: Map<string, LimiterBucket> = (globalThis as any).__rateLimiterStore ?? new Map();
+const limiterStore: Map<string, LimiterBucket> =
+  (globalThis as any).__rateLimiterStore ?? new Map();
 (globalThis as any).__rateLimiterStore = limiterStore;
 
 function pruneAttempts(record: AttemptRecord, windowMs: number, now: number) {
   record.timestamps = record.timestamps.filter((ts) => now - ts <= windowMs);
 }
 
-function buildStatus(record: AttemptRecord | undefined, bucket: LimiterBucket, now: number): RateLimitStatus {
+function buildStatus(
+  record: AttemptRecord | undefined,
+  bucket: LimiterBucket,
+  now: number
+): RateLimitStatus {
   if (record?.blockedUntil && record.blockedUntil > now) {
     return {
       isBlocked: true,

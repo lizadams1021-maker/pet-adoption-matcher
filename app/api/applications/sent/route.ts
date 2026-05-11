@@ -1,13 +1,13 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { sql } from "@/lib/db"
+import { type NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const userId = searchParams.get("userId")
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
 
     if (!userId) {
-      return NextResponse.json({ error: "User ID required" }, { status: 400 })
+      return NextResponse.json({ error: 'User ID required' }, { status: 400 });
     }
 
     const applications = await sql`
@@ -25,11 +25,11 @@ export async function GET(request: NextRequest) {
       JOIN pets p ON upa.pet_id = p.id
       WHERE upa.user_id = ${userId}
       ORDER BY upa.created_at DESC
-    `
+    `;
 
-    return NextResponse.json({ applications })
+    return NextResponse.json({ applications });
   } catch (error) {
-    console.error("[API] Fetch sent applications error:", error)
-    return NextResponse.json({ error: "Failed to fetch sent applications" }, { status: 500 })
+    console.error('[API] Fetch sent applications error:', error);
+    return NextResponse.json({ error: 'Failed to fetch sent applications' }, { status: 500 });
   }
 }

@@ -1,15 +1,12 @@
-import { NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db"
+import { NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
     const { petId, adopterId } = await request.json();
 
     if (!petId || !adopterId) {
-      return NextResponse.json(
-        { error: "Pet ID and Adopter ID required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Pet ID and Adopter ID required' }, { status: 400 });
     }
 
     // 1️⃣ Mark application as accepted
@@ -34,10 +31,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("[v0] Accept application error:", error);
-    return NextResponse.json(
-      { error: "Failed to accept application" },
-      { status: 500 }
-    );
+    console.error('[v0] Accept application error:', error);
+    return NextResponse.json({ error: 'Failed to accept application' }, { status: 500 });
   }
 }

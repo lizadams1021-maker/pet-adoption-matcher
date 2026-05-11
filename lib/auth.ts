@@ -1,14 +1,14 @@
-"use server";
+'use server';
 
-import jwt from "jsonwebtoken";
-import { sql } from "@/lib/db";
-import crypto from "crypto";
-import { cookies, headers } from "next/headers";
+import jwt from 'jsonwebtoken';
+import { sql } from '@/lib/db';
+import crypto from 'crypto';
+import { cookies, headers } from 'next/headers';
 
-const ACCESS_SECRET = process.env.ACCESS_SECRET || "cambia-esto";
-const ACCESS_EXP = "15m";
+const ACCESS_SECRET = process.env.ACCESS_SECRET || 'cambia-esto';
+const ACCESS_EXP = '15m';
 const REFRESH_EXP_DAYS = 30;
-const COOKIE_NAME = "refresh_token";
+const COOKIE_NAME = 'refresh_token';
 
 // --- Tokens ---
 
@@ -28,7 +28,7 @@ export async function verifyAccessToken(token: string) {
 // --- Refresh Tokens ---
 
 export async function createRefreshToken(userId: string) {
-  const plain = crypto.randomBytes(64).toString("hex");
+  const plain = crypto.randomBytes(64).toString('hex');
   const expires = new Date(Date.now() + REFRESH_EXP_DAYS * 86400000);
 
   await sql`
@@ -60,36 +60,35 @@ export async function rotateRefreshToken(oldPlain: string) {
 export async function setRefreshCookie(tokenPlain: string) {
   const cookieStore = await cookies(); // ✅ await aquí
   cookieStore.set({
-    name: "refresh_token",
+    name: 'refresh_token',
     value: tokenPlain,
     httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
     maxAge: 30 * 24 * 3600,
-    path: "/",
+    path: '/',
   });
 }
 
 export async function clearRefreshCookie() {
   const cookieStore = await cookies();
-  cookieStore.delete("refresh_token");
+  cookieStore.delete('refresh_token');
 }
 
-
 export async function refreshAccess() {
-  const host = (await headers()).get("host");
-  const protocol = process.env.NODE_ENV === "production" ? "https" : "http";
+  const host = (await headers()).get('host');
+  const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
   const base = `${protocol}://${host}`;
 
   const res = await fetch(`${base}/api/auth/refresh`, {
-    method: "POST",
-    credentials: "include",
+    method: 'POST',
+    credentials: 'include',
   });
   if (!res.ok) return null;
 
   const data = await res.json();
-  if (typeof window !== "undefined") {
-    localStorage.setItem("accessToken", data.accessToken);
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('accessToken', data.accessToken);
   }
   return data.accessToken;
 }

@@ -1,17 +1,18 @@
-
+import { User, Pet } from '@/lib/db';
 
 export interface MatchScore {
-  petId: string
-  score: number
-  reasons: string[]
+  petId: string;
+  score: number;
+  reasons: string[];
+  negativeReasons: string[];
 }
 
-type Application = {
-  user: any;
-  pet: any;
+export type Application = {
+  user: User;
+  pet: Pet;
 };
 
-type MatchResult = {
+export type MatchResult = {
   petId: string;
   userId: string;
   score: number;
@@ -19,447 +20,222 @@ type MatchResult = {
   negativeReasons: string[];
 };
 
-export function parseHoursRange(range: string | null): number | null {
+export function parseHoursRange(range: string | null | undefined): number | null {
   if (!range) return null;
-  if (range.endsWith("+")) {
-    return parseInt(range.replace("+", ""), 10);
+  if (range.endsWith('+')) {
+    return parseInt(range.replace('+', ''), 10);
   }
-  const parts = range.split("-").map(Number);
-  return parts[0]; // tomamos el valor mínimo del rango
+  const parts = range.split('-').map(Number);
+  return parts[0];
 }
 
-export function calculateApplicationMatches(applications: Application[]): MatchResult[] {
-  return applications.map(({ user, pet }) => {
-    let score = 0;
-    const reasons: string[] = [];
-    const negativeReasons: string[] = [];
-    const maxScore = 100;
-
-    // --------------------
-    // Children compatibility
-    // --------------------
-    if (pet.good_with_children) {
-      if (user.children_count > 0) {
-        score += 10;
-        reasons.push("Pet is good with children, matching user's household.");
-      } else {
-        score += 5;
-        reasons.push("Pet is good with children");
-      }
-    } else if (user.children_count > 0) {
-      negativeReasons.push("Pet may not be suitable for homes with children.");
-    } else {
-      score += 5;
-      reasons.push("No children in home, suitable for pet.");
-    }
-
-    // --------------------
-    // Compatibility with other pets
-    // --------------------
-    if (!pet.good_with_pets) {
-      if (user.has_pets && !user.pets_good_with_others) {
-        negativeReasons.push("Pet may not be compatible with user's other pets.");
-      } else {
-        score += 5;
-        reasons.push("User either has no pets or pets are good with others.");
-      }
-    } else {
-      score += 10;
-      reasons.push("Pet is good with other pets.");
-    }
-
-    // --------------------
-    // House-trained
-    // --------------------
-    if (pet.house_trained) {
-      score += 5;
-      reasons.push("Pet is house-trained.");
-    }
-
-    // --------------------
-    // Fenced yard requirement (high energy)
-    // --------------------
-    if (pet.energy_level === "high" || pet.requires_fenced_yard) {
-      if (user.has_fenced_yard) {
-        score += 10;
-        reasons.push("User has a fenced yard, suitable for high-energy pet.");
-      } else {
-        score += 2;
-        negativeReasons.push("High-energy pet or pet requiring fenced yard may not be ideal.");
-      }
-    } else {
-      score += 5;
-      reasons.push("Pet's energy level matches user's living situation.");
-    }
-
-    // --------------------
-    // Special needs
-    // --------------------
-    if (pet.special_needs) {
-      if (user.willing_behavior_training) {
-        score += 10;
-        reasons.push("User is willing to handle special needs of the pet.");
-      } else {
-        negativeReasons.push("User may not be prepared for this pet's special needs.");
-      }
-    }
-
-    // --------------------
-    // State compatibility
-    // --------------------
-    if (pet.state && user.state) {
-      if (pet.state === user.state) {
-        score += 5;
-        reasons.push("Pet is in the same state as the user.");
-      } else if (pet.adoptable_out_of_state && user.willing_out_of_state) {
-        score += 3;
-        reasons.push("Pet is adoptable out of state and user is willing to adopt out of state.");
-      } else {
-        negativeReasons.push("Pet is in a different state and is not adoptable out of state.");
-      }
-    }
-
-    // --------------------
-    // Age / breed / weight preference
-    // --------------------
-    if (user.preferred_age && user.preferred_age === pet.age_group) {
-      score += 5;
-      reasons.push("Pet's age matches user's preference.");
-    }
-    if (user.preferred_dog_breed && user.preferred_dog_breed === pet.breed) {
-      score += 5;
-      reasons.push("Pet's breed matches user's preference.");
-    }
-    if (user.preferred_weight && user.preferred_weight === pet.weight_range) {
-      score += 5;
-      reasons.push("Pet's weight matches user's preference.");
-    }  
-
-    // --------------------
-    // Only pet requirement
-    // --------------------
-    if (pet.only_pet && user.has_pets) {
-      negativeReasons.push("Pet prefers to be the only pet, but user already has pets.");
-    } else if (!pet.only_pet && !user.has_pets) {
-      score += 3;
-      reasons.push("Pet is comfortable with other pets, user has no pets.");
-    }
-
-    // --------------------
-    // Pet compatibility with user's pets (ok_with_animals)
-    // --------------------
-    if (pet.ok_with_animals !== null) {
-      if (user.has_pets && pet.ok_with_animals) {
-        score += 5;
-        reasons.push("Pet is compatible with other animals.");
-      } else if (user.has_pets && !pet.ok_with_animals) {
-        negativeReasons.push("Pet may not be compatible with user's other animals.");
-      }
-    }
-
-    // --------------------
-    // Needs company / alone time
-    // --------------------
-      const userHours = parseHoursRange(user.hours_home_alone);
-      const petHours = parseHoursRange(pet.comfortable_hours_alone);
-
-      if (
-        user.works_outside_home &&
-        userHours !== null &&
-        petHours !== null &&
-        userHours <= petHours
-      ) {
-        score += 5;
-        reasons.push(
-          `User's home situation provides company for ${pet.name} (user: ${userHours}h, pet comfortable: ${petHours}h).`
-        );
-      }
-
-    // --------------------
-    // Owner experience required
-    // --------------------
-    if (pet.owner_experience_required && pet.owner_experience_required !== "none") {
-      const required = pet.owner_experience_required;
-
-      // Base: experiencia previa mínima
-      const hasBasicExperience =
-        user.adopted_before || user.owned_pet_before;
-
-      if (!hasBasicExperience) {
-        negativeReasons.push("Pet may require an owner with prior experience.");
-      } else {
-        score += 5;
-        reasons.push("User has prior pet experience suitable for this pet.");
-      }
-
-      // Nivel 2: SPECIAL NEEDS
-      if (required === "special needs") {
-        const meetsSpecialNeeds =
-          user.spayed_neutered && user.vaccinated;
-
-        if (meetsSpecialNeeds) {
-          score += 4;
-          reasons.push("User has experience caring for special needs pets.");
-        } else {
-          negativeReasons.push(
-            "Pet may require an owner experienced with special needs care."
-          );
-        }
-      }
-
-      // Nivel 3: BEHAVIOR MODIFICATION
-      if (required === "behavior modification") {
-        const meetsBehaviorTraining =
-          user.willing_behavior_training === true;
-
-        if (meetsBehaviorTraining) {
-          score += 4;
-          reasons.push("User is willing to work on behavior modification.");
-        } else {
-          negativeReasons.push(
-            "Pet may require an owner willing to work on behavior modification."
-          );
-        }
-      }
-    }
-
-    // --------------------
-    // Cap max score
-    // --------------------
-    score = Math.max(0, Math.min(maxScore, score));
-
-    return {
-      petId: pet.id,
-      userId: user.id,
-      score: adjustScore(score),
-      reasons,
-      negativeReasons,
-    };
-  });
-}
-
-export function calculateCompatibility(user: any, pet: any): MatchResult {
+/**
+ * Core scoring logic shared between application matches and general compatibility checks.
+ */
+function calculateBaseCompatibility(
+  user: User,
+  pet: Pet
+): { score: number; reasons: string[]; negativeReasons: string[] } {
   let score = 0;
   const reasons: string[] = [];
   const negativeReasons: string[] = [];
-  const maxScore = 100;
+
+  // Total potential positive points: ~150
+  // We will normalize this to 0-100 at the end.
 
   // --------------------
   // Children compatibility
   // --------------------
   if (pet.good_with_children) {
-    if (user.children_count > 0) {
-      score += 10;
-      reasons.push("Pet is good with children, matching user's household.");
+    if (user.has_children || (user.children_count && user.children_count > 0)) {
+      score += 25;
+      reasons.push('Pet is excellent for your household with children.');
     } else {
-      score += 5;
-      reasons.push("Pet is good with children");
+      score += 15;
+      reasons.push('Pet is good with children (bonus for future flexibility).');
     }
-  } else if (user.children_count > 0) {
-    negativeReasons.push("Pet may not be suitable for homes with children.");
+  } else if (user.has_children || (user.children_count && user.children_count > 0)) {
+    score -= 40;
+    negativeReasons.push('Pet is not recommended for homes with children.');
   } else {
-    score += 5;
-    reasons.push("No children in home, suitable for pet.");
+    score += 15;
+    reasons.push('Safe match: No children in home and pet prefers it that way.');
   }
 
   // --------------------
   // Compatibility with other pets
   // --------------------
-  if (!pet.good_with_pets) {
-    if (user.has_pets && !user.pets_good_with_others) {
-      negativeReasons.push("Pet may not be compatible with user's other pets.");
+  const userHasPets = user.has_pets || (user.pets_types && user.pets_types.length > 0);
+  if (pet.good_with_pets) {
+    if (userHasPets) {
+      score += 25;
+      reasons.push('Pet is great with other animals, matching your current pets.');
     } else {
-      score += 5;
-      reasons.push("User either has no pets or pets are good with others.");
+      score += 15;
+      reasons.push('Pet is friendly with other animals.');
     }
   } else {
-    score += 10;
-    reasons.push("Pet is good with other pets.");
+    if (userHasPets) {
+      score -= 40;
+      negativeReasons.push('Pet may not be compatible with your other pets.');
+    } else {
+      score += 15;
+      reasons.push('Suitable for a single-pet household.');
+    }
   }
 
   // --------------------
   // House-trained
   // --------------------
   if (pet.house_trained) {
-    score += 5;
-    reasons.push("Pet is house-trained.");
+    score += 10;
+    reasons.push('Pet is already house-trained.');
   }
 
   // --------------------
   // Fenced yard requirement (high energy)
   // --------------------
-  if (pet.energy_level === "high" || pet.requires_fenced_yard) {
+  const highEnergy = pet.energy_level === 'high' || pet.energy_level === 'very high';
+  if (highEnergy || pet.requires_fenced_yard) {
     if (user.has_fenced_yard) {
-      score += 10;
-      reasons.push("User has a fenced yard, suitable for high-energy pet.");
+      score += 20;
+      reasons.push("Your fenced yard is perfect for this pet's energy level.");
     } else {
-      score += 2;
-      negativeReasons.push("High-energy pet or pet requiring fenced yard may not be ideal.");
+      score -= 20;
+      negativeReasons.push('This pet requires a fenced yard or high activity space you may lack.');
     }
   } else {
-    score += 5;
-    reasons.push("Pet's energy level matches user's living situation.");
+    score += 10;
+    reasons.push("Pet's energy level is a good match for your living situation.");
   }
 
   // --------------------
   // Special needs
   // --------------------
-  if (pet.special_needs) {
-    if (user.willing_behavior_training) {
-      score += 10;
-      reasons.push("User is willing to handle special needs of the pet.");
+  if (pet.special_needs && pet.special_needs !== 'No' && pet.special_needs !== 'none') {
+    if (user.willing_behavior_training || user.experience_level === 'advanced') {
+      score += 25;
+      reasons.push("You are well-prepared to handle this pet's special needs.");
     } else {
-      negativeReasons.push("User may not be prepared for this pet's special needs.");
+      score -= 30;
+      negativeReasons.push('This pet has special needs that require experienced care.');
     }
   }
 
   // --------------------
-  // State compatibility
+  // Location & State compatibility
   // --------------------
   if (pet.state && user.state) {
     if (pet.state === user.state) {
-      score += 5;
-      reasons.push("Pet is in the same state as the user.");
+      score += 15;
+      reasons.push('Located in the same state, making adoption easier.');
     } else if (pet.adoptable_out_of_state && user.willing_out_of_state) {
-      score += 3;
-      reasons.push("Pet is adoptable out of state and user is willing to adopt out of state.");
-    } else {
-      negativeReasons.push("Pet is in a different state and is not adoptable out of state.");
+      score += 5;
+      reasons.push('Out-of-state adoption is supported by both parties.');
+    } else if (!pet.adoptable_out_of_state && pet.state !== user.state) {
+      score -= 50;
+      negativeReasons.push('Rescue does not currently adopt to your state.');
     }
   }
 
   // --------------------
-  // Age / breed / weight preference
+  // Preferences (Age / Breed / Weight)
   // --------------------
   if (user.preferred_age && user.preferred_age === pet.age_group) {
-    score += 5;
-    reasons.push("Pet's age matches user's preference.");
+    score += 10;
+    reasons.push('Matches your preferred age group.');
   }
   if (user.preferred_dog_breed && user.preferred_dog_breed === pet.breed) {
-    score += 5;
-    reasons.push("Pet's breed matches user's preference.");
+    score += 10;
+    reasons.push('Matches your preferred breed.');
   }
   if (user.preferred_weight && user.preferred_weight === pet.weight_range) {
-    score += 5;
-    reasons.push("Pet's weight matches user's preference.");
+    score += 10;
+    reasons.push('Matches your preferred weight range.');
   }
 
   // --------------------
-  // Only pet requirement
+  // Schedule / Alone Time
   // --------------------
-  if (pet.only_pet && user.has_pets) {
-    negativeReasons.push("Pet prefers to be the only pet, but user already has pets.");
-  } else if (!pet.only_pet && !user.has_pets) {
-    score += 3;
-    reasons.push("Pet is comfortable with other pets, user has no pets.");
-  }
+  const userHours = parseHoursRange(user.hours_home_alone);
+  const petHours = parseHoursRange(pet.comfortable_hours_alone);
 
-  // --------------------
-  // Pet compatibility with user's pets (ok_with_animals)
-  // --------------------
-  if (pet.ok_with_animals !== null) {
-    if (user.has_pets) {
-      score += 5;
-      reasons.push("Pet is compatible with other animals.");
-    } else if (user.has_pets && !pet.ok_with_animals) {
-      negativeReasons.push("Pet may not be compatible with user's other animals.");
+  if (userHours !== null && petHours !== null) {
+    if (userHours <= petHours) {
+      score += 15;
+      reasons.push("Your schedule aligns perfectly with this pet's needs for company.");
+    } else if (userHours > petHours + 2) {
+      score -= 15;
+      negativeReasons.push('Pet may be left alone longer than they are comfortable with.');
     }
   }
-
-  // --------------------
-  // Needs company / alone time
-  // --------------------
-    const userHours = parseHoursRange(user.hours_home_alone);
-    const petHours = parseHoursRange(pet.comfortable_hours_alone);
-
-    if (
-      user.works_outside_home &&
-      userHours !== null &&
-      petHours !== null &&
-      userHours <= petHours
-    ) {
-      score += 5;
-      reasons.push(
-        `User's home situation provides company for ${pet.name} (user: ${userHours}h, pet comfortable: ${petHours}h).`
-      );
-    }
 
   // --------------------
   // Owner experience required
   // --------------------
-  if (pet.owner_experience_required && pet.owner_experience_required !== "none") {
-  const required = pet.owner_experience_required;
+  if (pet.owner_experience_required && pet.owner_experience_required !== 'none') {
+    const hasExp =
+      user.adopted_before ||
+      user.owned_pet_before ||
+      user.experience_level === 'intermediate' ||
+      user.experience_level === 'advanced';
+    if (hasExp) {
+      score += 15;
+      reasons.push('Your prior pet experience is a great asset for this pet.');
+    } else {
+      score -= 10;
+      negativeReasons.push('This pet may require more experience than you currently have.');
+    }
+  }
 
-  // Base: experiencia previa mínima
-  const hasBasicExperience =
-    user.adopted_before || user.owned_pet_before;
+  // Normalize score:
+  // Base score can range from roughly -150 to +180.
+  // We want to map this to 0-100.
+  // A "neutral" score (just existence) would be around 40-50.
 
-  if (!hasBasicExperience) {
-    negativeReasons.push("Pet may require an owner with prior experience.");
+  let finalScore = 0;
+  if (score > 0) {
+    // If positive, scale towards 100. 150 raw points = ~95%
+    finalScore = Math.min(100, 40 + (score / 150) * 60);
   } else {
-    score += 5;
-    reasons.push("User has prior pet experience suitable for this pet.");
+    // If negative, scale towards 0. -100 raw points = 0%
+    finalScore = Math.max(0, 40 + (score / 100) * 40);
   }
 
-  // Nivel 2: SPECIAL NEEDS
-  if (required === "special needs") {
-    const meetsSpecialNeeds =
-      user.spayed_neutered && user.vaccinated;
+  return {
+    score: Math.round(finalScore),
+    reasons,
+    negativeReasons,
+  };
+}
 
-    if (meetsSpecialNeeds) {
-      score += 4;
-      reasons.push("User has experience caring for special needs pets.");
-    } else {
-      negativeReasons.push(
-        "Pet may require an owner experienced with special needs care."
-      );
-    }
-  }
+export function calculateApplicationMatches(applications: Application[]): MatchResult[] {
+  return applications.map(({ user, pet }) => {
+    const { score, reasons, negativeReasons } = calculateBaseCompatibility(user, pet);
 
-  // Nivel 3: BEHAVIOR MODIFICATION
-  if (required === "behavior modification") {
-    const meetsBehaviorTraining =
-      user.willing_behavior_training === true;
+    return {
+      petId: pet.id,
+      userId: user.id,
+      score,
+      reasons,
+      negativeReasons,
+    };
+  });
+}
 
-    if (meetsBehaviorTraining) {
-      score += 4;
-      reasons.push("User is willing to work on behavior modification.");
-    } else {
-      negativeReasons.push(
-        "Pet may require an owner willing to work on behavior modification."
-      );
-    }
-  }
-  }
-
-
-  // --------------------
-  // Cap max score
-  // --------------------
-  score = Math.max(0, Math.min(maxScore, score));
+export function calculateCompatibility(user: User, pet: Pet): MatchResult {
+  const { score, reasons, negativeReasons } = calculateBaseCompatibility(user, pet);
 
   return {
     petId: pet.id,
     userId: user.id,
-    score: adjustScore(score),
+    score,
     reasons,
     negativeReasons,
   };
-  
 }
 
 export function adjustScore(score: number) {
-  if (score <= 35) {
-    return score;
-  }
-
-  if (score <= 50) {
-    return 35 + (score - 35) * 2;
-  }
-  return 90 + (score - 50) * 0.2;
+  // Legacy function for compatibility, now just returns the score
+  return score;
 }
-
-
-
-
-
