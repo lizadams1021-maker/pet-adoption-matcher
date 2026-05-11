@@ -216,7 +216,8 @@ export default function ProfilePage() {
     };
 
     loadProfile();
-  }, [userId, router, loading, updateUser, user]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, loading, router, updateUser]);
 
   useEffect(() => {
     if (formData.state) {
@@ -224,7 +225,12 @@ export default function ProfilePage() {
       setAvailableCities(cities);
       if (formData.city && !cities.includes(formData.city)) {
         setCustomCity(formData.city);
+      } else {
+        setCustomCity('');
       }
+    } else {
+      setAvailableCities([]);
+      setCustomCity('');
     }
   }, [formData.state, formData.city]);
 
