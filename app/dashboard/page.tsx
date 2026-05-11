@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   JSXElementConstructor,
@@ -9,20 +9,17 @@ import {
   useCallback,
   useEffect,
   useState,
-} from "react";
-import { useRouter } from "next/navigation";
-import { AppLayout } from "@/components/app-layout";
-import { Users, Heart, TrendingUp, X } from "lucide-react";
-import Image from "next/image";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { MapPin, Home, Briefcase, Check, Phone, Mail } from "lucide-react";
-import {
-  calculateApplicationMatches,
-  calculateCompatibility,
-} from "@/lib/matching-algorithm";
-import Swal from "sweetalert2";
-import { useAuthClient } from "@/lib/useAuthClient";
+} from 'react';
+import { useRouter } from 'next/navigation';
+import { AppLayout } from '@/components/app-layout';
+import { Users, Heart, TrendingUp, X } from 'lucide-react';
+import Image from 'next/image';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { MapPin, Home, Briefcase, Check, Phone, Mail } from 'lucide-react';
+import { calculateApplicationMatches, calculateCompatibility } from '@/lib/matching-algorithm';
+import Swal from 'sweetalert2';
+import { useAuthClient } from '@/lib/useAuthClient';
 
 const PETS_PAGE_SIZE = 6;
 
@@ -50,25 +47,25 @@ export default function DashboardPage() {
   const [loadingPage, setLoading] = useState(true);
 
   const getStatusVisuals = (status?: string) => {
-    const normalized = (status ?? "").toLowerCase();
+    const normalized = (status ?? '').toLowerCase();
 
-    if (normalized === "adopted") {
+    if (normalized === 'adopted') {
       return {
-        listText: "text-green-700 font-semibold",
-        headerText: "text-green-600 font-medium capitalize",
+        listText: 'text-green-700 font-semibold',
+        headerText: 'text-green-600 font-medium capitalize',
       };
     }
 
-    if (normalized === "in progress") {
+    if (normalized === 'in progress') {
       return {
-        listText: "text-amber-600 font-semibold",
-        headerText: "text-amber-600 font-medium capitalize",
+        listText: 'text-amber-600 font-semibold',
+        headerText: 'text-amber-600 font-medium capitalize',
       };
     }
 
     return {
-      listText: "text-muted-foreground",
-      headerText: "text-muted-foreground font-medium capitalize",
+      listText: 'text-muted-foreground',
+      headerText: 'text-muted-foreground font-medium capitalize',
     };
   };
 
@@ -91,33 +88,26 @@ export default function DashboardPage() {
         const data = await res.json();
 
         if (!res.ok) {
-          throw new Error(data.error || "Failed to fetch pets");
+          throw new Error(data.error || 'Failed to fetch pets');
         }
 
         const incomingPets = data.pets ?? [];
         const totalCount =
-          typeof data.totalCount === "number"
-            ? data.totalCount
-            : incomingPets.length;
-        const computedTotalPages = Math.max(
-          1,
-          Math.ceil(totalCount / PETS_PAGE_SIZE)
-        );
+          typeof data.totalCount === 'number' ? data.totalCount : incomingPets.length;
+        const computedTotalPages = Math.max(1, Math.ceil(totalCount / PETS_PAGE_SIZE));
 
         setPetTotalCount(totalCount);
         setPetTotalPages(computedTotalPages);
         setPetPage(pageToLoad);
         setHasMorePets(pageToLoad + 1 < computedTotalPages);
 
-        setPets((prev) =>
-          pageToLoad === 0 ? incomingPets : [...prev, ...incomingPets]
-        );
+        setPets((prev) => (pageToLoad === 0 ? incomingPets : [...prev, ...incomingPets]));
 
         if (isInitialPage && incomingPets.length > 0) {
           setSelectedPet(incomingPets[0]);
         }
       } catch (error) {
-        console.error("[v0] Fetch pets error:", error);
+        console.error('[v0] Fetch pets error:', error);
       } finally {
         setLoadingPets(false);
         if (isInitialPage) {
@@ -125,7 +115,7 @@ export default function DashboardPage() {
         }
       }
     },
-    [user?.id]
+    [user]
   );
 
   const handleLoadMorePets = useCallback(() => {
@@ -137,7 +127,7 @@ export default function DashboardPage() {
     if (loading) return;
 
     if (!user) {
-      router.push("/login");
+      router.push('/login');
       return;
     }
 
@@ -165,7 +155,7 @@ export default function DashboardPage() {
           setStats(statsData);
         }
       } catch (error) {
-        console.error("[v0] Fetch stats error:", error);
+        console.error('[v0] Fetch stats error:', error);
       } finally {
         setLoadingStats(false);
       }
@@ -174,13 +164,8 @@ export default function DashboardPage() {
     fetchStats();
   }, [user]);
 
-  useEffect(() => {
+  const fetchAdopters = useCallback(async () => {
     if (!selectedPet) return;
-
-    fetchAdopters();
-  }, [selectedPet, page]);
-
-  const fetchAdopters = async () => {
     try {
       setLoadingAdopters(true);
 
@@ -188,18 +173,16 @@ export default function DashboardPage() {
       const petRes = await fetch(`/api/pets/${selectedPet.id}`);
       const petData = await petRes.json();
       if (!petRes.ok || !petData.pet) {
-        console.error("Failed to fetch full pet info:", petData.error);
+        console.error('Failed to fetch full pet info:', petData.error);
         return;
       }
       const fullPet = petData.pet;
 
       // 2️⃣ Brring pet applications
-      const res = await fetch(
-        `/api/applications?petId=${selectedPet.id}&page=${page}&limit=5`
-      );
+      const res = await fetch(`/api/applications?petId=${selectedPet.id}&page=${page}&limit=5`);
       const data = await res.json();
 
-      if (!res.ok) throw new Error(data.error || "Failed to fetch adopters");
+      if (!res.ok) throw new Error(data.error || 'Failed to fetch adopters');
 
       // 3️⃣ Combine applications with full pet data
       const applicationsWithPet = data.applications.map((app: any) => ({
@@ -208,8 +191,7 @@ export default function DashboardPage() {
       }));
 
       // 4️⃣ Calculate matches
-      const matchedApplications =
-        calculateApplicationMatches(applicationsWithPet);
+      const matchedApplications = calculateApplicationMatches(applicationsWithPet);
 
       // 5️⃣ Add score and reasons for every application
       const applicationsWithMatches = data.applications.map((app: any) => {
@@ -222,104 +204,101 @@ export default function DashboardPage() {
         };
       });
 
-      console.log("[Dashboard] Adopters: ", applicationsWithMatches);
+      // 6️⃣ Sort by score descending
+      applicationsWithMatches.sort((a: any, b: any) => b.score - a.score);
+
+      console.log('[Dashboard] Adopters: ', applicationsWithMatches);
       setAdopters(applicationsWithMatches);
       setTotalPages(data.totalPages || 1);
     } catch (error) {
-      console.error("[v0] Fetch adopters error:", error);
+      console.error('[v0] Fetch adopters error:', error);
     } finally {
       setLoadingAdopters(false);
     }
-  };
+  }, [selectedPet, page]);
 
-  const handleReject = async (
-    petId: string,
-    adopterId: string,
-    adopterName: string
-  ) => {
+  useEffect(() => {
+    fetchAdopters();
+  }, [fetchAdopters]);
+
+  const handleReject = async (petId: string, adopterId: string, adopterName: string) => {
     try {
-      const res = await fetch("/api/applications/reject", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/applications/reject', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ petId, adopterId }),
       });
 
-      if (!res.ok) throw new Error("Failed to reject application");
+      if (!res.ok) throw new Error('Failed to reject application');
 
       // Update local state to remove adopter from list
       setAdopters((prev) => prev.filter((a) => a.id !== adopterId));
 
       Swal.fire({
-        title: "Application Rejected",
+        title: 'Application Rejected',
         html: `You have rejected the application from <strong>${adopterName}</strong>.`,
         icon: undefined,
-        confirmButtonText: "OK",
+        confirmButtonText: 'OK',
       });
     } catch (error) {
-      console.error("[v0] Reject error:", error);
+      console.error('[v0] Reject error:', error);
       Swal.fire({
-        title: "Error",
-        text: "There was an error rejecting the application. Please try again.",
-        icon: "error",
-        confirmButtonText: "OK",
+        title: 'Error',
+        text: 'There was an error rejecting the application. Please try again.',
+        icon: 'error',
+        confirmButtonText: 'OK',
       });
     }
   };
 
-  const handleAccept = async (
-    petId: string,
-    adopterId: string,
-    adopterName: string
-  ) => {
+  const handleAccept = async (petId: string, adopterId: string, adopterName: string) => {
     const result = await Swal.fire({
-      title: "Please Confirm",
+      title: 'Please Confirm',
       html: `
       We'll send <strong>${adopterName}</strong> a message to continue with your adoption application process.<br>`,
-      icon: "warning",
+      icon: 'warning',
       showCancelButton: true,
-      confirmButtonColor: "#16a34a",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "Yes, accept",
+      confirmButtonColor: '#16a34a',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Yes, accept',
     });
 
     if (!result.isConfirmed) return;
 
     try {
-      const res = await fetch("/api/applications/accept", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const res = await fetch('/api/applications/accept', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ petId, adopterId }),
       });
 
-      if (!res.ok) throw new Error("Failed to accept application");
+      if (!res.ok) throw new Error('Failed to accept application');
 
       Swal.fire({
-        title: "Application Accepted",
+        title: 'Application Accepted',
         html: `You have accepted <strong>${adopterName}</strong> for adoption.`,
-        icon: "success",
-        confirmButtonText: "OK",
+        icon: 'success',
+        confirmButtonText: 'OK',
       }).then(async () => {
         // ✅ Update list of adopters for this pet
         await fetchAdopters();
 
         // ✅ Update pet status to 'adopted'
         setPets((prevPets) =>
-          prevPets.map((p) =>
-            p.id === petId ? { ...p, status: "in progress" } : p
-          )
+          prevPets.map((p) => (p.id === petId ? { ...p, status: 'in progress' } : p))
         );
 
         setSelectedPet((prev: typeof selectedPet) =>
-          prev && prev.id === petId ? { ...prev, status: "in progress" } : prev
+          prev && prev.id === petId ? { ...prev, status: 'in progress' } : prev
         );
       });
     } catch (error) {
-      console.error("[v0] Accept error:", error);
+      console.error('[v0] Accept error:', error);
       Swal.fire({
-        title: "Error",
-        text: "There was an error accepting the application. Please try again.",
-        icon: "error",
-        confirmButtonText: "OK",
+        title: 'Error',
+        text: 'There was an error accepting the application. Please try again.',
+        icon: 'error',
+        confirmButtonText: 'OK',
       });
     }
   };
@@ -342,13 +321,13 @@ export default function DashboardPage() {
   }
 
   const compatibilityTips = [
-    "Close proximity to the shelter",
-    "Similar activity level",
-    "Compatible housing situation",
-    "Experience with pets like yours",
-    "Stable financial situation",
-    "Schedule aligns with pet needs",
-    "Family composition is a good fit",
+    'Close proximity to the shelter',
+    'Similar activity level',
+    'Compatible housing situation',
+    'Experience with pets like yours',
+    'Stable financial situation',
+    'Schedule aligns with pet needs',
+    'Family composition is a good fit',
     "Activity level matches pet's energy requirements",
     "Family composition is compatible with pet's temperament",
   ];
@@ -358,12 +337,8 @@ export default function DashboardPage() {
       <div className="max-w-7xl">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">
-            Welcome back, {user.name}! 👋
-          </h1>
-          <p className="text-muted-foreground">
-            Manage your pets and review adoption applications
-          </p>
+          <h1 className="text-3xl font-bold mb-2">Welcome back, {user.name}! 👋</h1>
+          <p className="text-muted-foreground">Manage your pets and review adoption applications</p>
         </div>
 
         {/* Stat Cards */}
@@ -379,7 +354,7 @@ export default function DashboardPage() {
             {/* Active Pets */}
             <div
               className="bg-card rounded-lg border p-6 cursor-pointer hover:shadow-md transition"
-              onClick={() => router.push("/my-pets")}
+              onClick={() => router.push('/my-pets')}
             >
               <div className="flex items-center gap-4">
                 <div className="p-3 bg-purple-100 rounded-lg">
@@ -395,7 +370,7 @@ export default function DashboardPage() {
             {/* Pending Apps */}
             <div
               className="bg-card rounded-lg border p-6 cursor-pointer hover:shadow-md transition"
-              onClick={() => router.push("/my-applications")}
+              onClick={() => router.push('/my-applications')}
             >
               <div className="flex items-center gap-4">
                 <div className="p-3 bg-yellow-100 rounded-lg">
@@ -411,7 +386,7 @@ export default function DashboardPage() {
             {/* New Matches */}
             <div
               className="bg-card rounded-lg border p-6 cursor-pointer hover:shadow-md transition"
-              onClick={() => router.push("/matches")}
+              onClick={() => router.push('/matches')}
             >
               <div className="flex items-center gap-4">
                 <div className="p-3 bg-green-100 rounded-lg">
@@ -427,7 +402,7 @@ export default function DashboardPage() {
             {/* This Week */}
             <div
               className="bg-card rounded-lg border p-6 cursor-pointer hover:shadow-md transition"
-              onClick={() => router.push("/matches")}
+              onClick={() => router.push('/matches')}
             >
               <div className="flex items-center gap-4">
                 <div className="p-3 bg-blue-100 rounded-lg">
@@ -445,9 +420,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-[400px_1fr] gap-6">
           {/* Left Column - My Pets */}
           <div>
-            <h2 className="text-lg font-semibold mb-4 text-muted-foreground">
-              MY PETS
-            </h2>
+            <h2 className="text-lg font-semibold mb-4 text-muted-foreground">MY PETS</h2>
             {pets.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <p>No pets added yet.</p>
@@ -456,9 +429,9 @@ export default function DashboardPage() {
               <div className="space-y-4">
                 {pets.map((pet) => {
                   const isSelected = selectedPet?.id === pet.id;
-                  const normalizedStatus = (pet.status ?? "").toLowerCase();
-                  const isAdopted = normalizedStatus === "adopted";
-                  const isInProgress = normalizedStatus === "in progress";
+                  const normalizedStatus = (pet.status ?? '').toLowerCase();
+                  const isAdopted = normalizedStatus === 'adopted';
+                  const isInProgress = normalizedStatus === 'in progress';
                   const statusVisuals = getStatusVisuals(pet.status);
 
                   return (
@@ -468,21 +441,17 @@ export default function DashboardPage() {
                       className={`w-full flex items-center gap-4 p-4 rounded-lg border transition-colors text-left
               ${
                 isAdopted
-                  ? "bg-green-100 border-green-300"
+                  ? 'bg-green-100 border-green-300'
                   : isInProgress
-                  ? "bg-amber-50 border-amber-200"
-                  : "bg-card border-border"
+                    ? 'bg-amber-50 border-amber-200'
+                    : 'bg-card border-border'
               }
-              ${
-                isSelected
-                  ? `ring-2 ${isAdopted ? "ring-green-500" : "ring-primary"}`
-                  : ""
-              }
+              ${isSelected ? `ring-2 ${isAdopted ? 'ring-green-500' : 'ring-primary'}` : ''}
               hover:bg-accent`}
                     >
                       <div className="relative w-20 h-20 rounded-lg overflow-hidden shrink-0">
                         <Image
-                          src={pet.image_url || "/placeholder.svg"}
+                          src={pet.image_url || '/placeholder.svg'}
                           alt={pet.name}
                           fill
                           className="object-cover"
@@ -490,12 +459,8 @@ export default function DashboardPage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <h3 className="font-semibold text-lg">{pet.name}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          {pet.breed}
-                        </p>
-                        <p className={`text-sm mt-1 ${statusVisuals.listText}`}>
-                          {pet.status}
-                        </p>
+                        <p className="text-sm text-muted-foreground">{pet.breed}</p>
+                        <p className={`text-sm mt-1 ${statusVisuals.listText}`}>{pet.status}</p>
                       </div>
                     </button>
                   );
@@ -510,7 +475,7 @@ export default function DashboardPage() {
                   disabled={loadingPets}
                   onClick={handleLoadMorePets}
                 >
-                  {loadingPets ? "Loading..." : "Load more pets"}
+                  {loadingPets ? 'Loading...' : 'Load more pets'}
                 </Button>
                 <p className="text-xs text-muted-foreground text-center mt-2">
                   Showing {pets.length} of {petTotalCount} pets
@@ -534,19 +499,12 @@ export default function DashboardPage() {
                     </h2>
                   </div>
                   <div className="mb-4 text-sm text-muted-foreground">
-                    <span className="font-medium">{selectedPet.breed}</span> •{" "}
-                    {selectedPet.age_group} •{" "}
-                    <span
-                      className={
-                        getStatusVisuals(selectedPet.status).headerText
-                      }
-                    >
+                    <span className="font-medium">{selectedPet.breed}</span> •{' '}
+                    {selectedPet.age_group} •{' '}
+                    <span className={getStatusVisuals(selectedPet.status).headerText}>
                       {selectedPet.status}
-                    </span>{" "}
-                    •{" "}
-                    <span className="font-medium">
-                      {adopters.length} matches
-                    </span>
+                    </span>{' '}
+                    • <span className="font-medium">{adopters.length} matches</span>
                   </div>
 
                   {adopters.length > 0 ? (
@@ -554,45 +512,36 @@ export default function DashboardPage() {
                       {adopters.map((adopter, index) => {
                         const appliedDate = new Date(adopter.applied_at);
                         const daysAgo = Math.floor(
-                          (Date.now() - appliedDate.getTime()) /
-                            (1000 * 60 * 60 * 24)
+                          (Date.now() - appliedDate.getTime()) / (1000 * 60 * 60 * 24)
                         );
-                        const formattedDate = appliedDate.toLocaleDateString(
-                          "en-US",
-                          {
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                          }
-                        );
-                        const normalizedStatus = adopter.status ?? "pending";
+                        const formattedDate = appliedDate.toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric',
+                        });
+                        const normalizedStatus = adopter.status ?? 'pending';
                         const statusLabel =
-                          normalizedStatus === "accepted"
-                            ? "Accepted"
-                            : normalizedStatus === "rejected"
-                            ? "Rejected"
-                            : "Pending";
+                          normalizedStatus === 'accepted'
+                            ? 'Accepted'
+                            : normalizedStatus === 'rejected'
+                              ? 'Rejected'
+                              : 'Pending';
                         const statusClasses =
-                          normalizedStatus === "accepted"
-                            ? "bg-green-100 text-green-700 border-green-200"
-                            : normalizedStatus === "rejected"
-                            ? "bg-red-100 text-red-700 border-red-200"
-                            : "";
+                          normalizedStatus === 'accepted'
+                            ? 'bg-green-100 text-green-700 border-green-200'
+                            : normalizedStatus === 'rejected'
+                              ? 'bg-red-100 text-red-700 border-red-200'
+                              : '';
 
                         return (
-                          <div
-                            key={adopter.id}
-                            className="bg-card rounded-lg border p-6"
-                          >
+                          <div key={adopter.id} className="bg-card rounded-lg border p-6">
                             {/* Adopter Header */}
                             <div className="flex items-start justify-between mb-6">
                               <div className="flex items-center gap-4">
                                 <div className="relative w-16 h-16 rounded-full overflow-hidden shrink-0 bg-muted">
                                   {adopter.image_url ? (
                                     <Image
-                                      src={
-                                        adopter.image_url || "/placeholder.svg"
-                                      }
+                                      src={adopter.image_url || '/placeholder.svg'}
                                       alt={adopter.name}
                                       fill
                                       className="object-cover"
@@ -605,16 +554,11 @@ export default function DashboardPage() {
                                 </div>
                                 <div>
                                   <div className="flex items-center gap-2 mb-1">
-                                    <Badge
-                                      variant="outline"
-                                      className="text-xs"
-                                    >
+                                    <Badge variant="outline" className="text-xs">
                                       #{index + 1} Match
                                     </Badge>
                                   </div>
-                                  <h3 className="font-semibold text-lg">
-                                    {adopter.name}
-                                  </h3>
+                                  <h3 className="font-semibold text-lg">{adopter.name}</h3>
                                 </div>
                               </div>
                             </div>
@@ -625,13 +569,9 @@ export default function DashboardPage() {
                                 <div className="flex items-start gap-2 text-sm">
                                   <Phone className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
                                   <div>
-                                    <p className="text-muted-foreground text-xs mb-1">
-                                      Phone
-                                    </p>
+                                    <p className="text-muted-foreground text-xs mb-1">Phone</p>
                                     <p className="font-medium">
-                                      {adopter.cell_phone ||
-                                        adopter.home_phone ||
-                                        "Not provided"}
+                                      {adopter.cell_phone || adopter.home_phone || 'Not provided'}
                                     </p>
                                   </div>
                                 </div>
@@ -641,11 +581,9 @@ export default function DashboardPage() {
                                 <div className="flex items-start gap-2 text-sm">
                                   <Mail className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
                                   <div>
-                                    <p className="text-muted-foreground text-xs mb-1">
-                                      Email
-                                    </p>
+                                    <p className="text-muted-foreground text-xs mb-1">Email</p>
                                     <p className="font-medium break-all">
-                                      {adopter.email || "Not provided"}
+                                      {adopter.email || 'Not provided'}
                                     </p>
                                   </div>
                                 </div>
@@ -655,22 +593,15 @@ export default function DashboardPage() {
                                 <div className="flex items-start gap-2 text-sm">
                                   <MapPin className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
                                   <div>
-                                    <p className="text-muted-foreground text-xs mb-1">
-                                      Address
-                                    </p>
+                                    <p className="text-muted-foreground text-xs mb-1">Address</p>
                                     <p className="font-medium">
-                                      {adopter.address_line &&
-                                      adopter.city &&
-                                      adopter.state
+                                      {adopter.address_line && adopter.city && adopter.state
                                         ? `${
                                             adopter.address_line.length > 40
-                                              ? adopter.address_line.substring(
-                                                  0,
-                                                  40
-                                                ) + "..."
+                                              ? adopter.address_line.substring(0, 40) + '...'
                                               : adopter.address_line
                                           }, ${adopter.city}, ${adopter.state}`
-                                        : adopter.location || "Not provided"}
+                                        : adopter.location || 'Not provided'}
                                     </p>
                                   </div>
                                 </div>
@@ -680,13 +611,9 @@ export default function DashboardPage() {
                                 <div className="flex items-start gap-2 text-sm">
                                   <Home className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
                                   <div>
-                                    <p className="text-muted-foreground text-xs mb-1">
-                                      Housing
-                                    </p>
+                                    <p className="text-muted-foreground text-xs mb-1">Housing</p>
                                     <p className="font-medium capitalize">
-                                      {adopter.home_type ||
-                                        adopter.housing_type ||
-                                        "Not specified"}
+                                      {adopter.home_type || adopter.housing_type || 'Not specified'}
                                     </p>
                                   </div>
                                 </div>
@@ -706,10 +633,7 @@ export default function DashboardPage() {
                                       | number
                                       | bigint
                                       | boolean
-                                      | ReactElement<
-                                          unknown,
-                                          string | JSXElementConstructor<any>
-                                        >
+                                      | ReactElement<unknown, string | JSXElementConstructor<any>>
                                       | Iterable<ReactNode>
                                       | ReactPortal
                                       | Promise<
@@ -720,8 +644,7 @@ export default function DashboardPage() {
                                           | ReactPortal
                                           | ReactElement<
                                               unknown,
-                                              | string
-                                              | JSXElementConstructor<any>
+                                              string | JSXElementConstructor<any>
                                             >
                                           | Iterable<ReactNode>
                                           | null
@@ -731,14 +654,9 @@ export default function DashboardPage() {
                                       | undefined,
                                     idx: Key | null | undefined
                                   ) => (
-                                    <div
-                                      key={idx}
-                                      className="flex items-start gap-2 text-sm"
-                                    >
+                                    <div key={idx} className="flex items-start gap-2 text-sm">
                                       <Check className="h-4 w-4 text-green-600 mt-0.5 shrink-0" />
-                                      <span className="text-muted-foreground">
-                                        {reason}
-                                      </span>
+                                      <span className="text-muted-foreground">{reason}</span>
                                     </div>
                                   )
                                 )}
@@ -760,8 +678,7 @@ export default function DashboardPage() {
                                           | boolean
                                           | ReactElement<
                                               unknown,
-                                              | string
-                                              | JSXElementConstructor<any>
+                                              string | JSXElementConstructor<any>
                                             >
                                           | Iterable<ReactNode>
                                           | ReactPortal
@@ -773,8 +690,7 @@ export default function DashboardPage() {
                                               | ReactPortal
                                               | ReactElement<
                                                   unknown,
-                                                  | string
-                                                  | JSXElementConstructor<any>
+                                                  string | JSXElementConstructor<any>
                                                 >
                                               | Iterable<ReactNode>
                                               | null
@@ -784,14 +700,9 @@ export default function DashboardPage() {
                                           | undefined,
                                         idx: Key | null | undefined
                                       ) => (
-                                        <div
-                                          key={idx}
-                                          className="flex items-start gap-2 text-sm"
-                                        >
+                                        <div key={idx} className="flex items-start gap-2 text-sm">
                                           <X className="h-4 w-4 text-red-600 mt-0.5 shrink-0" />
-                                          <span className="text-muted-foreground">
-                                            {reason}
-                                          </span>
+                                          <span className="text-muted-foreground">{reason}</span>
                                         </div>
                                       )
                                     )}
@@ -803,19 +714,16 @@ export default function DashboardPage() {
                             {/* Application Info */}
                             <div className="flex items-center gap-4 text-sm text-muted-foreground mb-4 pb-4 border-b">
                               <span>
-                                Applied {formattedDate} • {daysAgo}{" "}
-                                {daysAgo === 1 ? "day" : "days"} ago
+                                Applied {formattedDate} • {daysAgo} {daysAgo === 1 ? 'day' : 'days'}{' '}
+                                ago
                               </span>
-                              <Badge
-                                variant="outline"
-                                className={statusClasses}
-                              >
+                              <Badge variant="outline" className={statusClasses}>
                                 {statusLabel}
                               </Badge>
                             </div>
 
                             {/* Action Buttons */}
-                            {normalizedStatus === "accepted" ? (
+                            {normalizedStatus === 'accepted' ? (
                               <div className="text-green-700 font-semibold text-center mt-2">
                                 Application accepted
                               </div>
@@ -825,11 +733,7 @@ export default function DashboardPage() {
                                   variant="outline"
                                   className="flex-1 text-green-600 hover:text-green-700 bg-transparent"
                                   onClick={() =>
-                                    handleAccept(
-                                      selectedPet.id,
-                                      adopter.id,
-                                      adopter.name
-                                    )
+                                    handleAccept(selectedPet.id, adopter.id, adopter.name)
                                   }
                                 >
                                   Accept
@@ -839,11 +743,7 @@ export default function DashboardPage() {
                                   variant="outline"
                                   className="flex-1 text-red-600 hover:text-red-700 bg-transparent"
                                   onClick={() =>
-                                    handleReject(
-                                      selectedPet.id,
-                                      adopter.id,
-                                      adopter.name
-                                    )
+                                    handleReject(selectedPet.id, adopter.id, adopter.name)
                                   }
                                 >
                                   Reject
@@ -856,9 +756,7 @@ export default function DashboardPage() {
                     </div>
                   ) : (
                     <div className="text-center py-12 text-muted-foreground">
-                      <p>
-                        No adopters have applied for {selectedPet.name} yet.
-                      </p>
+                      <p>No adopters have applied for {selectedPet.name} yet.</p>
                     </div>
                   )}
                 </>
