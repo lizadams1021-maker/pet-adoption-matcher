@@ -1,45 +1,38 @@
-"use client";
+'use client';
 
-import type React from "react";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import Swal from "sweetalert2";
+import type React from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import Swal from 'sweetalert2';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Textarea } from "@/components/ui/textarea";
-import { AppLayout } from "@/components/app-layout";
-import Image from "next/image";
-import { Upload } from "lucide-react";
-import { US_STATES, getCitiesForState } from "@/lib/us-states-cities";
-import {
-  validateProfileForm,
-  type ProfileFormData,
-} from "@/lib/profile-validation";
-import { useAuthClient } from "@/lib/useAuthClient";
-import {
-  IMAGE_SIZE_LIMIT_MESSAGE,
-  MAX_IMAGE_SIZE_BYTES,
-  MAX_IMAGE_SIZE_MB,
-} from "@/lib/constants";
+} from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Textarea } from '@/components/ui/textarea';
+import { AppLayout } from '@/components/app-layout';
+import Image from 'next/image';
+import { Upload } from 'lucide-react';
+import { US_STATES, getCitiesForState } from '@/lib/us-states-cities';
+import { validateProfileForm, type ProfileFormData } from '@/lib/profile-validation';
+import { useAuthClient } from '@/lib/useAuthClient';
+import { IMAGE_SIZE_LIMIT_MESSAGE, MAX_IMAGE_SIZE_BYTES, MAX_IMAGE_SIZE_MB } from '@/lib/constants';
 
 const formatDateForInput = (value?: string | Date | null) => {
-  if (!value) return "";
-  const isoString = typeof value === "string" ? value : value.toISOString();
-  return isoString.split("T")[0];
+  if (!value) return '';
+  const isoString = typeof value === 'string' ? value : value.toISOString();
+  return isoString.split('T')[0];
 };
 
 const ensureArray = (value?: string[] | string | null) => {
   if (Array.isArray(value)) return value;
-  if (typeof value === "string" && value.length > 0) return [value];
+  if (typeof value === 'string' && value.length > 0) return [value];
   return [];
 };
 
@@ -50,71 +43,71 @@ export default function ProfilePage() {
   const [saved, setSaved] = useState(false);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [profileImage, setProfileImage] = useState<string>("");
+  const [profileImage, setProfileImage] = useState<string>('');
   const [uploading, setUploading] = useState(false);
 
   const [formData, setFormData] = useState<Partial<ProfileFormData>>({
-    firstName: "",
-    lastName: "",
-    email: "",
-    homePhone: "",
-    cellPhone: "",
-    gender: "Prefer not to answer",
-    birthday: "",
-    addressLine: "",
-    city: "",
-    state: "",
-    zipCode: "",
+    firstName: '',
+    lastName: '',
+    email: '',
+    homePhone: '',
+    cellPhone: '',
+    gender: 'Prefer not to answer',
+    birthday: '',
+    addressLine: '',
+    city: '',
+    state: '',
+    zipCode: '',
     willingOutOfState: false,
     hasPets: false,
     petsTypes: [],
     petsGoodWithOthers: false,
     hasFencedYard: false,
-    homeType: "",
+    homeType: '',
     landlordAllowsPets: false,
-    landlordPhone: "",
-    landlordEmail: "",
+    landlordPhone: '',
+    landlordEmail: '',
     associationRestrictions: false,
     worksOutsideHome: false,
-    hoursHomeAlone: "",
-    wherePetsWhenAway: "",
+    hoursHomeAlone: '',
+    wherePetsWhenAway: '',
     hasChildren: false,
     childrenCount: 0,
-    childrenAges: "",
+    childrenAges: '',
     adultsInHome: 1,
-    homeActivityLevel: "",
-    petLiveLocation: "",
-    adoptionTimeline: "",
-    preferredDogBreed: "",
-    preferredCatType: "",
-    preferredAge: "",
-    preferredWeight: "",
+    homeActivityLevel: '',
+    petLiveLocation: '',
+    adoptionTimeline: '',
+    preferredDogBreed: '',
+    preferredCatType: '',
+    preferredAge: '',
+    preferredWeight: '',
     preferredTemperamentDetailed: [],
-    preferredEnergy: "",
+    preferredEnergy: '',
     undesiredCharacteristics: [],
     takePetsToVet: false,
-    vetName: "",
-    vetPhone: "",
-    vetEmail: "",
-    reference1Name: "",
-    reference1Phone: "",
-    reference1Email: "",
-    reference2Name: "",
-    reference2Phone: "",
-    reference2Email: "",
+    vetName: '',
+    vetPhone: '',
+    vetEmail: '',
+    reference1Name: '',
+    reference1Phone: '',
+    reference1Email: '',
+    reference2Name: '',
+    reference2Phone: '',
+    reference2Email: '',
     adoptedBefore: false,
     ownedPetBefore: false,
     spayedNeutered: false,
     vaccinated: false,
-    hadPetsNoLongerHave: "",
+    hadPetsNoLongerHave: '',
     willingBehaviorTraining: false,
-    reasonsGiveUp: "",
-    planForVetCosts: "",
-    additionalComments: "",
+    reasonsGiveUp: '',
+    planForVetCosts: '',
+    additionalComments: '',
   });
 
   const [availableCities, setAvailableCities] = useState<string[]>([]);
-  const [customCity, setCustomCity] = useState("");
+  const [customCity, setCustomCity] = useState('');
 
   const userId = user?.id;
 
@@ -122,79 +115,75 @@ export default function ProfilePage() {
     if (loading) return;
 
     if (!userId) {
-      router.push("/login");
+      router.push('/login');
       return;
     }
 
     const mapUserToForm = (userData: typeof user) => {
       if (!userData) return;
       setFormData({
-        firstName: userData.first_name || "",
-        lastName: userData.last_name || "",
+        firstName: userData.first_name || '',
+        lastName: userData.last_name || '',
         email: userData.email || user.email,
-        homePhone: userData.home_phone || "",
-        cellPhone: userData.cell_phone || "",
-        gender: userData.gender || "Prefer not to answer",
+        homePhone: userData.home_phone || '',
+        cellPhone: userData.cell_phone || '',
+        gender: userData.gender || 'Prefer not to answer',
         birthday: formatDateForInput(userData.birthday as string),
-        addressLine: userData.address_line || "",
-        city: userData.city || "",
-        state: userData.state || "",
-        zipCode: userData.zip_code || "",
+        addressLine: userData.address_line || '',
+        city: userData.city || '',
+        state: userData.state || '',
+        zipCode: userData.zip_code || '',
         willingOutOfState: Boolean(userData.willing_out_of_state),
         hasPets: Boolean(userData.has_pets),
         petsTypes: ensureArray(userData.pets_types as string[]),
         petsGoodWithOthers: Boolean(userData.pets_good_with_others),
         hasFencedYard: Boolean(userData.has_fenced_yard),
-        homeType: userData.home_type || "",
+        homeType: userData.home_type || '',
         landlordAllowsPets: Boolean(userData.landlord_allows_pets),
-        landlordPhone: userData.landlord_phone || "",
-        landlordEmail: userData.landlord_email || "",
-        associationRestrictions: Boolean(
-          userData.association_restrictions
-        ),
+        landlordPhone: userData.landlord_phone || '',
+        landlordEmail: userData.landlord_email || '',
+        associationRestrictions: Boolean(userData.association_restrictions),
         worksOutsideHome: Boolean(userData.works_outside_home),
-        hoursHomeAlone: userData.hours_home_alone || "",
-        wherePetsWhenAway: userData.where_pets_when_away || "",
+        hoursHomeAlone: userData.hours_home_alone || '',
+        wherePetsWhenAway: userData.where_pets_when_away || '',
         hasChildren: Boolean(userData.has_children),
         childrenCount: userData.children_count ?? 0,
-        childrenAges: userData.children_ages || "",
+        childrenAges: userData.children_ages || '',
         adultsInHome: userData.adults_in_home || 1,
-        homeActivityLevel: userData.home_activity_level || "",
-        petLiveLocation: userData.pet_live_location || "",
-        adoptionTimeline: userData.adoption_timeline || "",
-        preferredDogBreed: userData.preferred_dog_breed || "",
-        preferredCatType: userData.preferred_cat_type || "",
-        preferredAge: userData.preferred_age || "",
-        preferredWeight: userData.preferred_weight || "",
+        homeActivityLevel: userData.home_activity_level || '',
+        petLiveLocation: userData.pet_live_location || '',
+        adoptionTimeline: userData.adoption_timeline || '',
+        preferredDogBreed: userData.preferred_dog_breed || '',
+        preferredCatType: userData.preferred_cat_type || '',
+        preferredAge: userData.preferred_age || '',
+        preferredWeight: userData.preferred_weight || '',
         preferredTemperamentDetailed: ensureArray(
           userData.preferred_temperament_detailed as string[]
         ),
-        preferredEnergy: userData.preferred_energy || "",
-        undesiredCharacteristics: ensureArray(
-          userData.undesired_characteristics as string[]
-        ),
+        preferredEnergy: userData.preferred_energy || '',
+        undesiredCharacteristics: ensureArray(userData.undesired_characteristics as string[]),
         takePetsToVet: Boolean(userData.take_pets_to_vet),
-        vetName: userData.vet_name || "",
-        vetPhone: userData.vet_phone || "",
-        vetEmail: userData.vet_email || "",
-        reference1Name: userData.reference1_name || "",
-        reference1Phone: userData.reference1_phone || "",
-        reference1Email: userData.reference1_email || "",
-        reference2Name: userData.reference2_name || "",
-        reference2Phone: userData.reference2_phone || "",
-        reference2Email: userData.reference2_email || "",
+        vetName: userData.vet_name || '',
+        vetPhone: userData.vet_phone || '',
+        vetEmail: userData.vet_email || '',
+        reference1Name: userData.reference1_name || '',
+        reference1Phone: userData.reference1_phone || '',
+        reference1Email: userData.reference1_email || '',
+        reference2Name: userData.reference2_name || '',
+        reference2Phone: userData.reference2_phone || '',
+        reference2Email: userData.reference2_email || '',
         adoptedBefore: Boolean(userData.adopted_before),
         ownedPetBefore: Boolean(userData.owned_pet_before),
         spayedNeutered: Boolean(userData.spayed_neutered),
         vaccinated: Boolean(userData.vaccinated),
-        hadPetsNoLongerHave: userData.had_pets_no_longer_have || "",
+        hadPetsNoLongerHave: userData.had_pets_no_longer_have || '',
         willingBehaviorTraining: Boolean(userData.willing_behavior_training),
-        reasonsGiveUp: userData.reasons_give_up || "",
-        planForVetCosts: userData.plan_for_vet_costs || "",
-        additionalComments: userData.additional_comments || "",
+        reasonsGiveUp: userData.reasons_give_up || '',
+        planForVetCosts: userData.plan_for_vet_costs || '',
+        additionalComments: userData.additional_comments || '',
       });
 
-      setProfileImage(userData.image_url || "");
+      setProfileImage(userData.image_url || '');
 
       if (userData.state) {
         const cities = getCitiesForState(userData.state);
@@ -219,7 +208,7 @@ export default function ProfilePage() {
 
         mapUserToForm(latestUser);
       } catch (error) {
-        console.error("[v0] Load profile error:", error);
+        console.error('[v0] Load profile error:', error);
         mapUserToForm(user);
       } finally {
         setLoadingPage(false);
@@ -227,7 +216,7 @@ export default function ProfilePage() {
     };
 
     loadProfile();
-  }, [userId, router, loading, updateUser]);
+  }, [userId, router, loading, updateUser, user]);
 
   useEffect(() => {
     if (formData.state) {
@@ -245,27 +234,27 @@ export default function ProfilePage() {
 
     if (file.size > MAX_IMAGE_SIZE_BYTES) {
       Swal.fire({
-        icon: "warning",
-        title: "Image Too Large",
+        icon: 'warning',
+        title: 'Image Too Large',
         text: IMAGE_SIZE_LIMIT_MESSAGE,
       });
-      e.target.value = "";
+      e.target.value = '';
       return;
     }
 
     setUploading(true);
     try {
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append('file', file);
 
-      const response = await fetch("/api/upload", {
-        method: "POST",
+      const response = await fetch('/api/upload', {
+        method: 'POST',
         body: formData,
       });
 
       if (!response.ok) {
-        let errorMessage = "Failed to upload image";
-        const raw = await response.text().catch(() => "");
+        let errorMessage = 'Failed to upload image';
+        const raw = await response.text().catch(() => '');
         if (raw) {
           try {
             const parsed = JSON.parse(raw);
@@ -275,20 +264,17 @@ export default function ProfilePage() {
           }
         }
 
-        if (
-          response.status === 400 &&
-          errorMessage.toLowerCase().includes("exceeds")
-        ) {
+        if (response.status === 400 && errorMessage.toLowerCase().includes('exceeds')) {
           errorMessage = IMAGE_SIZE_LIMIT_MESSAGE;
         }
 
         Swal.fire({
-          icon: "error",
-          title: "Upload Error",
+          icon: 'error',
+          title: 'Upload Error',
           text: errorMessage,
         });
 
-        e.target.value = "";
+        e.target.value = '';
 
         return;
       }
@@ -296,11 +282,11 @@ export default function ProfilePage() {
       const data = await response.json();
       setProfileImage(data.imageUrl);
     } catch (error) {
-      console.error("[v0] Image upload error:", error);
+      console.error('[v0] Image upload error:', error);
       Swal.fire({
-        icon: "error",
-        title: "Upload Error",
-        text: "Failed to upload image: " + String(error),
+        icon: 'error',
+        title: 'Upload Error',
+        text: 'Failed to upload image: ' + String(error),
       });
     } finally {
       setUploading(false);
@@ -315,7 +301,7 @@ export default function ProfilePage() {
         errorMap[err.field] = err.message;
       });
       setErrors(errorMap);
-      alert("Please fix the validation errors before saving");
+      alert('Please fix the validation errors before saving');
       return;
     }
 
@@ -323,9 +309,9 @@ export default function ProfilePage() {
     setErrors({});
 
     try {
-      const response = await fetch("/api/user/profile", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch('/api/user/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userId: user?.id,
           ...formData,
@@ -360,11 +346,11 @@ export default function ProfilePage() {
           });
           setErrors(errorMap);
         }
-        alert("Failed to save profile: " + (error.error || "Unknown error"));
+        alert('Failed to save profile: ' + (error.error || 'Unknown error'));
       }
     } catch (error: any) {
-      console.error("[v0] Save profile error:", error);
-      alert("Failed to save profile: " + String(error));
+      console.error('[v0] Save profile error:', error);
+      alert('Failed to save profile: ' + String(error));
     } finally {
       setSaving(false);
     }
@@ -396,8 +382,8 @@ export default function ProfilePage() {
     return null;
   }
 
-  const isRenting = formData.homeType?.includes("Rent");
-  const isOwnCondo = formData.homeType === "Own Condo";
+  const isRenting = formData.homeType?.includes('Rent');
+  const isOwnCondo = formData.homeType === 'Own Condo';
 
   if (loadingPage) {
     return (
@@ -417,9 +403,7 @@ export default function ProfilePage() {
       <div className="max-w-4xl">
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Your Profile</h1>
-          <p className="text-muted-foreground">
-            Complete your adoption application profile
-          </p>
+          <p className="text-muted-foreground">Complete your adoption application profile</p>
         </div>
 
         <div className="bg-card rounded-lg border p-6 space-y-8">
@@ -430,7 +414,7 @@ export default function ProfilePage() {
               <div className="relative h-32 w-32 rounded-full overflow-hidden bg-muted shrink-0">
                 {profileImage ? (
                   <Image
-                    src={profileImage || "/placeholder.svg"}
+                    src={profileImage || '/placeholder.svg'}
                     alt="Profile"
                     fill
                     className="object-cover"
@@ -445,7 +429,7 @@ export default function ProfilePage() {
                 <Label htmlFor="profile-image" className="cursor-pointer">
                   <div className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 w-fit">
                     <Upload className="h-4 w-4" />
-                    {uploading ? "Uploading..." : "Upload Photo"}
+                    {uploading ? 'Uploading...' : 'Upload Photo'}
                   </div>
                   <input
                     id="profile-image"
@@ -474,12 +458,10 @@ export default function ProfilePage() {
                 <Input
                   id="firstName"
                   value={formData.firstName}
-                  onChange={(e) => updateField("firstName", e.target.value)}
-                  className={errors.firstName ? "border-red-500" : ""}
+                  onChange={(e) => updateField('firstName', e.target.value)}
+                  className={errors.firstName ? 'border-red-500' : ''}
                 />
-                {errors.firstName && (
-                  <p className="text-sm text-red-500">{errors.firstName}</p>
-                )}
+                {errors.firstName && <p className="text-sm text-red-500">{errors.firstName}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="lastName">
@@ -488,12 +470,10 @@ export default function ProfilePage() {
                 <Input
                   id="lastName"
                   value={formData.lastName}
-                  onChange={(e) => updateField("lastName", e.target.value)}
-                  className={errors.lastName ? "border-red-500" : ""}
+                  onChange={(e) => updateField('lastName', e.target.value)}
+                  className={errors.lastName ? 'border-red-500' : ''}
                 />
-                {errors.lastName && (
-                  <p className="text-sm text-red-500">{errors.lastName}</p>
-                )}
+                {errors.lastName && <p className="text-sm text-red-500">{errors.lastName}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">
@@ -503,12 +483,10 @@ export default function ProfilePage() {
                   id="email"
                   type="email"
                   value={formData.email}
-                  onChange={(e) => updateField("email", e.target.value)}
-                  className={errors.email ? "border-red-500" : ""}
+                  onChange={(e) => updateField('email', e.target.value)}
+                  className={errors.email ? 'border-red-500' : ''}
                 />
-                {errors.email && (
-                  <p className="text-sm text-red-500">{errors.email}</p>
-                )}
+                {errors.email && <p className="text-sm text-red-500">{errors.email}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="cellPhone">
@@ -518,12 +496,10 @@ export default function ProfilePage() {
                   id="cellPhone"
                   type="tel"
                   value={formData.cellPhone}
-                  onChange={(e) => updateField("cellPhone", e.target.value)}
-                  className={errors.cellPhone ? "border-red-500" : ""}
+                  onChange={(e) => updateField('cellPhone', e.target.value)}
+                  className={errors.cellPhone ? 'border-red-500' : ''}
                 />
-                {errors.cellPhone && (
-                  <p className="text-sm text-red-500">{errors.cellPhone}</p>
-                )}
+                {errors.cellPhone && <p className="text-sm text-red-500">{errors.cellPhone}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="homePhone">Home Phone</Label>
@@ -531,12 +507,10 @@ export default function ProfilePage() {
                   id="homePhone"
                   type="tel"
                   value={formData.homePhone}
-                  onChange={(e) => updateField("homePhone", e.target.value)}
-                  className={errors.homePhone ? "border-red-500" : ""}
+                  onChange={(e) => updateField('homePhone', e.target.value)}
+                  className={errors.homePhone ? 'border-red-500' : ''}
                 />
-                {errors.homePhone && (
-                  <p className="text-sm text-red-500">{errors.homePhone}</p>
-                )}
+                {errors.homePhone && <p className="text-sm text-red-500">{errors.homePhone}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="birthday">
@@ -546,28 +520,21 @@ export default function ProfilePage() {
                   id="birthday"
                   type="date"
                   value={formData.birthday}
-                  onChange={(e) => updateField("birthday", e.target.value)}
-                  className={errors.birthday ? "border-red-500" : ""}
+                  onChange={(e) => updateField('birthday', e.target.value)}
+                  className={errors.birthday ? 'border-red-500' : ''}
                 />
-                {errors.birthday && (
-                  <p className="text-sm text-red-500">{errors.birthday}</p>
-                )}
+                {errors.birthday && <p className="text-sm text-red-500">{errors.birthday}</p>}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="gender">Gender</Label>
-                <Select
-                  value={formData.gender}
-                  onValueChange={(v) => updateField("gender", v)}
-                >
+                <Select value={formData.gender} onValueChange={(v) => updateField('gender', v)}>
                   <SelectTrigger id="gender">
                     <SelectValue placeholder="Select gender" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="M">Male</SelectItem>
                     <SelectItem value="F">Female</SelectItem>
-                    <SelectItem value="Prefer not to answer">
-                      Prefer not to answer
-                    </SelectItem>
+                    <SelectItem value="Prefer not to answer">Prefer not to answer</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -585,26 +552,18 @@ export default function ProfilePage() {
                 <Input
                   id="addressLine"
                   value={formData.addressLine}
-                  onChange={(e) => updateField("addressLine", e.target.value)}
-                  className={errors.addressLine ? "border-red-500" : ""}
+                  onChange={(e) => updateField('addressLine', e.target.value)}
+                  className={errors.addressLine ? 'border-red-500' : ''}
                 />
-                {errors.addressLine && (
-                  <p className="text-sm text-red-500">{errors.addressLine}</p>
-                )}
+                {errors.addressLine && <p className="text-sm text-red-500">{errors.addressLine}</p>}
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="state">
                     State <span className="text-red-500">*</span>
                   </Label>
-                  <Select
-                    value={formData.state}
-                    onValueChange={(v) => updateField("state", v)}
-                  >
-                    <SelectTrigger
-                      id="state"
-                      className={errors.state ? "border-red-500" : ""}
-                    >
+                  <Select value={formData.state} onValueChange={(v) => updateField('state', v)}>
+                    <SelectTrigger id="state" className={errors.state ? 'border-red-500' : ''}>
                       <SelectValue placeholder="Select state" />
                     </SelectTrigger>
                     <SelectContent>
@@ -615,9 +574,7 @@ export default function ProfilePage() {
                       ))}
                     </SelectContent>
                   </Select>
-                  {errors.state && (
-                    <p className="text-sm text-red-500">{errors.state}</p>
-                  )}
+                  {errors.state && <p className="text-sm text-red-500">{errors.state}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="city">
@@ -627,17 +584,14 @@ export default function ProfilePage() {
                     <Select
                       value={formData.city}
                       onValueChange={(v) => {
-                        if (v === "other") {
-                          updateField("city", customCity);
+                        if (v === 'other') {
+                          updateField('city', customCity);
                         } else {
-                          updateField("city", v);
+                          updateField('city', v);
                         }
                       }}
                     >
-                      <SelectTrigger
-                        id="city"
-                        className={errors.city ? "border-red-500" : ""}
-                      >
+                      <SelectTrigger id="city" className={errors.city ? 'border-red-500' : ''}>
                         <SelectValue placeholder="Select city" />
                       </SelectTrigger>
                       <SelectContent>
@@ -646,23 +600,19 @@ export default function ProfilePage() {
                             {city}
                           </SelectItem>
                         ))}
-                        <SelectItem value="other">
-                          Other (type below)
-                        </SelectItem>
+                        <SelectItem value="other">Other (type below)</SelectItem>
                       </SelectContent>
                     </Select>
                   ) : (
                     <Input
                       id="city"
                       value={formData.city}
-                      onChange={(e) => updateField("city", e.target.value)}
+                      onChange={(e) => updateField('city', e.target.value)}
                       placeholder="Enter city"
-                      className={errors.city ? "border-red-500" : ""}
+                      className={errors.city ? 'border-red-500' : ''}
                     />
                   )}
-                  {errors.city && (
-                    <p className="text-sm text-red-500">{errors.city}</p>
-                  )}
+                  {errors.city && <p className="text-sm text-red-500">{errors.city}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="zipCode">
@@ -671,25 +621,21 @@ export default function ProfilePage() {
                   <Input
                     id="zipCode"
                     value={formData.zipCode}
-                    onChange={(e) => updateField("zipCode", e.target.value)}
-                    className={errors.zipCode ? "border-red-500" : ""}
+                    onChange={(e) => updateField('zipCode', e.target.value)}
+                    className={errors.zipCode ? 'border-red-500' : ''}
                   />
-                  {errors.zipCode && (
-                    <p className="text-sm text-red-500">{errors.zipCode}</p>
-                  )}
+                  {errors.zipCode && <p className="text-sm text-red-500">{errors.zipCode}</p>}
                 </div>
               </div>
               {availableCities.length > 0 && (
                 <div className="space-y-2">
-                  <Label htmlFor="customCity">
-                    If your city is not listed, enter it here
-                  </Label>
+                  <Label htmlFor="customCity">If your city is not listed, enter it here</Label>
                   <Input
                     id="customCity"
                     value={customCity}
                     onChange={(e) => {
                       setCustomCity(e.target.value);
-                      updateField("city", e.target.value);
+                      updateField('city', e.target.value);
                     }}
                     placeholder="Enter city name"
                   />
@@ -699,9 +645,7 @@ export default function ProfilePage() {
                 <Checkbox
                   id="willingOutOfState"
                   checked={formData.willingOutOfState}
-                  onCheckedChange={(checked) =>
-                    updateField("willingOutOfState", !!checked)
-                  }
+                  onCheckedChange={(checked) => updateField('willingOutOfState', !!checked)}
                 />
                 <Label htmlFor="willingOutOfState" className="cursor-pointer">
                   Willing to adopt from out of state
@@ -716,18 +660,13 @@ export default function ProfilePage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="homeType">Home Type</Label>
-                <Select
-                  value={formData.homeType}
-                  onValueChange={(v) => updateField("homeType", v)}
-                >
+                <Select value={formData.homeType} onValueChange={(v) => updateField('homeType', v)}>
                   <SelectTrigger id="homeType">
                     <SelectValue placeholder="Select home type" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Rent House">Rent House</SelectItem>
-                    <SelectItem value="Rent Apartment">
-                      Rent Apartment
-                    </SelectItem>
+                    <SelectItem value="Rent Apartment">Rent Apartment</SelectItem>
                     <SelectItem value="Own House">Own House</SelectItem>
                     <SelectItem value="Own Apartment">Own Apartment</SelectItem>
                     <SelectItem value="Own Condo">Own Condo</SelectItem>
@@ -739,9 +678,7 @@ export default function ProfilePage() {
                 <Checkbox
                   id="hasFencedYard"
                   checked={formData.hasFencedYard}
-                  onCheckedChange={(checked) =>
-                    updateField("hasFencedYard", !!checked)
-                  }
+                  onCheckedChange={(checked) => updateField('hasFencedYard', !!checked)}
                 />
                 <Label htmlFor="hasFencedYard" className="cursor-pointer">
                   I have a fenced yard
@@ -756,14 +693,9 @@ export default function ProfilePage() {
                     <Checkbox
                       id="landlordAllowsPets"
                       checked={formData.landlordAllowsPets}
-                      onCheckedChange={(checked) =>
-                        updateField("landlordAllowsPets", !!checked)
-                      }
+                      onCheckedChange={(checked) => updateField('landlordAllowsPets', !!checked)}
                     />
-                    <Label
-                      htmlFor="landlordAllowsPets"
-                      className="cursor-pointer"
-                    >
+                    <Label htmlFor="landlordAllowsPets" className="cursor-pointer">
                       Landlord allows pets
                     </Label>
                   </div>
@@ -774,15 +706,11 @@ export default function ProfilePage() {
                     id="landlordPhone"
                     type="tel"
                     value={formData.landlordPhone}
-                    onChange={(e) =>
-                      updateField("landlordPhone", e.target.value)
-                    }
-                    className={errors.landlordPhone ? "border-red-500" : ""}
+                    onChange={(e) => updateField('landlordPhone', e.target.value)}
+                    className={errors.landlordPhone ? 'border-red-500' : ''}
                   />
                   {errors.landlordPhone && (
-                    <p className="text-sm text-red-500">
-                      {errors.landlordPhone}
-                    </p>
+                    <p className="text-sm text-red-500">{errors.landlordPhone}</p>
                   )}
                 </div>
                 <div className="space-y-2">
@@ -791,15 +719,11 @@ export default function ProfilePage() {
                     id="landlordEmail"
                     type="email"
                     value={formData.landlordEmail}
-                    onChange={(e) =>
-                      updateField("landlordEmail", e.target.value)
-                    }
-                    className={errors.landlordEmail ? "border-red-500" : ""}
+                    onChange={(e) => updateField('landlordEmail', e.target.value)}
+                    className={errors.landlordEmail ? 'border-red-500' : ''}
                   />
                   {errors.landlordEmail && (
-                    <p className="text-sm text-red-500">
-                      {errors.landlordEmail}
-                    </p>
+                    <p className="text-sm text-red-500">{errors.landlordEmail}</p>
                   )}
                 </div>
               </div>
@@ -810,14 +734,9 @@ export default function ProfilePage() {
                 <Checkbox
                   id="associationRestrictions"
                   checked={formData.associationRestrictions}
-                  onCheckedChange={(checked) =>
-                    updateField("associationRestrictions", !!checked)
-                  }
+                  onCheckedChange={(checked) => updateField('associationRestrictions', !!checked)}
                 />
-                <Label
-                  htmlFor="associationRestrictions"
-                  className="cursor-pointer"
-                >
+                <Label htmlFor="associationRestrictions" className="cursor-pointer">
                   HOA/Condo association has pet restrictions
                 </Label>
               </div>
@@ -831,7 +750,7 @@ export default function ProfilePage() {
               <Checkbox
                 id="hasPets"
                 checked={formData.hasPets}
-                onCheckedChange={(checked) => updateField("hasPets", !!checked)}
+                onCheckedChange={(checked) => updateField('hasPets', !!checked)}
               />
               <Label htmlFor="hasPets" className="cursor-pointer">
                 I currently have pets
@@ -843,39 +762,27 @@ export default function ProfilePage() {
                 <div className="space-y-3">
                   <Label>What types of pets do you have?</Label>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {["Dog", "Cat", "Bird", "Fish", "Reptile", "Other"].map(
-                      (type) => (
-                        <div key={type} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`pet-type-${type}`}
-                            checked={formData.petsTypes?.includes(type)}
-                            onCheckedChange={() =>
-                              toggleArrayField("petsTypes", type)
-                            }
-                          />
-                          <Label
-                            htmlFor={`pet-type-${type}`}
-                            className="cursor-pointer"
-                          >
-                            {type}
-                          </Label>
-                        </div>
-                      )
-                    )}
+                    {['Dog', 'Cat', 'Bird', 'Fish', 'Reptile', 'Other'].map((type) => (
+                      <div key={type} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`pet-type-${type}`}
+                          checked={formData.petsTypes?.includes(type)}
+                          onCheckedChange={() => toggleArrayField('petsTypes', type)}
+                        />
+                        <Label htmlFor={`pet-type-${type}`} className="cursor-pointer">
+                          {type}
+                        </Label>
+                      </div>
+                    ))}
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="petsGoodWithOthers"
                     checked={formData.petsGoodWithOthers}
-                    onCheckedChange={(checked) =>
-                      updateField("petsGoodWithOthers", !!checked)
-                    }
+                    onCheckedChange={(checked) => updateField('petsGoodWithOthers', !!checked)}
                   />
-                  <Label
-                    htmlFor="petsGoodWithOthers"
-                    className="cursor-pointer"
-                  >
+                  <Label htmlFor="petsGoodWithOthers" className="cursor-pointer">
                     My pets are good with other animals
                   </Label>
                 </div>
@@ -891,21 +798,17 @@ export default function ProfilePage() {
                 <Checkbox
                   id="worksOutsideHome"
                   checked={formData.worksOutsideHome}
-                  onCheckedChange={(checked) =>
-                    updateField("worksOutsideHome", !!checked)
-                  }
+                  onCheckedChange={(checked) => updateField('worksOutsideHome', !!checked)}
                 />
                 <Label htmlFor="worksOutsideHome" className="cursor-pointer">
                   I work outside the home
                 </Label>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="hoursHomeAlone">
-                  Hours pet would be home alone
-                </Label>
+                <Label htmlFor="hoursHomeAlone">Hours pet would be home alone</Label>
                 <Select
                   value={formData.hoursHomeAlone}
-                  onValueChange={(v) => updateField("hoursHomeAlone", v)}
+                  onValueChange={(v) => updateField('hoursHomeAlone', v)}
                 >
                   <SelectTrigger id="hoursHomeAlone">
                     <SelectValue placeholder="Select hours" />
@@ -919,12 +822,10 @@ export default function ProfilePage() {
                 </Select>
               </div>
               <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="wherePetsWhenAway">
-                  Where will pets stay when you're away?
-                </Label>
+                <Label htmlFor="wherePetsWhenAway">Where will pets stay when you're away?</Label>
                 <Select
                   value={formData.wherePetsWhenAway}
-                  onValueChange={(v) => updateField("wherePetsWhenAway", v)}
+                  onValueChange={(v) => updateField('wherePetsWhenAway', v)}
                 >
                   <SelectTrigger id="wherePetsWhenAway">
                     <SelectValue placeholder="Select location" />
@@ -933,9 +834,7 @@ export default function ProfilePage() {
                     <SelectItem value="Inside">Inside</SelectItem>
                     <SelectItem value="Inside crated">Inside crated</SelectItem>
                     <SelectItem value="Outside">Outside</SelectItem>
-                    <SelectItem value="Kennel/Boarding">
-                      Kennel/Boarding
-                    </SelectItem>
+                    <SelectItem value="Kennel/Boarding">Kennel/Boarding</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -950,9 +849,7 @@ export default function ProfilePage() {
                 <Checkbox
                   id="hasChildren"
                   checked={formData.hasChildren}
-                  onCheckedChange={(checked) =>
-                    updateField("hasChildren", !!checked)
-                  }
+                  onCheckedChange={(checked) => updateField('hasChildren', !!checked)}
                 />
                 <Label htmlFor="hasChildren" className="cursor-pointer">
                   I have children at home
@@ -969,23 +866,16 @@ export default function ProfilePage() {
                       min="0"
                       value={formData.childrenCount}
                       onChange={(e) =>
-                        updateField(
-                          "childrenCount",
-                          Number.parseInt(e.target.value) || 0
-                        )
+                        updateField('childrenCount', Number.parseInt(e.target.value) || 0)
                       }
                     />
                   </div>
                   <div className="space-y-2 md:col-span-2">
-                    <Label htmlFor="childrenAges">
-                      Children's ages (e.g., "3, 7, 12")
-                    </Label>
+                    <Label htmlFor="childrenAges">Children's ages (e.g., "3, 7, 12")</Label>
                     <Input
                       id="childrenAges"
                       value={formData.childrenAges}
-                      onChange={(e) =>
-                        updateField("childrenAges", e.target.value)
-                      }
+                      onChange={(e) => updateField('childrenAges', e.target.value)}
                       placeholder="Enter ages separated by commas"
                     />
                   </div>
@@ -1000,10 +890,7 @@ export default function ProfilePage() {
                   min="1"
                   value={formData.adultsInHome}
                   onChange={(e) =>
-                    updateField(
-                      "adultsInHome",
-                      Number.parseInt(e.target.value) || 1
-                    )
+                    updateField('adultsInHome', Number.parseInt(e.target.value) || 1)
                   }
                 />
               </div>
@@ -1011,7 +898,7 @@ export default function ProfilePage() {
                 <Label htmlFor="homeActivityLevel">Home activity level</Label>
                 <Select
                   value={formData.homeActivityLevel}
-                  onValueChange={(v) => updateField("homeActivityLevel", v)}
+                  onValueChange={(v) => updateField('homeActivityLevel', v)}
                 >
                   <SelectTrigger id="homeActivityLevel">
                     <SelectValue placeholder="Select activity level" />
@@ -1035,7 +922,7 @@ export default function ProfilePage() {
                 <Label htmlFor="petLiveLocation">Where will pet live?</Label>
                 <Select
                   value={formData.petLiveLocation}
-                  onValueChange={(v) => updateField("petLiveLocation", v)}
+                  onValueChange={(v) => updateField('petLiveLocation', v)}
                 >
                   <SelectTrigger id="petLiveLocation">
                     <SelectValue placeholder="Select location" />
@@ -1043,9 +930,7 @@ export default function ProfilePage() {
                   <SelectContent>
                     <SelectItem value="Inside">Inside only</SelectItem>
                     <SelectItem value="Outside">Outside only</SelectItem>
-                    <SelectItem value="Indoor and Outdoor">
-                      Indoor and Outdoor
-                    </SelectItem>
+                    <SelectItem value="Indoor and Outdoor">Indoor and Outdoor</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1053,7 +938,7 @@ export default function ProfilePage() {
                 <Label htmlFor="adoptionTimeline">Adoption timeline</Label>
                 <Select
                   value={formData.adoptionTimeline}
-                  onValueChange={(v) => updateField("adoptionTimeline", v)}
+                  onValueChange={(v) => updateField('adoptionTimeline', v)}
                 >
                   <SelectTrigger id="adoptionTimeline">
                     <SelectValue placeholder="Select timeline" />
@@ -1068,28 +953,20 @@ export default function ProfilePage() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="preferredDogBreed">
-                  Preferred dog breed (if any)
-                </Label>
+                <Label htmlFor="preferredDogBreed">Preferred dog breed (if any)</Label>
                 <Input
                   id="preferredDogBreed"
                   value={formData.preferredDogBreed}
-                  onChange={(e) =>
-                    updateField("preferredDogBreed", e.target.value)
-                  }
+                  onChange={(e) => updateField('preferredDogBreed', e.target.value)}
                   placeholder="e.g., Golden Retriever, Mixed"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="preferredCatType">
-                  Preferred cat type (if any)
-                </Label>
+                <Label htmlFor="preferredCatType">Preferred cat type (if any)</Label>
                 <Input
                   id="preferredCatType"
                   value={formData.preferredCatType}
-                  onChange={(e) =>
-                    updateField("preferredCatType", e.target.value)
-                  }
+                  onChange={(e) => updateField('preferredCatType', e.target.value)}
                   placeholder="e.g., Tabby, Siamese"
                 />
               </div>
@@ -1097,15 +974,13 @@ export default function ProfilePage() {
                 <Label htmlFor="preferredAge">Preferred age</Label>
                 <Select
                   value={formData.preferredAge}
-                  onValueChange={(v) => updateField("preferredAge", v)}
+                  onValueChange={(v) => updateField('preferredAge', v)}
                 >
                   <SelectTrigger id="preferredAge">
                     <SelectValue placeholder="Select age" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="puppy">
-                      Puppy/Kitten (0-1 year)
-                    </SelectItem>
+                    <SelectItem value="puppy">Puppy/Kitten (0-1 year)</SelectItem>
                     <SelectItem value="young">Young (1-3 years)</SelectItem>
                     <SelectItem value="adult">Adult (3-7 years)</SelectItem>
                     <SelectItem value="senior">Senior (7+ years)</SelectItem>
@@ -1116,7 +991,7 @@ export default function ProfilePage() {
                 <Label htmlFor="preferredWeight">Preferred weight</Label>
                 <Select
                   value={formData.preferredWeight}
-                  onValueChange={(v) => updateField("preferredWeight", v)}
+                  onValueChange={(v) => updateField('preferredWeight', v)}
                 >
                   <SelectTrigger id="preferredWeight">
                     <SelectValue placeholder="Select weight" />
@@ -1132,7 +1007,7 @@ export default function ProfilePage() {
                 <Label htmlFor="preferredEnergy">Preferred energy level</Label>
                 <Select
                   value={formData.preferredEnergy}
-                  onValueChange={(v) => updateField("preferredEnergy", v)}
+                  onValueChange={(v) => updateField('preferredEnergy', v)}
                 >
                   <SelectTrigger id="preferredEnergy">
                     <SelectValue placeholder="Select energy level" />
@@ -1150,26 +1025,22 @@ export default function ProfilePage() {
               <Label>Preferred temperament (select all that apply)</Label>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {[
-                  "Friendly",
-                  "Energetic",
-                  "Playful",
-                  "Calm",
-                  "Independent",
-                  "Affectionate",
-                  "Loyal",
-                  "Protective",
-                  "Intelligent",
-                  "Gentle",
+                  'Friendly',
+                  'Energetic',
+                  'Playful',
+                  'Calm',
+                  'Independent',
+                  'Affectionate',
+                  'Loyal',
+                  'Protective',
+                  'Intelligent',
+                  'Gentle',
                 ].map((temp) => (
                   <div key={temp} className="flex items-center space-x-2">
                     <Checkbox
                       id={`temp-${temp}`}
-                      checked={formData.preferredTemperamentDetailed?.includes(
-                        temp
-                      )}
-                      onCheckedChange={() =>
-                        toggleArrayField("preferredTemperamentDetailed", temp)
-                      }
+                      checked={formData.preferredTemperamentDetailed?.includes(temp)}
+                      onCheckedChange={() => toggleArrayField('preferredTemperamentDetailed', temp)}
                     />
                     <Label htmlFor={`temp-${temp}`} className="cursor-pointer">
                       {temp}
@@ -1183,27 +1054,20 @@ export default function ProfilePage() {
               <Label>Undesired characteristics (select all that apply)</Label>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {[
-                  "Aggressive",
-                  "Excessive barking",
-                  "High maintenance",
-                  "Not house trained",
-                  "Destructive",
-                  "Shy",
+                  'Aggressive',
+                  'Excessive barking',
+                  'High maintenance',
+                  'Not house trained',
+                  'Destructive',
+                  'Shy',
                 ].map((char) => (
                   <div key={char} className="flex items-center space-x-2">
                     <Checkbox
                       id={`undesired-${char}`}
-                      checked={formData.undesiredCharacteristics?.includes(
-                        char
-                      )}
-                      onCheckedChange={() =>
-                        toggleArrayField("undesiredCharacteristics", char)
-                      }
+                      checked={formData.undesiredCharacteristics?.includes(char)}
+                      onCheckedChange={() => toggleArrayField('undesiredCharacteristics', char)}
                     />
-                    <Label
-                      htmlFor={`undesired-${char}`}
-                      className="cursor-pointer"
-                    >
+                    <Label htmlFor={`undesired-${char}`} className="cursor-pointer">
                       {char}
                     </Label>
                   </div>
@@ -1219,9 +1083,7 @@ export default function ProfilePage() {
               <Checkbox
                 id="takePetsToVet"
                 checked={formData.takePetsToVet}
-                onCheckedChange={(checked) =>
-                  updateField("takePetsToVet", !!checked)
-                }
+                onCheckedChange={(checked) => updateField('takePetsToVet', !!checked)}
               />
               <Label htmlFor="takePetsToVet" className="cursor-pointer">
                 I take my pets to the vet regularly
@@ -1235,7 +1097,7 @@ export default function ProfilePage() {
                   <Input
                     id="vetName"
                     value={formData.vetName}
-                    onChange={(e) => updateField("vetName", e.target.value)}
+                    onChange={(e) => updateField('vetName', e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
@@ -1244,12 +1106,10 @@ export default function ProfilePage() {
                     id="vetPhone"
                     type="tel"
                     value={formData.vetPhone}
-                    onChange={(e) => updateField("vetPhone", e.target.value)}
-                    className={errors.vetPhone ? "border-red-500" : ""}
+                    onChange={(e) => updateField('vetPhone', e.target.value)}
+                    className={errors.vetPhone ? 'border-red-500' : ''}
                   />
-                  {errors.vetPhone && (
-                    <p className="text-sm text-red-500">{errors.vetPhone}</p>
-                  )}
+                  {errors.vetPhone && <p className="text-sm text-red-500">{errors.vetPhone}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="vetEmail">Veterinarian email</Label>
@@ -1257,23 +1117,19 @@ export default function ProfilePage() {
                     id="vetEmail"
                     type="email"
                     value={formData.vetEmail}
-                    onChange={(e) => updateField("vetEmail", e.target.value)}
-                    className={errors.vetEmail ? "border-red-500" : ""}
+                    onChange={(e) => updateField('vetEmail', e.target.value)}
+                    className={errors.vetEmail ? 'border-red-500' : ''}
                   />
-                  {errors.vetEmail && (
-                    <p className="text-sm text-red-500">{errors.vetEmail}</p>
-                  )}
+                  {errors.vetEmail && <p className="text-sm text-red-500">{errors.vetEmail}</p>}
                 </div>
               </div>
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="planForVetCosts">
-                How do you plan to pay for veterinary costs?
-              </Label>
+              <Label htmlFor="planForVetCosts">How do you plan to pay for veterinary costs?</Label>
               <Select
                 value={formData.planForVetCosts}
-                onValueChange={(v) => updateField("planForVetCosts", v)}
+                onValueChange={(v) => updateField('planForVetCosts', v)}
               >
                 <SelectTrigger id="planForVetCosts">
                   <SelectValue placeholder="Select payment plan" />
@@ -1292,9 +1148,7 @@ export default function ProfilePage() {
           {/* References */}
           <div className="border-t pt-6 space-y-4">
             <h2 className="text-xl font-semibold">References</h2>
-            <p className="text-sm text-muted-foreground">
-              Please provide two personal references
-            </p>
+            <p className="text-sm text-muted-foreground">Please provide two personal references</p>
 
             <div className="space-y-4">
               <div className="p-4 bg-muted/50 rounded-lg space-y-4">
@@ -1305,9 +1159,7 @@ export default function ProfilePage() {
                     <Input
                       id="reference1Name"
                       value={formData.reference1Name}
-                      onChange={(e) =>
-                        updateField("reference1Name", e.target.value)
-                      }
+                      onChange={(e) => updateField('reference1Name', e.target.value)}
                     />
                   </div>
                   <div className="space-y-2">
@@ -1316,15 +1168,11 @@ export default function ProfilePage() {
                       id="reference1Phone"
                       type="tel"
                       value={formData.reference1Phone}
-                      onChange={(e) =>
-                        updateField("reference1Phone", e.target.value)
-                      }
-                      className={errors.reference1Phone ? "border-red-500" : ""}
+                      onChange={(e) => updateField('reference1Phone', e.target.value)}
+                      className={errors.reference1Phone ? 'border-red-500' : ''}
                     />
                     {errors.reference1Phone && (
-                      <p className="text-sm text-red-500">
-                        {errors.reference1Phone}
-                      </p>
+                      <p className="text-sm text-red-500">{errors.reference1Phone}</p>
                     )}
                   </div>
                   <div className="space-y-2">
@@ -1333,15 +1181,11 @@ export default function ProfilePage() {
                       id="reference1Email"
                       type="email"
                       value={formData.reference1Email}
-                      onChange={(e) =>
-                        updateField("reference1Email", e.target.value)
-                      }
-                      className={errors.reference1Email ? "border-red-500" : ""}
+                      onChange={(e) => updateField('reference1Email', e.target.value)}
+                      className={errors.reference1Email ? 'border-red-500' : ''}
                     />
                     {errors.reference1Email && (
-                      <p className="text-sm text-red-500">
-                        {errors.reference1Email}
-                      </p>
+                      <p className="text-sm text-red-500">{errors.reference1Email}</p>
                     )}
                   </div>
                 </div>
@@ -1355,9 +1199,7 @@ export default function ProfilePage() {
                     <Input
                       id="reference2Name"
                       value={formData.reference2Name}
-                      onChange={(e) =>
-                        updateField("reference2Name", e.target.value)
-                      }
+                      onChange={(e) => updateField('reference2Name', e.target.value)}
                     />
                   </div>
                   <div className="space-y-2">
@@ -1366,15 +1208,11 @@ export default function ProfilePage() {
                       id="reference2Phone"
                       type="tel"
                       value={formData.reference2Phone}
-                      onChange={(e) =>
-                        updateField("reference2Phone", e.target.value)
-                      }
-                      className={errors.reference2Phone ? "border-red-500" : ""}
+                      onChange={(e) => updateField('reference2Phone', e.target.value)}
+                      className={errors.reference2Phone ? 'border-red-500' : ''}
                     />
                     {errors.reference2Phone && (
-                      <p className="text-sm text-red-500">
-                        {errors.reference2Phone}
-                      </p>
+                      <p className="text-sm text-red-500">{errors.reference2Phone}</p>
                     )}
                   </div>
                   <div className="space-y-2">
@@ -1383,15 +1221,11 @@ export default function ProfilePage() {
                       id="reference2Email"
                       type="email"
                       value={formData.reference2Email}
-                      onChange={(e) =>
-                        updateField("reference2Email", e.target.value)
-                      }
-                      className={errors.reference2Email ? "border-red-500" : ""}
+                      onChange={(e) => updateField('reference2Email', e.target.value)}
+                      className={errors.reference2Email ? 'border-red-500' : ''}
                     />
                     {errors.reference2Email && (
-                      <p className="text-sm text-red-500">
-                        {errors.reference2Email}
-                      </p>
+                      <p className="text-sm text-red-500">{errors.reference2Email}</p>
                     )}
                   </div>
                 </div>
@@ -1407,9 +1241,7 @@ export default function ProfilePage() {
                 <Checkbox
                   id="adoptedBefore"
                   checked={formData.adoptedBefore}
-                  onCheckedChange={(checked) =>
-                    updateField("adoptedBefore", !!checked)
-                  }
+                  onCheckedChange={(checked) => updateField('adoptedBefore', !!checked)}
                 />
                 <Label htmlFor="adoptedBefore" className="cursor-pointer">
                   I have adopted a pet before
@@ -1419,9 +1251,7 @@ export default function ProfilePage() {
                 <Checkbox
                   id="ownedPetBefore"
                   checked={formData.ownedPetBefore}
-                  onCheckedChange={(checked) =>
-                    updateField("ownedPetBefore", !!checked)
-                  }
+                  onCheckedChange={(checked) => updateField('ownedPetBefore', !!checked)}
                 />
                 <Label htmlFor="ownedPetBefore" className="cursor-pointer">
                   I have owned a pet before
@@ -1431,9 +1261,7 @@ export default function ProfilePage() {
                 <Checkbox
                   id="spayedNeutered"
                   checked={formData.spayedNeutered}
-                  onCheckedChange={(checked) =>
-                    updateField("spayedNeutered", !!checked)
-                  }
+                  onCheckedChange={(checked) => updateField('spayedNeutered', !!checked)}
                 />
                 <Label htmlFor="spayedNeutered" className="cursor-pointer">
                   My previous pets were spayed/neutered
@@ -1443,9 +1271,7 @@ export default function ProfilePage() {
                 <Checkbox
                   id="vaccinated"
                   checked={formData.vaccinated}
-                  onCheckedChange={(checked) =>
-                    updateField("vaccinated", !!checked)
-                  }
+                  onCheckedChange={(checked) => updateField('vaccinated', !!checked)}
                 />
                 <Label htmlFor="vaccinated" className="cursor-pointer">
                   My previous pets were vaccinated
@@ -1455,14 +1281,9 @@ export default function ProfilePage() {
                 <Checkbox
                   id="willingBehaviorTraining"
                   checked={formData.willingBehaviorTraining}
-                  onCheckedChange={(checked) =>
-                    updateField("willingBehaviorTraining", !!checked)
-                  }
+                  onCheckedChange={(checked) => updateField('willingBehaviorTraining', !!checked)}
                 />
-                <Label
-                  htmlFor="willingBehaviorTraining"
-                  className="cursor-pointer"
-                >
+                <Label htmlFor="willingBehaviorTraining" className="cursor-pointer">
                   Willing to attend behavior training
                 </Label>
               </div>
@@ -1475,9 +1296,7 @@ export default function ProfilePage() {
               <Textarea
                 id="hadPetsNoLongerHave"
                 value={formData.hadPetsNoLongerHave}
-                onChange={(e) =>
-                  updateField("hadPetsNoLongerHave", e.target.value)
-                }
+                onChange={(e) => updateField('hadPetsNoLongerHave', e.target.value)}
                 rows={3}
               />
             </div>
@@ -1489,7 +1308,7 @@ export default function ProfilePage() {
               <Textarea
                 id="reasonsGiveUp"
                 value={formData.reasonsGiveUp}
-                onChange={(e) => updateField("reasonsGiveUp", e.target.value)}
+                onChange={(e) => updateField('reasonsGiveUp', e.target.value)}
                 rows={3}
               />
             </div>
@@ -1500,15 +1319,12 @@ export default function ProfilePage() {
             <h2 className="text-xl font-semibold">Additional Information</h2>
             <div className="space-y-2">
               <Label htmlFor="additionalComments">
-                Is there anything else you'd like us to know about you or your
-                home?
+                Is there anything else you'd like us to know about you or your home?
               </Label>
               <Textarea
                 id="additionalComments"
                 value={formData.additionalComments}
-                onChange={(e) =>
-                  updateField("additionalComments", e.target.value)
-                }
+                onChange={(e) => updateField('additionalComments', e.target.value)}
                 rows={4}
                 placeholder="Tell us more about yourself, your lifestyle, or why you want to adopt..."
               />
@@ -1518,9 +1334,9 @@ export default function ProfilePage() {
           {/* Action Buttons */}
           <div className="flex gap-3 pt-4">
             <Button onClick={handleSave} disabled={saving}>
-              {saving ? "Saving..." : saved ? "Saved!" : "Save Profile"}
+              {saving ? 'Saving...' : saved ? 'Saved!' : 'Save Profile'}
             </Button>
-            <Button variant="outline" onClick={() => router.push("/matches")}>
+            <Button variant="outline" onClick={() => router.push('/matches')}>
               View Matches
             </Button>
           </div>

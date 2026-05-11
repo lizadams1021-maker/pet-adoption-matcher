@@ -1,43 +1,59 @@
-"use client";
+'use client';
 
-import type React from "react";
+import type React from 'react';
 
-import { US_STATES } from "@/lib/us-states-cities";
-import { DOG_BREEDS, CAT_BREEDS } from "@/lib/breeds";
-import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
-import Swal from "sweetalert2";
-import { AppLayout } from "@/components/app-layout";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { US_STATES } from '@/lib/us-states-cities';
+import { DOG_BREEDS, CAT_BREEDS } from '@/lib/breeds';
+import { useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Swal from 'sweetalert2';
+import { AppLayout } from '@/components/app-layout';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import Image from "next/image";
-import { Upload } from "lucide-react";
-import { useAuthClient } from "@/lib/useAuthClient";
-import {
-  IMAGE_SIZE_LIMIT_MESSAGE,
-  MAX_IMAGE_SIZE_BYTES,
-  MAX_IMAGE_SIZE_MB,
-} from "@/lib/constants";
+} from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import Image from 'next/image';
+import { Upload } from 'lucide-react';
+import { useAuthClient } from '@/lib/useAuthClient';
+import { IMAGE_SIZE_LIMIT_MESSAGE, MAX_IMAGE_SIZE_BYTES, MAX_IMAGE_SIZE_MB } from '@/lib/constants';
+
+type AnimalType = 'dog' | 'cat' | 'other';
+type WeightOption = { value: string; label: string };
+
+const weightOptions: Record<AnimalType, WeightOption[]> = {
+  dog: [
+    { value: 'small', label: 'Small (0-25 lbs)' },
+    { value: 'medium', label: 'Medium (25-60 lbs)' },
+    { value: 'large', label: 'Large (60+ lbs)' },
+  ],
+  cat: [
+    { value: 'small', label: 'Small (0-10 lbs)' },
+    { value: 'medium', label: 'Medium (10-20 lbs)' },
+    { value: 'large', label: 'Large (20+ lbs)' },
+  ],
+  other: [
+    { value: 'small', label: 'Small' },
+    { value: 'medium', label: 'Medium' },
+    { value: 'large', label: 'Large' },
+  ],
+};
 
 export default function AddPetPage() {
   const { user, loading } = useAuthClient();
   const router = useRouter();
   const [uploading, setUploading] = useState(false);
   const [submitting, setSubmiting] = useState(false);
-  type AnimalType = "dog" | "cat" | "other";
-  type WeightOption = { value: string; label: string };
+
   type PetFormData = {
     name: string;
-    type: AnimalType | "";
+    type: AnimalType | '';
     breed: string;
     ageGroup: string;
     weightRange: string;
@@ -69,57 +85,39 @@ export default function AddPetPage() {
     energyLevel: string;
   };
 
-  const weightOptions: Record<AnimalType, WeightOption[]> = {
-    dog: [
-      { value: "small", label: "Small (0-25 lbs)" },
-      { value: "medium", label: "Medium (25-60 lbs)" },
-      { value: "large", label: "Large (60+ lbs)" },
-    ],
-    cat: [
-      { value: "small", label: "Small (0-10 lbs)" },
-      { value: "medium", label: "Medium (10-20 lbs)" },
-      { value: "large", label: "Large (20+ lbs)" },
-    ],
-    other: [
-      { value: "small", label: "Small" },
-      { value: "medium", label: "Medium" },
-      { value: "large", label: "Large" },
-    ],
-  };
-
   const [formData, setFormData] = useState<PetFormData>({
-    name: "",
-    type: "",
-    breed: "",
-    ageGroup: "",
-    weightRange: "",
-    energyLevel: "",
-    size: "",
+    name: '',
+    type: '',
+    breed: '',
+    ageGroup: '',
+    weightRange: '',
+    energyLevel: '',
+    size: '',
     goodWithKids: false,
     goodWithCats: false,
     goodWithDogs: false,
     houseTrained: false,
-    specialNeeds: "",
-    description: "",
-    imageUrl: "",
+    specialNeeds: '',
+    description: '',
+    imageUrl: '',
 
     // New fields:
-    state: "",
+    state: '',
     adoptableOutOfState: false,
     onlyPet: false,
     okWithAnimals: [], // ["dog", "cat"]
     requiresFencedYard: false,
     needsCompany: false,
-    comfortableHoursAlone: "",
-    ownerExperienceRequired: "",
+    comfortableHoursAlone: '',
+    ownerExperienceRequired: '',
   });
   const [errors, setErrors] = useState<PetFormErrors>({
-    name: "",
-    type: "",
-    breed: "",
-    ageGroup: "",
-    weightRange: "",
-    energyLevel: "",
+    name: '',
+    type: '',
+    breed: '',
+    ageGroup: '',
+    weightRange: '',
+    energyLevel: '',
   });
 
   const availableWeightOptions = useMemo(() => {
@@ -127,11 +125,11 @@ export default function AddPetPage() {
     return weightOptions[formData.type as AnimalType];
   }, [formData.type]);
   const breedOptions =
-    formData.type === "dog"
+    formData.type === 'dog'
       ? DOG_BREEDS
-      : formData.type === "cat"
-      ? CAT_BREEDS
-      : ["Other / Not applicable"];
+      : formData.type === 'cat'
+        ? CAT_BREEDS
+        : ['Other / Not applicable'];
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -139,27 +137,27 @@ export default function AddPetPage() {
 
     if (file.size > MAX_IMAGE_SIZE_BYTES) {
       Swal.fire({
-        icon: "warning",
-        title: "Image Too Large",
+        icon: 'warning',
+        title: 'Image Too Large',
         text: IMAGE_SIZE_LIMIT_MESSAGE,
       });
-      e.target.value = "";
+      e.target.value = '';
       return;
     }
 
     setUploading(true);
     try {
       const formDataObj = new FormData();
-      formDataObj.append("file", file);
+      formDataObj.append('file', file);
 
-      const response = await fetch("/api/upload", {
-        method: "POST",
+      const response = await fetch('/api/upload', {
+        method: 'POST',
         body: formDataObj,
       });
 
       if (!response.ok) {
-        let errorMessage = "Failed to upload image";
-        const raw = await response.text().catch(() => "");
+        let errorMessage = 'Failed to upload image';
+        const raw = await response.text().catch(() => '');
         if (raw) {
           try {
             const parsed = JSON.parse(raw);
@@ -169,20 +167,17 @@ export default function AddPetPage() {
           }
         }
 
-        if (
-          response.status === 400 &&
-          errorMessage.toLowerCase().includes("exceeds")
-        ) {
+        if (response.status === 400 && errorMessage.toLowerCase().includes('exceeds')) {
           errorMessage = IMAGE_SIZE_LIMIT_MESSAGE;
         }
 
         // Mostrar error con SweetAlert2
         Swal.fire({
-          icon: "error",
-          title: "Upload Error",
+          icon: 'error',
+          title: 'Upload Error',
           text: errorMessage,
         });
-        e.target.value = "";
+        e.target.value = '';
 
         return;
       }
@@ -190,11 +185,11 @@ export default function AddPetPage() {
       const data = await response.json();
       setFormData((prev) => ({ ...prev, imageUrl: data.imageUrl }));
     } catch (error) {
-      console.error("[v0] Image upload error:", error);
+      console.error('[v0] Image upload error:', error);
       Swal.fire({
-        icon: "error",
-        title: "Upload Error",
-        text: "Failed to upload image: " + String(error),
+        icon: 'error',
+        title: 'Upload Error',
+        text: 'Failed to upload image: ' + String(error),
       });
     } finally {
       setUploading(false);
@@ -207,12 +202,12 @@ export default function AddPetPage() {
 
     const newErrors: any = {};
 
-    if (!formData.name) newErrors.name = "This field is required";
-    if (!formData.type) newErrors.type = "This field is required";
-    if (!formData.breed) newErrors.breed = "This field is required";
-    if (!formData.ageGroup) newErrors.ageGroup = "This field is required";
-    if (!formData.weightRange) newErrors.weightRange = "This field is required";
-    if (!formData.energyLevel) newErrors.energyLevel = "This field is required";
+    if (!formData.name) newErrors.name = 'This field is required';
+    if (!formData.type) newErrors.type = 'This field is required';
+    if (!formData.breed) newErrors.breed = 'This field is required';
+    if (!formData.ageGroup) newErrors.ageGroup = 'This field is required';
+    if (!formData.weightRange) newErrors.weightRange = 'This field is required';
+    if (!formData.energyLevel) newErrors.energyLevel = 'This field is required';
 
     setErrors(newErrors);
 
@@ -238,9 +233,7 @@ export default function AddPetPage() {
       state: formData.state || null,
       adoptable_out_of_state: formData.adoptableOutOfState || false,
       only_pet: formData.onlyPet || false,
-      ok_with_animals: formData.okWithAnimals?.length
-        ? formData.okWithAnimals
-        : null,
+      ok_with_animals: formData.okWithAnimals?.length ? formData.okWithAnimals : null,
       requires_fenced_yard: formData.requiresFencedYard || false,
       needs_company: formData.needsCompany || false,
       comfortable_hours_alone: formData.comfortableHoursAlone || null,
@@ -252,23 +245,23 @@ export default function AddPetPage() {
     };
 
     try {
-      const res = await fetch("/api/pets", {
-        method: "POST",
+      const res = await fetch('/api/pets', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(newPet),
       });
 
       if (!res.ok) {
-        console.error("Error creating pet");
+        console.error('Error creating pet');
         return;
       }
 
       await res.json();
-      router.push("/my-pets");
+      router.push('/my-pets');
     } catch (error) {
-      console.error("Error sending form:", error);
+      console.error('Error sending form:', error);
     } finally {
       setSubmiting(false);
     }
@@ -279,14 +272,14 @@ export default function AddPetPage() {
   };
 
   useEffect(() => {
-    setFormData((prev) => ({ ...prev, weightRange: "" }));
+    setFormData((prev) => ({ ...prev, weightRange: '' }));
   }, [formData.type]);
 
   useEffect(() => {
     if (loading) return;
 
     if (!user) {
-      router.push("/login");
+      router.push('/login');
       return;
     }
   }, [user, router, loading]);
@@ -301,17 +294,14 @@ export default function AddPetPage() {
           </p>
         </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="space-y-6 bg-card rounded-lg border p-6"
-        >
+        <form onSubmit={handleSubmit} className="space-y-6 bg-card rounded-lg border p-6">
           <div className="space-y-4">
             <Label>Pet Photo</Label>
             <div className="flex items-center gap-6">
               <div className="relative h-32 w-32 rounded-lg overflow-hidden bg-muted shrink-0">
                 {formData.imageUrl ? (
                   <Image
-                    src={formData.imageUrl || "/placeholder.svg"}
+                    src={formData.imageUrl || '/placeholder.svg'}
                     alt="Pet preview"
                     fill
                     className="object-cover"
@@ -326,7 +316,7 @@ export default function AddPetPage() {
                 <Label htmlFor="pet-image" className="cursor-pointer">
                   <div className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 w-fit">
                     <Upload className="h-4 w-4" />
-                    {uploading ? "Uploading..." : "Upload Photo"}
+                    {uploading ? 'Uploading...' : 'Upload Photo'}
                   </div>
                   <input
                     id="pet-image"
@@ -352,21 +342,16 @@ export default function AddPetPage() {
               <Input
                 id="name"
                 value={formData.name}
-                onChange={(e) => handleChange("name", e.target.value)}
+                onChange={(e) => handleChange('name', e.target.value)}
               />
-              {errors.name && (
-                <p className="text-sm text-red-500">{errors.type}</p>
-              )}
+              {errors.name && <p className="text-sm text-red-500">{errors.type}</p>}
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="type">
                 Type <span className="text-red-500">*</span>
               </Label>
-              <Select
-                value={formData.type}
-                onValueChange={(value) => handleChange("type", value)}
-              >
+              <Select value={formData.type} onValueChange={(value) => handleChange('type', value)}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select" />
                 </SelectTrigger>
@@ -376,9 +361,7 @@ export default function AddPetPage() {
                   <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
               </Select>
-              {errors.type && (
-                <p className="text-sm text-red-500">{errors.type}</p>
-              )}
+              {errors.type && <p className="text-sm text-red-500">{errors.type}</p>}
             </div>
 
             <div className="space-y-2">
@@ -388,7 +371,7 @@ export default function AddPetPage() {
 
               <Select
                 value={formData.breed}
-                onValueChange={(value) => handleChange("breed", value)}
+                onValueChange={(value) => handleChange('breed', value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select" />
@@ -401,9 +384,7 @@ export default function AddPetPage() {
                   ))}
                 </SelectContent>
               </Select>
-              {errors.breed && (
-                <p className="text-sm text-red-500">{errors.type}</p>
-              )}
+              {errors.breed && <p className="text-sm text-red-500">{errors.type}</p>}
             </div>
 
             <div className="space-y-2">
@@ -412,7 +393,7 @@ export default function AddPetPage() {
               </Label>
               <Select
                 value={formData.ageGroup}
-                onValueChange={(value) => handleChange("ageGroup", value)}
+                onValueChange={(value) => handleChange('ageGroup', value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select" />
@@ -424,9 +405,7 @@ export default function AddPetPage() {
                   <SelectItem value="senior">Senior (7+ years)</SelectItem>
                 </SelectContent>
               </Select>
-              {errors.ageGroup && (
-                <p className="text-sm text-red-500">{errors.type}</p>
-              )}
+              {errors.ageGroup && <p className="text-sm text-red-500">{errors.type}</p>}
             </div>
 
             <div className="space-y-2">
@@ -435,7 +414,7 @@ export default function AddPetPage() {
               </Label>
               <Select
                 value={formData.weightRange}
-                onValueChange={(value) => handleChange("weightRange", value)}
+                onValueChange={(value) => handleChange('weightRange', value)}
                 disabled={!formData.type} // opcional: deshabilitar si no se selecciona tipo
               >
                 <SelectTrigger>
@@ -449,9 +428,7 @@ export default function AddPetPage() {
                   ))}
                 </SelectContent>
               </Select>
-              {errors.weightRange && (
-                <p className="text-sm text-red-500">{errors.type}</p>
-              )}
+              {errors.weightRange && <p className="text-sm text-red-500">{errors.type}</p>}
             </div>
 
             <div className="space-y-2">
@@ -460,7 +437,7 @@ export default function AddPetPage() {
               </Label>
               <Select
                 value={formData.energyLevel}
-                onValueChange={(value) => handleChange("energyLevel", value)}
+                onValueChange={(value) => handleChange('energyLevel', value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select" />
@@ -471,18 +448,14 @@ export default function AddPetPage() {
                   <SelectItem value="high">High</SelectItem>
                 </SelectContent>
               </Select>
-              {errors.energyLevel && (
-                <p className="text-sm text-red-500">{errors.type}</p>
-              )}
+              {errors.energyLevel && <p className="text-sm text-red-500">{errors.type}</p>}
             </div>
 
             <div className="space-y-2">
               <Label>Is this pet okay with other animals?</Label>
               <Select
-                value={formData.okWithAnimals.join(",")}
-                onValueChange={(value) =>
-                  handleChange("okWithAnimals", value.split(","))
-                }
+                value={formData.okWithAnimals.join(',')}
+                onValueChange={(value) => handleChange('okWithAnimals', value.split(','))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select" />
@@ -499,9 +472,7 @@ export default function AddPetPage() {
               <Label>How many hours can this pet be home alone?</Label>
               <Select
                 value={formData.comfortableHoursAlone}
-                onValueChange={(value) =>
-                  handleChange("comfortableHoursAlone", value)
-                }
+                onValueChange={(value) => handleChange('comfortableHoursAlone', value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select" />
@@ -519,21 +490,15 @@ export default function AddPetPage() {
               <Label>Does this pet require an experienced owner?</Label>
               <Select
                 value={formData.ownerExperienceRequired}
-                onValueChange={(value) =>
-                  handleChange("ownerExperienceRequired", value)
-                }
+                onValueChange={(value) => handleChange('ownerExperienceRequired', value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="none">No special experience</SelectItem>
-                  <SelectItem value="some experience">
-                    Some experience
-                  </SelectItem>
-                  <SelectItem value="special needs">
-                    Experience with special needs
-                  </SelectItem>
+                  <SelectItem value="some experience">Some experience</SelectItem>
+                  <SelectItem value="special needs">Experience with special needs</SelectItem>
                   <SelectItem value="behavior modification">
                     Experience with behavior modification
                   </SelectItem>
@@ -543,10 +508,7 @@ export default function AddPetPage() {
 
             <div className="space-y-2">
               <Label htmlFor="state">State</Label>
-              <Select
-                value={formData.state}
-                onValueChange={(v) => handleChange("state", v)}
-              >
+              <Select value={formData.state} onValueChange={(v) => handleChange('state', v)}>
                 <SelectTrigger id="state">
                   <SelectValue placeholder="Select" />
                 </SelectTrigger>
@@ -568,9 +530,7 @@ export default function AddPetPage() {
               <Checkbox
                 id="adoptableOutOfState"
                 checked={formData.adoptableOutOfState}
-                onCheckedChange={(checked) =>
-                  handleChange("adoptableOutOfState", checked)
-                }
+                onCheckedChange={(checked) => handleChange('adoptableOutOfState', checked)}
               />
               <Label>This pet can be adopted out of state.</Label>
             </div>
@@ -579,7 +539,7 @@ export default function AddPetPage() {
               <Checkbox
                 id="onlyPet"
                 checked={formData.onlyPet}
-                onCheckedChange={(checked) => handleChange("onlyPet", checked)}
+                onCheckedChange={(checked) => handleChange('onlyPet', checked)}
               />
               <Label>Needs to be the only pet.</Label>
             </div>
@@ -588,9 +548,7 @@ export default function AddPetPage() {
               <Checkbox
                 id="requiresFencedYard"
                 checked={formData.requiresFencedYard}
-                onCheckedChange={(checked) =>
-                  handleChange("requiresFencedYard", checked)
-                }
+                onCheckedChange={(checked) => handleChange('requiresFencedYard', checked)}
               />
               <Label>This pet requires a fenced yard.</Label>
             </div>
@@ -599,13 +557,9 @@ export default function AddPetPage() {
               <Checkbox
                 id="needsCompany"
                 checked={formData.needsCompany}
-                onCheckedChange={(checked) =>
-                  handleChange("needsCompany", checked)
-                }
+                onCheckedChange={(checked) => handleChange('needsCompany', checked)}
               />
-              <Label>
-                This pet needs someone who is home more often than not.
-              </Label>
+              <Label>This pet needs someone who is home more often than not.</Label>
             </div>
 
             <p className="text-base font-semibold">Compatibility</p>
@@ -614,9 +568,7 @@ export default function AddPetPage() {
                 <Checkbox
                   id="goodWithKids"
                   checked={formData.goodWithKids}
-                  onCheckedChange={(checked) =>
-                    handleChange("goodWithKids", checked)
-                  }
+                  onCheckedChange={(checked) => handleChange('goodWithKids', checked)}
                 />
                 <Label>Good with kids</Label>
               </div>
@@ -624,9 +576,7 @@ export default function AddPetPage() {
                 <Checkbox
                   id="goodWithCats"
                   checked={formData.goodWithCats}
-                  onCheckedChange={(checked) =>
-                    handleChange("goodWithCats", checked)
-                  }
+                  onCheckedChange={(checked) => handleChange('goodWithCats', checked)}
                 />
                 <Label>Good with cats</Label>
               </div>
@@ -634,9 +584,7 @@ export default function AddPetPage() {
                 <Checkbox
                   id="goodWithDogs"
                   checked={formData.goodWithDogs}
-                  onCheckedChange={(checked) =>
-                    handleChange("goodWithDogs", checked)
-                  }
+                  onCheckedChange={(checked) => handleChange('goodWithDogs', checked)}
                 />
                 <Label>Good with dogs</Label>
               </div>
@@ -644,9 +592,7 @@ export default function AddPetPage() {
                 <Checkbox
                   id="houseTrained"
                   checked={formData.houseTrained}
-                  onCheckedChange={(checked) =>
-                    handleChange("houseTrained", checked)
-                  }
+                  onCheckedChange={(checked) => handleChange('houseTrained', checked)}
                 />
                 <Label>House trained</Label>
               </div>
@@ -659,7 +605,7 @@ export default function AddPetPage() {
               id="specialNeeds"
               placeholder="Any medical conditions or special requirements"
               value={formData.specialNeeds}
-              onChange={(e) => handleChange("specialNeeds", e.target.value)}
+              onChange={(e) => handleChange('specialNeeds', e.target.value)}
             />
           </div>
 
@@ -669,21 +615,17 @@ export default function AddPetPage() {
               id="description"
               className="w-full min-h-[120px] px-3 py-2 rounded-md border border-input bg-background text-sm placeholder:text-sm"
               value={formData.description}
-              onChange={(e) => handleChange("description", e.target.value)}
+              onChange={(e) => handleChange('description', e.target.value)}
               placeholder="Tell us about this pet's personality, habits, and special needs..."
             />
           </div>
 
           <div className="flex gap-3 pt-4">
             <Button type="submit" disabled={submitting}>
-              {submitting ? "Adding..." : "Add Pet"}
+              {submitting ? 'Adding...' : 'Add Pet'}
             </Button>
 
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => router.push("/my-pets")}
-            >
+            <Button type="button" variant="outline" onClick={() => router.push('/my-pets')}>
               Cancel
             </Button>
           </div>

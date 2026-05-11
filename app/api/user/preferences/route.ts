@@ -1,9 +1,9 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { sql } from "@/lib/db"
+import { type NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 
 export async function PUT(request: NextRequest) {
   try {
-    const { userId, preferences } = await request.json()
+    const { userId, preferences } = await request.json();
 
     await sql`
       UPDATE users 
@@ -17,11 +17,11 @@ export async function PUT(request: NextRequest) {
         preferred_temperament = ${preferences.temperamentPreference},
         updated_at = NOW()
       WHERE id = ${userId}
-    `
+    `;
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("[v0] Update preferences error:", error)
-    return NextResponse.json({ error: "Failed to update preferences" }, { status: 500 })
+    console.error('[v0] Update preferences error:', error);
+    return NextResponse.json({ error: 'Failed to update preferences' }, { status: 500 });
   }
 }

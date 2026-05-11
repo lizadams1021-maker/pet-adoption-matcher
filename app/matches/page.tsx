@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
-import { AppLayout } from "@/components/app-layout";
-import { PetCard } from "@/components/pet-card";
-import Swal from "sweetalert2";
-import { useAuthClient } from "@/lib/useAuthClient";
-import { Button } from "@/components/ui/button";
+import { useEffect, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { AppLayout } from '@/components/app-layout';
+import { PetCard } from '@/components/pet-card';
+import Swal from 'sweetalert2';
+import { useAuthClient } from '@/lib/useAuthClient';
+import { Button } from '@/components/ui/button';
 
 export default function MatchesPage() {
   const { user, loading } = useAuthClient();
@@ -28,7 +28,7 @@ export default function MatchesPage() {
     if (loading) return;
 
     if (!user) {
-      router.push("/login");
+      router.push('/login');
       return;
     }
 
@@ -36,17 +36,16 @@ export default function MatchesPage() {
       try {
         if (pageToLoad === 0) setLoadingInitial(true);
         else setLoadingMore(true);
-        console.log("Page to load", pageToLoad);
-        console.log("Limit", limit);
+        console.log('Page to load', pageToLoad);
+        console.log('Limit', limit);
         const res = await fetch(
           `/api/pets?excludeOwnerId=${user.id}&page=${pageToLoad}&limit=${limit}`
         );
         const data = await res.json();
 
-        if (!res.ok) throw new Error(data.error || "Failed to fetch pets");
+        if (!res.ok) throw new Error(data.error || 'Failed to fetch pets');
 
         const newPets = data.pets || [];
-
         setMatches(newPets);
 
         if (data.totalCount) {
@@ -77,12 +76,10 @@ export default function MatchesPage() {
     const checkApplications = async () => {
       try {
         const petIds = matches.map((pet) => pet.id);
-        const queryParams = petIds.map((id) => `petId=${id}`).join("&");
+        const queryParams = petIds.map((id) => `petId=${id}`).join('&');
 
         if (user) {
-          const res = await fetch(
-            `/api/applications/check?userId=${user.id}&${queryParams}`
-          );
+          const res = await fetch(`/api/applications/check?userId=${user.id}&${queryParams}`);
           const data = await res.json();
 
           const updatedSet = new Set<string>();
@@ -92,24 +89,20 @@ export default function MatchesPage() {
 
           setAppliedPets(updatedSet);
         } else {
-          console.error("[Authentication] User is not logged in:");
-          router.push("/login");
+          console.error('[Authentication] User is not logged in:');
+          router.push('/login');
         }
       } catch (err) {
-        console.error("Error checking applications:", err);
+        console.error('Error checking applications:', err);
       } finally {
         setLoadingApplied(false);
       }
     };
 
     checkApplications();
-  }, [matches, user]);
+  }, [matches, user, router]);
 
-  const handleApply = async (
-    petId: string,
-    petName: string,
-    owner_name: string
-  ) => {
+  const handleApply = async (petId: string, petName: string, owner_name: string) => {
     if (!user) return;
     setLoadingPetId(petId);
 
@@ -117,19 +110,19 @@ export default function MatchesPage() {
       const hasApplied = appliedPets.has(petId);
 
       if (hasApplied) {
-        const res = await fetch("/api/applications", {
-          method: "DELETE",
-          headers: { "Content-Type": "application/json" },
+        const res = await fetch('/api/applications', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId: user.id, petId }),
         });
 
-        if (!res.ok) throw new Error("Failed to delete application");
+        if (!res.ok) throw new Error('Failed to delete application');
 
         Swal.fire({
-          title: "Application Withdrawn",
+          title: 'Application Withdrawn',
           html: `You have withdrawn your application for <strong>${petName}</strong>. You can always apply again later if you change your mind.`,
           icon: undefined,
-          confirmButtonText: "OK",
+          confirmButtonText: 'OK',
         });
 
         // Update local state
@@ -137,9 +130,9 @@ export default function MatchesPage() {
         updated.delete(petId);
         setAppliedPets(updated);
       } else {
-        const res = await fetch("/api/applications", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
+        const res = await fetch('/api/applications', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId: user.id, petId }),
         });
 
@@ -148,7 +141,7 @@ export default function MatchesPage() {
 
           // SweetAlert message when application is successful
           Swal.fire({
-            title: "Application Submitted!",
+            title: 'Application Submitted!',
             html: `
             Thanks for showing interest in <strong>${petName}</strong>. 
             We shared your interest, details, and match criteria with <strong>${owner_name}</strong>. 
@@ -157,15 +150,15 @@ export default function MatchesPage() {
             We encourage you to keep looking while you wait to hear from <strong>${owner_name}</strong>
             in case there’s an even better pet out there for you!
           `,
-            icon: "success",
-            confirmButtonText: "OK",
+            icon: 'success',
+            confirmButtonText: 'OK',
             width: 600,
-            padding: "2em",
+            padding: '2em',
           });
         }
       }
     } catch (error) {
-      console.error("[v0] Apply error:", error);
+      console.error('[v0] Apply error:', error);
     } finally {
       setLoadingPetId(null);
     }
@@ -198,8 +191,8 @@ export default function MatchesPage() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold mb-2">Your Pet Matches</h1>
           <p className="text-muted-foreground">
-            Pets are ranked by compatibility based on your preferences. Higher
-            scores mean better matches!
+            Pets are ranked by compatibility based on your preferences. Higher scores mean better
+            matches!
           </p>
         </div>
 
@@ -217,7 +210,7 @@ export default function MatchesPage() {
             matches.map((pet) => (
               <PetCard
                 key={pet.id}
-                user={user}
+                user={user as any}
                 pet={pet}
                 matchScore={pet.matchScore}
                 hasApplied={appliedPets.has(pet.id)}
@@ -263,9 +256,7 @@ export default function MatchesPage() {
 
         {/* Si no hay más páginas y no está cargando */}
         {!loadingInitial && totalPages === 1 && matches.length > 0 && (
-          <div className="text-center text-muted-foreground py-8">
-            End of results
-          </div>
+          <div className="text-center text-muted-foreground py-8">End of results</div>
         )}
       </div>
     </AppLayout>

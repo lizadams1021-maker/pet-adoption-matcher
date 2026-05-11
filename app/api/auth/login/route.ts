@@ -1,10 +1,10 @@
-import { sql } from "@/lib/db";
-import bcrypt from "bcryptjs";
-import { NextRequest, NextResponse } from "next/server";
-import { signAccessToken, createRefreshToken, setRefreshCookie } from "@/lib/auth";
-import { getRateLimiter } from "@/lib/rate-limiter";
+import { sql } from '@/lib/db';
+import bcrypt from 'bcryptjs';
+import { NextRequest, NextResponse } from 'next/server';
+import { signAccessToken, createRefreshToken, setRefreshCookie } from '@/lib/auth';
+import { getRateLimiter } from '@/lib/rate-limiter';
 
-const loginLimiter = getRateLimiter("login", {
+const loginLimiter = getRateLimiter('login', {
   windowMs: 10 * 60 * 1000,
   maxAttempts: 5,
   blockDurationMs: 15 * 60 * 1000,
@@ -14,15 +14,15 @@ export async function POST(request: NextRequest) {
   try {
     const { email, password } = await request.json();
 
-    const forwardedFor = request.headers.get("x-forwarded-for");
-    const ip = forwardedFor?.split(",")[0].trim() || request.headers.get("x-real-ip");
-    const identifier = `${ip ?? "unknown"}:${email ?? "anonymous"}`;
+    const forwardedFor = request.headers.get('x-forwarded-for');
+    const ip = forwardedFor?.split(',')[0].trim() || request.headers.get('x-real-ip');
+    const identifier = `${ip ?? 'unknown'}:${email ?? 'anonymous'}`;
 
     const rateStatus = loginLimiter.check(identifier);
     if (rateStatus.isBlocked) {
       return NextResponse.json(
         {
-          error: "Too many failed attempts. Please try again later.",
+          error: 'Too many failed attempts. Please try again later.',
           retryAfter: rateStatus.retryAfterSeconds,
         },
         { status: 429 }
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
       const status = loginLimiter.recordFailure(identifier);
       return NextResponse.json(
         {
-          error: "Invalid credentials",
+          error: 'Invalid credentials',
           remainingAttempts: status.remainingAttempts,
         },
         { status: 401 }
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
       const status = loginLimiter.recordFailure(identifier);
       return NextResponse.json(
         {
-          error: "Invalid credentials",
+          error: 'Invalid credentials',
           remainingAttempts: status.remainingAttempts,
         },
         { status: 401 }
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
 
     return response;
   } catch (error) {
-    console.error("[Auth] Login error:", error);
-    return NextResponse.json({ error: "Login failed" }, { status: 500 });
+    console.error('[Auth] Login error:', error);
+    return NextResponse.json({ error: 'Login failed' }, { status: 500 });
   }
 }
