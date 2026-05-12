@@ -17,7 +17,7 @@ type AuthUser = {
   zip_code: string;
   willing_out_of_state: boolean;
   has_pets: boolean;
-  pets_types: never[];
+  pets_types: string[];
   pets_good_with_others: boolean;
   has_fenced_yard: boolean;
   home_type: string;
@@ -36,12 +36,13 @@ type AuthUser = {
   pet_live_location: string;
   adoption_timeline: string;
   preferred_dog_breed: string;
+  preferred_species: string;
   preferred_cat_type: string;
   preferred_age: string;
   preferred_weight: string;
-  preferred_temperament_detailed: never[];
+  preferred_temperament_detailed: string[];
   preferred_energy: string;
-  undesired_characteristics: never[];
+  undesired_characteristics: string[];
   take_pets_to_vet: boolean;
   vet_name: string;
   vet_phone: string;

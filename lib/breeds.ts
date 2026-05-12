@@ -39,4 +39,8 @@ export const CAT_BREEDS = [
   'Norwegian Forest',
   'Russian Blue',
   'Birman',
+  'Torbie',
+  'Tabby',
+  'Tuxie',
+  'Tuxedo',
 ];
