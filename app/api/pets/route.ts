@@ -72,18 +72,21 @@ export async function GET(request: NextRequest) {
       }
       const user = userResult[0] as User;
 
-      // 2. Fetch all available pets not owned by this user
-      const allPets = await sql`
-        SELECT p.*, u.name AS owner_name
-        FROM pets p
-        JOIN users u ON p.owner_id = u.id
-        WHERE p.owner_id != ${excludeOwnerId} AND p.status != 'adopted'
+      // 2. Fetch only necessary columns for scoring to avoid "response too large" error
+      const allPetsForScoring = await sql`
+        SELECT 
+          id, good_with_children, good_with_pets, house_trained, 
+          energy_level, requires_fenced_yard, special_needs, state, 
+          adoptable_out_of_state, age_group, breed, weight_range, 
+          comfortable_hours_alone, owner_experience_required
+        FROM pets 
+        WHERE owner_id != ${excludeOwnerId} AND status != 'adopted'
       `;
 
       // 3. Calculate scores, filter > 0, and sort
       const { calculateCompatibility } = await import('@/lib/matching-algorithm');
 
-      const petsWithScores = allPets
+      const petsWithScores = allPetsForScoring
         .map((pet: any) => {
           const match = calculateCompatibility(user, pet as Pet);
           return { ...pet, matchScore: match };
@@ -94,7 +97,29 @@ export async function GET(request: NextRequest) {
 
       // 4. Paginate
       const totalCount = petsWithScores.length;
-      const paginatedPets = petsWithScores.slice(offset, offset + limit);
+      const paginatedSubset = petsWithScores.slice(offset, offset + limit);
+
+      if (paginatedSubset.length === 0) {
+        return NextResponse.json({ pets: [], totalCount });
+      }
+
+      // 5. Fetch full details for the paginated subset
+      const petIds = paginatedSubset.map((p) => p.id);
+      const fullPets = await sql`
+        SELECT p.*, u.name AS owner_name
+        FROM pets p
+        JOIN users u ON p.owner_id = u.id
+        WHERE p.id = ANY(${petIds})
+      `;
+
+      // Re-attach scores and sort again (since ANY order is not guaranteed)
+      const paginatedPets = paginatedSubset.map((subsetPet) => {
+        const fullPet = fullPets.find((fp) => fp.id === subsetPet.id);
+        return { ...fullPet, matchScore: subsetPet.matchScore };
+      });
+
+      // Sort again by matchScore.score to maintain the original order
+      paginatedPets.sort((a: any, b: any) => b.matchScore.score - a.matchScore.score);
 
       return NextResponse.json({ pets: paginatedPets, totalCount });
     } else {
