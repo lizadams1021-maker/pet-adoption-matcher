@@ -72,11 +72,10 @@ export default function MyPetsPage() {
     goodWithCats: false,
     goodWithDogs: false,
     houseTrained: false,
+    goodWithOtherAnimals: false,
     specialNeeds: '',
     description: '',
     imageUrl: '',
-
-    // New fields:
     state: '',
     adoptableOutOfState: false,
     onlyPet: false,
@@ -231,9 +230,10 @@ export default function MyPetsPage() {
         energyLevel: fullPet.energy_level || 'moderate',
         size: fullPet.size || 'medium',
         goodWithKids: fullPet.good_with_children || false,
-        goodWithCats: fullPet.good_with_pets || false,
-        goodWithDogs: fullPet.good_with_pets || false,
+        goodWithCats: fullPet.ok_with_animals?.includes('cat') || false,
+        goodWithDogs: fullPet.ok_with_animals?.includes('dog') || false,
         houseTrained: fullPet.house_trained || false,
+        goodWithOtherAnimals: fullPet.ok_with_animals?.includes('other') || false,
         specialNeeds: fullPet.special_needs || '',
         description: fullPet.description || '',
         imageUrl: fullPet.image_url || '',
@@ -329,7 +329,7 @@ export default function MyPetsPage() {
       size: editFormData.size,
       temperament: [],
       goodWithChildren: editFormData.goodWithKids,
-      goodWithPets: editFormData.goodWithCats || editFormData.goodWithDogs,
+      goodWithPets: editFormData.goodWithCats || editFormData.goodWithDogs || editFormData.goodWithOtherAnimals,
       houseTrained: editFormData.houseTrained,
       specialNeeds: editFormData.specialNeeds || null,
       description: editFormData.description || null,
@@ -337,7 +337,17 @@ export default function MyPetsPage() {
       state: editFormData.state || null,
       adoptable_out_of_state: editFormData.adoptableOutOfState || false,
       only_pet: editFormData.onlyPet || false,
-      ok_with_animals: editFormData.okWithAnimals?.length ? editFormData.okWithAnimals : null,
+      ok_with_animals: [
+        ...(editFormData.goodWithDogs ? ['dog'] : []),
+        ...(editFormData.goodWithCats ? ['cat'] : []),
+        ...(editFormData.goodWithOtherAnimals ? ['other'] : []),
+      ].length
+        ? [
+            ...(editFormData.goodWithDogs ? ['dog'] : []),
+            ...(editFormData.goodWithCats ? ['cat'] : []),
+            ...(editFormData.goodWithOtherAnimals ? ['other'] : []),
+          ]
+        : null,
       requires_fenced_yard: editFormData.requiresFencedYard || false,
       needs_company: editFormData.needsCompany || false,
       comfortable_hours_alone: editFormData.comfortableHoursAlone || null,
@@ -563,24 +573,6 @@ export default function MyPetsPage() {
                           </Select>
                         </div>
 
-                        <div className="space-y-2">
-                          <Label>Is this pet okay with other animals?</Label>
-                          <Select
-                            value={editFormData.okWithAnimals.join(',')}
-                            onValueChange={(value) =>
-                              handleChange('okWithAnimals', value.split(','))
-                            }
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select one or more" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="dog">Dogs</SelectItem>
-                              <SelectItem value="cat">Cats</SelectItem>
-                              <SelectItem value="other">Other</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
 
                         <div className="space-y-2">
                           <Label>How many hours can this pet be home alone?</Label>
@@ -714,6 +706,16 @@ export default function MyPetsPage() {
                             />
                             <Label htmlFor="edit-goodWithDogs" className="text-sm cursor-pointer">
                               Good with dogs
+                            </Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Checkbox
+                              id="edit-goodWithOtherAnimals"
+                              checked={editFormData.goodWithOtherAnimals}
+                              onCheckedChange={(checked) => handleChange('goodWithOtherAnimals', checked)}
+                            />
+                            <Label htmlFor="edit-goodWithOtherAnimals" className="text-sm cursor-pointer">
+                              Good with other animals
                             </Label>
                           </div>
                           <div className="flex items-center space-x-2">

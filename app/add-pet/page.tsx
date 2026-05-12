@@ -63,13 +63,13 @@ export default function AddPetPage() {
     goodWithCats: boolean;
     goodWithDogs: boolean;
     houseTrained: boolean;
+    goodWithOtherAnimals: boolean;
     specialNeeds: string;
     description: string;
     imageUrl: string;
     state: string;
     adoptableOutOfState: boolean;
     onlyPet: boolean;
-    okWithAnimals: string[];
     requiresFencedYard: boolean;
     needsCompany: boolean;
     comfortableHoursAlone: string;
@@ -97,15 +97,13 @@ export default function AddPetPage() {
     goodWithCats: false,
     goodWithDogs: false,
     houseTrained: false,
+    goodWithOtherAnimals: false,
     specialNeeds: '',
     description: '',
     imageUrl: '',
-
-    // New fields:
     state: '',
     adoptableOutOfState: false,
     onlyPet: false,
-    okWithAnimals: [], // ["dog", "cat"]
     requiresFencedYard: false,
     needsCompany: false,
     comfortableHoursAlone: '',
@@ -228,12 +226,22 @@ export default function AddPetPage() {
       size: formData.size,
       temperament: [],
       goodWithChildren: formData.goodWithKids,
-      goodWithPets: formData.goodWithCats || formData.goodWithDogs,
+      goodWithPets: formData.goodWithCats || formData.goodWithDogs || formData.goodWithOtherAnimals,
       houseTrained: formData.houseTrained,
       state: formData.state || null,
       adoptable_out_of_state: formData.adoptableOutOfState || false,
       only_pet: formData.onlyPet || false,
-      ok_with_animals: formData.okWithAnimals?.length ? formData.okWithAnimals : null,
+      ok_with_animals: [
+        ...(formData.goodWithDogs ? ['dog'] : []),
+        ...(formData.goodWithCats ? ['cat'] : []),
+        ...(formData.goodWithOtherAnimals ? ['other'] : []),
+      ].length
+        ? [
+            ...(formData.goodWithDogs ? ['dog'] : []),
+            ...(formData.goodWithCats ? ['cat'] : []),
+            ...(formData.goodWithOtherAnimals ? ['other'] : []),
+          ]
+        : null,
       requires_fenced_yard: formData.requiresFencedYard || false,
       needs_company: formData.needsCompany || false,
       comfortable_hours_alone: formData.comfortableHoursAlone || null,
@@ -451,22 +459,6 @@ export default function AddPetPage() {
               {errors.energyLevel && <p className="text-sm text-red-500">{errors.type}</p>}
             </div>
 
-            <div className="space-y-2">
-              <Label>Is this pet okay with other animals?</Label>
-              <Select
-                value={formData.okWithAnimals.join(',')}
-                onValueChange={(value) => handleChange('okWithAnimals', value.split(','))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="dog">Dogs</SelectItem>
-                  <SelectItem value="cat">Cats</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
 
             <div className="space-y-2">
               <Label>How many hours can this pet be home alone?</Label>
@@ -587,6 +579,14 @@ export default function AddPetPage() {
                   onCheckedChange={(checked) => handleChange('goodWithDogs', checked)}
                 />
                 <Label>Good with dogs</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="goodWithOtherAnimals"
+                  checked={formData.goodWithOtherAnimals}
+                  onCheckedChange={(checked) => handleChange('goodWithOtherAnimals', checked)}
+                />
+                <Label>Good with other animals</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox

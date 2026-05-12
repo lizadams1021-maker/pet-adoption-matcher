@@ -23,6 +23,7 @@ export interface User {
   preferred_pet_size: string | null;
   preferred_temperament: string[] | null;
   preferred_age?: string | null;
+  preferred_species?: string | null;
   preferred_dog_breed?: string | null;
   preferred_weight?: string | null;
   willing_behavior_training?: boolean | null;

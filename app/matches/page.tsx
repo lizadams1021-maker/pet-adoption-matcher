@@ -141,7 +141,7 @@ export default function MatchesPage() {
 
           // SweetAlert message when application is successful
           Swal.fire({
-            title: 'Application Submitted!',
+            title: 'Interest Shared',
             html: `
             Thanks for showing interest in <strong>${petName}</strong>. 
             We shared your interest, details, and match criteria with <strong>${owner_name}</strong>. 

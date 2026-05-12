@@ -79,6 +79,7 @@ export default function ProfilePage() {
     petLiveLocation: '',
     adoptionTimeline: '',
     preferredDogBreed: '',
+    preferredSpecies: '',
     preferredCatType: '',
     preferredAge: '',
     preferredWeight: '',
@@ -154,6 +155,7 @@ export default function ProfilePage() {
         petLiveLocation: userData.pet_live_location || '',
         adoptionTimeline: userData.adoption_timeline || '',
         preferredDogBreed: userData.preferred_dog_breed || '',
+        preferredSpecies: userData.preferred_species || '',
         preferredCatType: userData.preferred_cat_type || '',
         preferredAge: userData.preferred_age || '',
         preferredWeight: userData.preferred_weight || '',
@@ -924,6 +926,23 @@ export default function ProfilePage() {
           <div className="border-t pt-6 space-y-4">
             <h2 className="text-xl font-semibold">Pet Preferences</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="preferredSpecies">What are you looking for?</Label>
+                <Select
+                  value={formData.preferredSpecies}
+                  onValueChange={(v) => updateField('preferredSpecies', v)}
+                >
+                  <SelectTrigger id="preferredSpecies">
+                    <SelectValue placeholder="Select species" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="dog">Dog</SelectItem>
+                    <SelectItem value="cat">Cat</SelectItem>
+                    <SelectItem value="both">Both Dogs & Cats</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="petLiveLocation">Where will pet live?</Label>
                 <Select
