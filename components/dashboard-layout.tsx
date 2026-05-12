@@ -1,8 +1,8 @@
-import type React from "react"
-import { Home, PawPrint, FileText, Settings, Search, Bell } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import type React from 'react';
+import { Home, PawPrint, FileText, Settings, Search, Bell } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -29,15 +29,24 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
             <Home className="w-4 h-4" />
             Dashboard
           </Button>
-          <Button variant="ghost" className="w-full justify-start gap-3 text-muted-foreground hover:text-foreground">
+          <Button
+            variant="ghost"
+            className="w-full justify-start gap-3 text-muted-foreground hover:text-foreground"
+          >
             <PawPrint className="w-4 h-4" />
             My Pets
           </Button>
-          <Button variant="ghost" className="w-full justify-start gap-3 text-muted-foreground hover:text-foreground">
+          <Button
+            variant="ghost"
+            className="w-full justify-start gap-3 text-muted-foreground hover:text-foreground"
+          >
             <FileText className="w-4 h-4" />
             Applications
           </Button>
-          <Button variant="ghost" className="w-full justify-start gap-3 text-muted-foreground hover:text-foreground">
+          <Button
+            variant="ghost"
+            className="w-full justify-start gap-3 text-muted-foreground hover:text-foreground"
+          >
             <Settings className="w-4 h-4" />
             Setting
           </Button>
@@ -65,7 +74,9 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
               <h1 className="text-2xl font-semibold text-foreground text-balance">
                 Welcome back, Paws & Claws Rescue! 👋
               </h1>
-              <p className="text-sm text-muted-foreground mt-1">Manage your pets and review adoption applications</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                Manage your pets and review adoption applications
+              </p>
             </div>
             <div className="flex items-center gap-4">
               <div className="relative">
@@ -84,5 +95,5 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         <main className="flex-1 p-8">{children}</main>
       </div>
     </div>
-  )
+  );
 }

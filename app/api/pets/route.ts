@@ -1,5 +1,5 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { sql } from "@/lib/db"
+import { type NextRequest, NextResponse } from 'next/server';
+import { sql, type User, type Pet } from '@/lib/db';
 
 async function ensureSpecialNeedsColumnSupportsText() {
   const columnInfo = await sql`
@@ -9,11 +9,11 @@ async function ensureSpecialNeedsColumnSupportsText() {
       AND table_name = 'pets'
       AND column_name = 'special_needs'
     LIMIT 1
-  `
+  `;
 
-  const currentType = columnInfo[0]?.data_type
+  const currentType = columnInfo[0]?.data_type;
 
-  if (currentType && currentType !== "text") {
+  if (currentType && currentType !== 'text') {
     try {
       await sql`
         ALTER TABLE pets
@@ -23,9 +23,9 @@ async function ensureSpecialNeedsColumnSupportsText() {
           WHEN special_needs IS FALSE THEN 'No'
           ELSE NULL
         END
-      `
+      `;
     } catch (error) {
-      console.error("[DB] Failed to alter special_needs column type:", error)
+      console.error('[DB] Failed to alter special_needs column type:', error);
     }
   }
 }
@@ -33,14 +33,13 @@ async function ensureSpecialNeedsColumnSupportsText() {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const ownerId = searchParams.get("ownerId");
-    const excludeOwnerId = searchParams.get("excludeOwnerId");
+    const ownerId = searchParams.get('ownerId');
+    const excludeOwnerId = searchParams.get('excludeOwnerId');
 
     const defaultLimit = 5;
-    const limitParam = Number(searchParams.get("limit"));
-    const pageParam = Number(searchParams.get("page"));
-    const limit =
-      !Number.isNaN(limitParam) && limitParam > 0 ? limitParam : defaultLimit;
+    const limitParam = Number(searchParams.get('limit'));
+    const pageParam = Number(searchParams.get('page'));
+    const limit = !Number.isNaN(limitParam) && limitParam > 0 ? limitParam : defaultLimit;
     const page = !Number.isNaN(pageParam) && pageParam >= 0 ? pageParam : 0;
     const offset = page * limit;
 
@@ -51,18 +50,7 @@ export async function GET(request: NextRequest) {
       // If ownerId is present, paginate pets for that owner
       pets = await sql`
         SELECT 
-          p.id, 
-          p.name, 
-          p.breed, 
-          p.age_group, 
-          p.type,
-          p.energy_level, 
-          p.size, 
-          p.weight_range,
-          p.good_with_children,
-          p.good_with_pets,
-          p.status,
-          p.image_url,
+          p.*, 
           u.name AS owner_name
         FROM pets p
         JOIN users u ON p.owner_id = u.id
@@ -77,40 +65,68 @@ export async function GET(request: NextRequest) {
         WHERE owner_id = ${ownerId}
       `;
     } else if (excludeOwnerId) {
-      // We exclude ownerId and not display adopted pets
-      pets = await sql`
-        SELECT 
-          p.id, 
-          p.name, 
-          p.breed, 
-          p.age_group,
-          p.temperament, 
-          p.energy_level, 
-          p.weight_range, 
-          u.name AS owner_name
-        FROM pets p
-        JOIN users u ON p.owner_id = u.id
-        WHERE p.owner_id != ${excludeOwnerId} AND p.status != 'adopted'
-        ORDER BY p.created_at DESC
-        LIMIT ${limit} OFFSET ${offset}
-      `;
+      // 1. Fetch user profile
+      const userResult = await sql`SELECT * FROM users WHERE id = ${excludeOwnerId} LIMIT 1`;
+      if (userResult.length === 0) {
+        return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      }
+      const user = userResult[0] as User;
 
-      totalCountResult = await sql`
-        SELECT COUNT(*) AS count
-        FROM pets
+      // 2. Fetch only necessary columns for scoring to avoid "response too large" error
+      const allPetsForScoring = await sql`
+        SELECT 
+          id, good_with_children, good_with_pets, house_trained, 
+          energy_level, requires_fenced_yard, special_needs, state, 
+          adoptable_out_of_state, age_group, breed, weight_range, 
+          comfortable_hours_alone, owner_experience_required
+        FROM pets 
         WHERE owner_id != ${excludeOwnerId} AND status != 'adopted'
       `;
+
+      // 3. Calculate scores, filter > 0, and sort
+      const { calculateCompatibility } = await import('@/lib/matching-algorithm');
+
+      const petsWithScores = allPetsForScoring
+        .map((pet: any) => {
+          const match = calculateCompatibility(user, pet as Pet);
+          return { ...pet, matchScore: match };
+        })
+        .filter((pet: any) => pet.matchScore.score > 0);
+
+      petsWithScores.sort((a: any, b: any) => b.matchScore.score - a.matchScore.score);
+
+      // 4. Paginate
+      const totalCount = petsWithScores.length;
+      const paginatedSubset = petsWithScores.slice(offset, offset + limit);
+
+      if (paginatedSubset.length === 0) {
+        return NextResponse.json({ pets: [], totalCount });
+      }
+
+      // 5. Fetch full details for the paginated subset
+      const petIds = paginatedSubset.map((p) => p.id);
+      const fullPets = await sql`
+        SELECT p.*, u.name AS owner_name
+        FROM pets p
+        JOIN users u ON p.owner_id = u.id
+        WHERE p.id = ANY(${petIds})
+      `;
+
+      // Re-attach scores and sort again (since ANY order is not guaranteed)
+      const paginatedPets = paginatedSubset.map((subsetPet) => {
+        const fullPet = fullPets.find((fp) => fp.id === subsetPet.id);
+        return { ...fullPet, matchScore: subsetPet.matchScore };
+      });
+
+      // Sort again by matchScore.score to maintain the original order
+      paginatedPets.sort((a: any, b: any) => b.matchScore.score - a.matchScore.score);
+
+      return NextResponse.json({ pets: paginatedPets, totalCount });
     } else {
       // Without ownerId, we filter all the adopted pets
       pets = await sql`
         SELECT 
-          p.id, 
-          p.name, 
-          p.breed, 
-          p.age_group,
-          p.temperament, 
-          p.energy_level, 
-          p.size, 
+          p.*, 
           u.name AS owner_name
         FROM pets p
         JOIN users u ON p.owner_id = u.id
@@ -130,19 +146,16 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ pets, totalCount });
   } catch (error) {
-    console.error("[v0] Fetch pets error:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch pets" },
-      { status: 500 }
-    );
+    console.error('[v0] Fetch pets error:', error);
+    return NextResponse.json({ error: 'Failed to fetch pets' }, { status: 500 });
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    await ensureSpecialNeedsColumnSupportsText()
-    const petData = await request.json()
-    const petId = `pet-${Date.now()}`
+    await ensureSpecialNeedsColumnSupportsText();
+    const petData = await request.json();
+    const petId = `pet-${Date.now()}`;
 
     await sql`
       INSERT INTO pets (
@@ -199,18 +212,18 @@ export async function POST(request: NextRequest) {
         ${petData.comfortable_hours_alone || null},
         ${petData.owner_experience_required || null}
       )
-    `
+    `;
 
-    return NextResponse.json({ success: true, petId })
+    return NextResponse.json({ success: true, petId });
   } catch (error) {
-    console.error("[API] Add pet error:", error)
-    return NextResponse.json({ error: "Failed to add pet" }, { status: 500 })
+    console.error('[API] Add pet error:', error);
+    return NextResponse.json({ error: 'Failed to add pet' }, { status: 500 });
   }
 }
 
 export async function PUT(request: NextRequest) {
   try {
-    await ensureSpecialNeedsColumnSupportsText()
+    await ensureSpecialNeedsColumnSupportsText();
     const { petId, updates } = await request.json();
 
     await sql`
@@ -244,28 +257,25 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("[API] Update pet error:", error);
-    return NextResponse.json(
-      { error: "Failed to update pet" },
-      { status: 500 }
-    );
+    console.error('[API] Update pet error:', error);
+    return NextResponse.json({ error: 'Failed to update pet' }, { status: 500 });
   }
 }
 
 export async function DELETE(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url)
-    const petId = searchParams.get("petId")
+    const { searchParams } = new URL(request.url);
+    const petId = searchParams.get('petId');
 
     if (!petId) {
-      return NextResponse.json({ error: "Pet ID required" }, { status: 400 })
+      return NextResponse.json({ error: 'Pet ID required' }, { status: 400 });
     }
 
-    await sql`DELETE FROM pets WHERE id = ${petId}`
+    await sql`DELETE FROM pets WHERE id = ${petId}`;
 
-    return NextResponse.json({ success: true })
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("[v0] Delete pet error:", error)
-    return NextResponse.json({ error: "Failed to delete pet" }, { status: 500 })
+    console.error('[v0] Delete pet error:', error);
+    return NextResponse.json({ error: 'Failed to delete pet' }, { status: 500 });
   }
 }

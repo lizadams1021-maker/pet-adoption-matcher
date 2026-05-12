@@ -1,18 +1,20 @@
-"use client";
+'use client';
 
-import Link from "next/link";
-import Image from "next/image";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import Link from 'next/link';
+import Image from 'next/image';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { User, Pet } from '@/lib/db';
 import {
   calculateCompatibility,
   type MatchScore,
-} from "@/lib/matching-algorithm";
-import { useEffect, useMemo, useState } from "react";
+  type MatchResult,
+} from '@/lib/matching-algorithm';
+import { useEffect, useMemo, useState } from 'react';
 
 interface PetCardProps {
-  user: any;
-  pet: any;
+  user: User;
+  pet: Pet;
   matchScore: MatchScore;
   hasApplied?: boolean;
   onApply?: () => void;
@@ -29,47 +31,25 @@ export function PetCard({
   loading,
   loadingApplied,
 }: PetCardProps) {
-  const [fullPet, setFullPet] = useState<any>(null);
-  const [match, setMatch] = useState<any>(null);
+  const [fullPet, setFullPet] = useState<Pet | null>(null);
+  const [match, setMatch] = useState<MatchResult | MatchScore | null>(null);
   const [loadingMatch, setLoadingMatch] = useState(true);
 
-  // Full pet info fetch
+  // Initialize match from props if available
   useEffect(() => {
-    if (!pet?.id) return;
-    let isCancelled = false; // para evitar actualizar estado si se desmonta
+    if (matchScore) {
+      setMatch(matchScore);
+      setLoadingMatch(false);
+    } else if (user && pet) {
+      const matchResult = calculateCompatibility(user, pet);
+      setMatch(matchResult);
+      setLoadingMatch(false);
+    }
 
-    const fetchAndCalculateMatch = async () => {
-      setLoadingMatch(true);
-
-      // fetch del pet completo
-      try {
-        const res = await fetch(`/api/pets/${pet.id}`);
-        const data = await res.json();
-        if (!res.ok || !data.pet) {
-          console.error("Error fetching pet:", data.error);
-          return;
-        }
-
-        if (!isCancelled) {
-          setFullPet(data.pet);
-
-          // Calculate compatibility
-          const matchResult = calculateCompatibility(user, data.pet);
-          setMatch(matchResult);
-        }
-      } catch (err) {
-        console.error("Error fetching or calculating match:", err);
-      } finally {
-        if (!isCancelled) setLoadingMatch(false);
-      }
-    };
-
-    fetchAndCalculateMatch();
-
-    return () => {
-      isCancelled = true;
-    };
-  }, [pet?.id, user]);
+    if (pet) {
+      setFullPet(pet);
+    }
+  }, [pet, user, matchScore]);
 
   return (
     <div className="bg-card rounded-lg border overflow-hidden hover:shadow-lg transition-shadow">
@@ -79,7 +59,7 @@ export function PetCard({
             <div className="w-12 h-12 border-4 rounded-full animate-spin border-t-transparent border-white"></div>
           ) : (
             <Image
-              src={fullPet?.image_url || "/placeholder.svg"}
+              src={fullPet?.image_url || '/placeholder.svg'}
               alt={pet.name}
               fill
               className="object-cover"
@@ -99,9 +79,7 @@ export function PetCard({
       </Link>
       <div className="p-4">
         <Link href={`/pet/${pet.id}`}>
-          <h3 className="text-xl font-bold mb-1 cursor-pointer hover:text-primary">
-            {pet.name}
-          </h3>
+          <h3 className="text-xl font-bold mb-1 cursor-pointer hover:text-primary">{pet.name}</h3>
         </Link>
         <p className="text-sm text-muted-foreground mb-3">
           {pet.breed} • {pet.age_group}
@@ -109,11 +87,7 @@ export function PetCard({
 
         <div className="flex flex-wrap gap-1.5 mb-4">
           {pet.temperament.slice(0, 3).map((trait) => (
-            <Badge
-              key={trait}
-              variant="secondary"
-              className="text-xs capitalize"
-            >
+            <Badge key={trait} variant="secondary" className="text-xs capitalize">
               {trait}
             </Badge>
           ))}
@@ -149,8 +123,8 @@ export function PetCard({
             }}
             className={`w-full ${
               hasApplied
-                ? "text-green-700 flex items-center justify-center px-3 py-2 bg-green-50 border border-green-200 rounded-md hover:bg-green-100"
-                : "bg-primary hover:bg-primary/90"
+                ? 'text-green-700 flex items-center justify-center px-3 py-2 bg-green-50 border border-green-200 rounded-md hover:bg-green-100'
+                : 'bg-primary hover:bg-primary/90'
             }`}
             disabled={loading || loadingApplied} // deshabilitado mientras cargue applied o se aplique
           >
@@ -159,8 +133,8 @@ export function PetCard({
               <div
                 className={`w-5 h-5 border-2 rounded-full animate-spin border-t-transparent ${
                   hasApplied
-                    ? "border-green-700 border-l-green-700 border-b-green-700 border-r-green-700"
-                    : "border-white"
+                    ? 'border-green-700 border-l-green-700 border-b-green-700 border-r-green-700'
+                    : 'border-white'
                 }`}
               ></div>
             ) : loading ? (
@@ -168,14 +142,14 @@ export function PetCard({
               <div
                 className={`w-5 h-5 border-2 rounded-full animate-spin border-t-transparent ${
                   hasApplied
-                    ? "border-green-700 border-l-green-700 border-b-green-700 border-r-green-700"
-                    : "border-white"
+                    ? 'border-green-700 border-l-green-700 border-b-green-700 border-r-green-700'
+                    : 'border-white'
                 }`}
               ></div>
             ) : hasApplied ? (
               <span className="text-green-700 font-medium">✓ Applied</span>
             ) : (
-              "Apply"
+              'Apply'
             )}
           </Button>
         </div>

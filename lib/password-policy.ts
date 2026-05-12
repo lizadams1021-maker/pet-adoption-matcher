@@ -1,16 +1,16 @@
 const COMMON_PASSWORDS = new Set([
-  "123456",
-  "password",
-  "123456789",
-  "12345678",
-  "qwerty",
-  "abc123",
-  "111111",
-  "123123",
-  "letmein",
-  "welcome",
-  "iloveyou",
-  "admin",
+  '123456',
+  'password',
+  '123456789',
+  '12345678',
+  'qwerty',
+  'abc123',
+  '111111',
+  '123123',
+  'letmein',
+  'welcome',
+  'iloveyou',
+  'admin',
 ]);
 
 export const MIN_PASSWORD_LENGTH = 6;
@@ -45,19 +45,19 @@ export function validatePassword(password: string): string[] {
     issues.push(`Password must be at least ${MIN_PASSWORD_LENGTH} characters long.`);
   }
   if (!checks.hasUppercase) {
-    issues.push("Password must include at least one uppercase letter.");
+    issues.push('Password must include at least one uppercase letter.');
   }
   if (!checks.hasLowercase) {
-    issues.push("Password must include at least one lowercase letter.");
+    issues.push('Password must include at least one lowercase letter.');
   }
   if (!checks.hasNumber) {
-    issues.push("Password must include at least one digit.");
+    issues.push('Password must include at least one digit.');
   }
   if (!checks.hasSymbol) {
-    issues.push("Password must include at least one special character.");
+    issues.push('Password must include at least one special character.');
   }
   if (!checks.notCommon) {
-    issues.push("Password is too common and easily guessable.");
+    issues.push('Password is too common and easily guessable.');
   }
 
   return issues;

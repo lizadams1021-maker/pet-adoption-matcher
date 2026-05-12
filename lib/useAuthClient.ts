@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useCallback, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { refreshAccess } from "@/lib/auth";
+import { useCallback, useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { refreshAccess } from '@/lib/auth';
 
 type AuthUser = {
   first_name: string;
@@ -17,7 +17,7 @@ type AuthUser = {
   zip_code: string;
   willing_out_of_state: boolean;
   has_pets: boolean;
-  pets_types: never[];
+  pets_types: string[];
   pets_good_with_others: boolean;
   has_fenced_yard: boolean;
   home_type: string;
@@ -36,12 +36,13 @@ type AuthUser = {
   pet_live_location: string;
   adoption_timeline: string;
   preferred_dog_breed: string;
+  preferred_species: string;
   preferred_cat_type: string;
   preferred_age: string;
   preferred_weight: string;
-  preferred_temperament_detailed: never[];
+  preferred_temperament_detailed: string[];
   preferred_energy: string;
-  undesired_characteristics: never[];
+  undesired_characteristics: string[];
   take_pets_to_vet: boolean;
   vet_name: string;
   vet_phone: string;
@@ -74,8 +75,8 @@ export function useAuthClient() {
 
   const persistUser = useCallback((userData: AuthUser) => {
     setUser(userData);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("user", JSON.stringify(userData));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('user', JSON.stringify(userData));
     }
   }, []);
 
@@ -83,8 +84,8 @@ export function useAuthClient() {
     setUser((prev) => {
       if (!prev) return prev;
       const merged = { ...prev, ...updates } as AuthUser;
-      if (typeof window !== "undefined") {
-        localStorage.setItem("user", JSON.stringify(merged));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('user', JSON.stringify(merged));
       }
       return merged;
     });
@@ -92,8 +93,8 @@ export function useAuthClient() {
 
   useEffect(() => {
     async function initAuth() {
-      let token = localStorage.getItem("accessToken");
-      const storedUser = localStorage.getItem("user");
+      let token = localStorage.getItem('accessToken');
+      const storedUser = localStorage.getItem('user');
 
       if (storedUser && token) {
         setUser(JSON.parse(storedUser));
@@ -107,30 +108,29 @@ export function useAuthClient() {
 
       if (!token) {
         setUser(null);
-        router.push("/login");
+        router.push('/login');
         return;
       }
 
       try {
-        const res = await fetch("/api/me", {
+        const res = await fetch('/api/me', {
           headers: { Authorization: `Bearer ${token}` },
         });
-        if (!res.ok) throw new Error("Invalid token");
+        if (!res.ok) throw new Error('Invalid token');
         const data = await res.json();
 
         persistUser(data.user);
-        localStorage.setItem("accessToken", token);
-
+        localStorage.setItem('accessToken', token);
       } catch {
         setUser(null);
-        router.push("/login");
+        router.push('/login');
       } finally {
         setLoading(false);
       }
     }
 
     initAuth();
-  }, []);
+  }, [persistUser, router]);
 
   return { user, loading, updateUser };
 }
