@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server';
-import { sql } from '@/lib/db';
+import { sql, type User, type Pet } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   try {
@@ -21,14 +21,19 @@ export async function GET(request: NextRequest) {
     const userResult = await sql`SELECT * FROM users WHERE id = ${ownerId} LIMIT 1`;
     let newMatches = 0;
     if (userResult.length > 0) {
-      const user = userResult[0];
+      const user = userResult[0] as User;
       const allPets = await sql`
-        SELECT * FROM pets 
+        SELECT 
+          id, good_with_children, good_with_pets, house_trained, energy_level, 
+          requires_fenced_yard, special_needs, state, adoptable_out_of_state, 
+          age_group, breed, weight_range, comfortable_hours_alone, 
+          owner_experience_required
+        FROM pets 
         WHERE owner_id != ${ownerId} AND status != 'adopted'
       `;
       const { calculateCompatibility } = await import('@/lib/matching-algorithm');
       newMatches = allPets
-        .map((pet) => calculateCompatibility(user, pet))
+        .map((pet) => calculateCompatibility(user, pet as any as Pet))
         .filter((match) => match.score > 0).length;
     }
 
