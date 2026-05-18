@@ -1,16 +1,22 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useRef, useState, Suspense } from 'react';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { AppLayout } from '@/components/app-layout';
 import { PetCard } from '@/components/pet-card';
 import Swal from 'sweetalert2';
 import { useAuthClient } from '@/lib/useAuthClient';
 import { Button } from '@/components/ui/button';
 
-export default function MatchesPage() {
+function MatchesContent() {
   const { user, loading } = useAuthClient();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+
+  const pageParam = searchParams.get('page');
+  const page = pageParam ? parseInt(pageParam, 10) : 0;
+
   const [matches, setMatches] = useState<any[]>([]);
   const [loadingPetId, setLoadingPetId] = useState<string | null>(null);
   const [loadingInitial, setLoadingInitial] = useState(true);
@@ -19,10 +25,15 @@ export default function MatchesPage() {
   const [error, setError] = useState<string | null>(null);
   const [appliedPets, setAppliedPets] = useState<Set<string>>(new Set());
   const [hasMore, setHasMore] = useState(true);
-  const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const loaderRef = useRef<HTMLDivElement>(null);
   const limit = 6; // pets for every page
+
+  const handlePageChange = (newPage: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('page', newPage.toString());
+    router.push(`${pathname}?${params.toString()}`);
+  };
 
   useEffect(() => {
     if (loading) return;
@@ -235,7 +246,7 @@ export default function MatchesPage() {
             <Button
               variant="outline"
               disabled={page === 0}
-              onClick={() => setPage((p) => Math.max(p - 1, 0))}
+              onClick={() => handlePageChange(Math.max(page - 1, 0))}
             >
               ← Previous
             </Button>
@@ -247,7 +258,7 @@ export default function MatchesPage() {
             <Button
               variant="outline"
               disabled={page + 1 === totalPages}
-              onClick={() => setPage((p) => Math.min(p + 1, totalPages - 1))}
+              onClick={() => handlePageChange(Math.min(page + 1, totalPages - 1))}
             >
               Next →
             </Button>
@@ -260,5 +271,24 @@ export default function MatchesPage() {
         )}
       </div>
     </AppLayout>
+  );
+}
+
+export default function MatchesPage() {
+  return (
+    <Suspense
+      fallback={
+        <AppLayout>
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+              <p className="text-muted-foreground">Loading matches...</p>
+            </div>
+          </div>
+        </AppLayout>
+      }
+    >
+      <MatchesContent />
+    </Suspense>
   );
 }
