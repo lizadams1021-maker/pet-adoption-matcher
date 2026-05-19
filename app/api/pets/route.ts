@@ -207,7 +207,7 @@ export async function POST(request: NextRequest) {
         ${petData.adoptable_out_of_state || false},
         ${petData.only_pet || false},
         ${petData.ok_with_animals || null},
-        ${petData.requires_fenced_yard || false},
+        ${petData.requires_fenced_yard === undefined ? false : petData.requires_fenced_yard},
         ${petData.needs_company || false},
         ${petData.comfortable_hours_alone || null},
         ${petData.owner_experience_required || null}

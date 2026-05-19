@@ -72,7 +72,6 @@ export default function MyPetsPage() {
     goodWithCats: false,
     goodWithDogs: false,
     houseTrained: false,
-    goodWithOtherAnimals: false,
     specialNeeds: '',
     description: '',
     imageUrl: '',
@@ -80,7 +79,7 @@ export default function MyPetsPage() {
     adoptableOutOfState: false,
     onlyPet: false,
     okWithAnimals: [], // ["dog", "cat"]
-    requiresFencedYard: false,
+    requiresFencedYard: null as boolean | null,
     needsCompany: false,
     comfortableHoursAlone: '',
     ownerExperienceRequired: '',
@@ -233,7 +232,6 @@ export default function MyPetsPage() {
         goodWithCats: fullPet.ok_with_animals?.includes('cat') || false,
         goodWithDogs: fullPet.ok_with_animals?.includes('dog') || false,
         houseTrained: fullPet.house_trained || false,
-        goodWithOtherAnimals: fullPet.ok_with_animals?.includes('other') || false,
         specialNeeds: fullPet.special_needs || '',
         description: fullPet.description || '',
         imageUrl: fullPet.image_url || '',
@@ -241,7 +239,7 @@ export default function MyPetsPage() {
         adoptableOutOfState: fullPet.adoptable_out_of_state || false,
         onlyPet: fullPet.only_pet || false,
         okWithAnimals: fullPet.ok_with_animals || [],
-        requiresFencedYard: fullPet.requires_fenced_yard || false,
+        requiresFencedYard: fullPet.requires_fenced_yard,
         needsCompany: fullPet.needs_company || false,
         comfortableHoursAlone: fullPet.comfortable_hours_alone || '',
         ownerExperienceRequired: fullPet.owner_experience_required || '',
@@ -329,7 +327,7 @@ export default function MyPetsPage() {
       size: editFormData.size,
       temperament: [],
       goodWithChildren: editFormData.goodWithKids,
-      goodWithPets: editFormData.goodWithCats || editFormData.goodWithDogs || editFormData.goodWithOtherAnimals,
+      goodWithPets: editFormData.goodWithCats || editFormData.goodWithDogs,
       houseTrained: editFormData.houseTrained,
       specialNeeds: editFormData.specialNeeds || null,
       description: editFormData.description || null,
@@ -340,15 +338,13 @@ export default function MyPetsPage() {
       ok_with_animals: [
         ...(editFormData.goodWithDogs ? ['dog'] : []),
         ...(editFormData.goodWithCats ? ['cat'] : []),
-        ...(editFormData.goodWithOtherAnimals ? ['other'] : []),
       ].length
         ? [
             ...(editFormData.goodWithDogs ? ['dog'] : []),
             ...(editFormData.goodWithCats ? ['cat'] : []),
-            ...(editFormData.goodWithOtherAnimals ? ['other'] : []),
           ]
         : null,
-      requires_fenced_yard: editFormData.requiresFencedYard || false,
+      requires_fenced_yard: editFormData.requiresFencedYard,
       needs_company: editFormData.needsCompany || false,
       comfortable_hours_alone: editFormData.comfortableHoursAlone || null,
       owner_experience_required: editFormData.ownerExperienceRequired || null,
@@ -573,7 +569,6 @@ export default function MyPetsPage() {
                           </Select>
                         </div>
 
-
                         <div className="space-y-2">
                           <Label>How many hours can this pet be home alone?</Label>
                           <Select
@@ -654,18 +649,35 @@ export default function MyPetsPage() {
                             checked={editFormData.onlyPet}
                             onCheckedChange={(checked) => handleChange('onlyPet', checked)}
                           />
-                          <Label>Needs to be the only pet.</Label>
+                          <Label htmlFor="onlyPet" className="cursor-pointer">
+                            This pet needs to be the only pet in the household
+                          </Label>
                         </div>
 
-                        <div className="flex items-center space-x-2">
-                          <Checkbox
-                            id="requiresFencedYard"
-                            checked={editFormData.requiresFencedYard}
-                            onCheckedChange={(checked) =>
-                              handleChange('requiresFencedYard', checked)
+                        <div className="space-y-2">
+                          <Label htmlFor="edit-requiresFencedYard">Requires Fenced Yard</Label>
+                          <Select
+                            value={
+                              editFormData.requiresFencedYard === true
+                                ? 'true'
+                                : editFormData.requiresFencedYard === false
+                                  ? 'false'
+                                  : 'null'
                             }
-                          />
-                          <Label>This pet requires a fenced yard.</Label>
+                            onValueChange={(val) => {
+                              const parsed = val === 'true' ? true : val === 'false' ? false : null;
+                              handleChange('requiresFencedYard', parsed);
+                            }}
+                          >
+                            <SelectTrigger id="edit-requiresFencedYard">
+                              <SelectValue placeholder="Select" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="true">Yes</SelectItem>
+                              <SelectItem value="false">No</SelectItem>
+                              <SelectItem value="null">N/A</SelectItem>
+                            </SelectContent>
+                          </Select>
                         </div>
 
                         <div className="flex items-center space-x-2">
@@ -710,22 +722,16 @@ export default function MyPetsPage() {
                           </div>
                           <div className="flex items-center space-x-2">
                             <Checkbox
-                              id="edit-goodWithOtherAnimals"
-                              checked={editFormData.goodWithOtherAnimals}
-                              onCheckedChange={(checked) => handleChange('goodWithOtherAnimals', checked)}
-                            />
-                            <Label htmlFor="edit-goodWithOtherAnimals" className="text-sm cursor-pointer">
-                              Good with other animals
-                            </Label>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <Checkbox
                               id="edit-houseTrained"
                               checked={editFormData.houseTrained}
                               onCheckedChange={(checked) => handleChange('houseTrained', checked)}
                             />
                             <Label htmlFor="edit-houseTrained" className="text-sm cursor-pointer">
-                              House trained
+                              {editFormData.type === 'cat'
+                                ? 'Litter box trained'
+                                : editFormData.type === 'dog'
+                                  ? 'House trained'
+                                  : 'House trained (dogs) / Litter box trained (cats)'}
                             </Label>
                           </div>
                         </div>

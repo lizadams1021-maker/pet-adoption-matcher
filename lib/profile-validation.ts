@@ -52,6 +52,7 @@ export interface ProfileFormData {
   adoptionTimeline?: string;
   preferredDogBreed?: string;
   preferredSpecies?: string;
+  desiredPetCount?: string;
   preferredCatType?: string;
   preferredAge?: string;
   preferredWeight?: string;
