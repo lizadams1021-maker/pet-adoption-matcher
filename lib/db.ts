@@ -31,6 +31,7 @@ export interface User {
   hours_home_alone?: string | null;
   adopted_before?: boolean | null;
   owned_pet_before?: boolean | null;
+  desired_pet_count?: string | null;
   created_at: Date;
   updated_at: Date;
 }

@@ -52,6 +52,7 @@ export async function PUT(request: NextRequest) {
       adoptionTimeline: 'adoption_timeline',
       preferredDogBreed: 'preferred_dog_breed',
       preferredSpecies: 'preferred_species',
+      desiredPetCount: 'desired_pet_count',
       preferredCatType: 'preferred_cat_type',
       preferredAge: 'preferred_age',
       preferredWeight: 'preferred_weight',

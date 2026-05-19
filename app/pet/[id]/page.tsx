@@ -146,7 +146,9 @@ export default function PetDetailPage() {
                     <p className="font-medium capitalize">{pet.age_group}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">House Trained</p>
+                    <p className="text-sm text-muted-foreground">
+                      {pet.type === 'cat' ? 'Litter Box Trained' : 'House Trained'}
+                    </p>
                     <p className="font-medium">{pet.house_trained ? 'Yes' : 'No'}</p>
                   </div>
                   {pet.special_needs && (
@@ -195,7 +197,13 @@ export default function PetDetailPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-muted-foreground">Requires Fenced Yard</p>
-                    <p className="font-medium">{pet.requires_fenced_yard ? 'Yes' : 'No'}</p>
+                    <p className="font-medium">
+                      {pet.requires_fenced_yard === true
+                        ? 'Yes'
+                        : pet.requires_fenced_yard === false
+                          ? 'No'
+                          : 'N/A'}
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Needs Company Often</p>

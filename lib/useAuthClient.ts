@@ -63,6 +63,7 @@ type AuthUser = {
   plan_for_vet_costs: string;
   additional_comments: string;
   image_url: string;
+  desired_pet_count?: string;
   id: string;
   email: string;
   name: string;

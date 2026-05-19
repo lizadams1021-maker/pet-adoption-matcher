@@ -109,7 +109,7 @@ export const CITIES_BY_STATE: Record<string, string[]> = {
   ME: ['Portland', 'Lewiston', 'Bangor', 'South Portland', 'Auburn'],
   MD: ['Baltimore', 'Frederick', 'Rockville', 'Gaithersburg', 'Bowie'],
   MA: ['Boston', 'Worcester', 'Springfield', 'Cambridge', 'Lowell'],
-  MI: ['Detroit', 'Grand Rapids', 'Warren', 'Sterling Heights', 'Ann Arbor'],
+  MI: ['Detroit', 'Grand Rapids', 'Warren', 'Sterling Heights', 'Ann Arbor', 'Kalamazoo'],
   MN: ['Minneapolis', 'St. Paul', 'Rochester', 'Duluth', 'Bloomington'],
   MS: ['Jackson', 'Gulfport', 'Southaven', 'Hattiesburg', 'Biloxi'],
   MO: ['Kansas City', 'St. Louis', 'Springfield', 'Columbia', 'Independence'],
