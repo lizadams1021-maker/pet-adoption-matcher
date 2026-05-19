@@ -63,14 +63,13 @@ export default function AddPetPage() {
     goodWithCats: boolean;
     goodWithDogs: boolean;
     houseTrained: boolean;
-    goodWithOtherAnimals: boolean;
     specialNeeds: string;
     description: string;
     imageUrl: string;
     state: string;
     adoptableOutOfState: boolean;
     onlyPet: boolean;
-    requiresFencedYard: boolean;
+    requiresFencedYard: boolean | null;
     needsCompany: boolean;
     comfortableHoursAlone: string;
     ownerExperienceRequired: string;
@@ -97,14 +96,13 @@ export default function AddPetPage() {
     goodWithCats: false,
     goodWithDogs: false,
     houseTrained: false,
-    goodWithOtherAnimals: false,
     specialNeeds: '',
     description: '',
     imageUrl: '',
     state: '',
     adoptableOutOfState: false,
     onlyPet: false,
-    requiresFencedYard: false,
+    requiresFencedYard: null,
     needsCompany: false,
     comfortableHoursAlone: '',
     ownerExperienceRequired: '',
@@ -226,7 +224,7 @@ export default function AddPetPage() {
       size: formData.size,
       temperament: [],
       goodWithChildren: formData.goodWithKids,
-      goodWithPets: formData.goodWithCats || formData.goodWithDogs || formData.goodWithOtherAnimals,
+      goodWithPets: formData.goodWithCats || formData.goodWithDogs,
       houseTrained: formData.houseTrained,
       state: formData.state || null,
       adoptable_out_of_state: formData.adoptableOutOfState || false,
@@ -234,15 +232,10 @@ export default function AddPetPage() {
       ok_with_animals: [
         ...(formData.goodWithDogs ? ['dog'] : []),
         ...(formData.goodWithCats ? ['cat'] : []),
-        ...(formData.goodWithOtherAnimals ? ['other'] : []),
       ].length
-        ? [
-            ...(formData.goodWithDogs ? ['dog'] : []),
-            ...(formData.goodWithCats ? ['cat'] : []),
-            ...(formData.goodWithOtherAnimals ? ['other'] : []),
-          ]
+        ? [...(formData.goodWithDogs ? ['dog'] : []), ...(formData.goodWithCats ? ['cat'] : [])]
         : null,
-      requires_fenced_yard: formData.requiresFencedYard || false,
+      requires_fenced_yard: formData.requiresFencedYard,
       needs_company: formData.needsCompany || false,
       comfortable_hours_alone: formData.comfortableHoursAlone || null,
       owner_experience_required: formData.ownerExperienceRequired || null,
@@ -459,7 +452,6 @@ export default function AddPetPage() {
               {errors.energyLevel && <p className="text-sm text-red-500">{errors.type}</p>}
             </div>
 
-
             <div className="space-y-2">
               <Label>How many hours can this pet be home alone?</Label>
               <Select
@@ -533,16 +525,35 @@ export default function AddPetPage() {
                 checked={formData.onlyPet}
                 onCheckedChange={(checked) => handleChange('onlyPet', checked)}
               />
-              <Label>Needs to be the only pet.</Label>
+              <Label htmlFor="onlyPet" className="cursor-pointer">
+                This pet needs to be the only pet in the household
+              </Label>
             </div>
 
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="requiresFencedYard"
-                checked={formData.requiresFencedYard}
-                onCheckedChange={(checked) => handleChange('requiresFencedYard', checked)}
-              />
-              <Label>This pet requires a fenced yard.</Label>
+            <div className="space-y-2">
+              <Label htmlFor="requiresFencedYard">Requires Fenced Yard</Label>
+              <Select
+                value={
+                  formData.requiresFencedYard === true
+                    ? 'true'
+                    : formData.requiresFencedYard === false
+                      ? 'false'
+                      : 'null'
+                }
+                onValueChange={(val) => {
+                  const parsed = val === 'true' ? true : val === 'false' ? false : null;
+                  handleChange('requiresFencedYard', parsed);
+                }}
+              >
+                <SelectTrigger id="requiresFencedYard">
+                  <SelectValue placeholder="Select" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="true">Yes</SelectItem>
+                  <SelectItem value="false">No</SelectItem>
+                  <SelectItem value="null">N/A</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="flex items-center space-x-2">
@@ -582,19 +593,17 @@ export default function AddPetPage() {
               </div>
               <div className="flex items-center space-x-2">
                 <Checkbox
-                  id="goodWithOtherAnimals"
-                  checked={formData.goodWithOtherAnimals}
-                  onCheckedChange={(checked) => handleChange('goodWithOtherAnimals', checked)}
-                />
-                <Label>Good with other animals</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox
                   id="houseTrained"
                   checked={formData.houseTrained}
                   onCheckedChange={(checked) => handleChange('houseTrained', checked)}
                 />
-                <Label>House trained</Label>
+                <Label htmlFor="houseTrained" className="cursor-pointer">
+                  {formData.type === 'cat'
+                    ? 'Litter box trained'
+                    : formData.type === 'dog'
+                      ? 'House trained'
+                      : 'House trained (dogs) / Litter box trained (cats)'}
+                </Label>
               </div>
             </div>
           </div>

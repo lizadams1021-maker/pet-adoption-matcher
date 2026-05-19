@@ -80,6 +80,7 @@ export default function ProfilePage() {
     adoptionTimeline: '',
     preferredDogBreed: '',
     preferredSpecies: '',
+    desiredPetCount: '1',
     preferredCatType: '',
     preferredAge: '',
     preferredWeight: '',
@@ -156,6 +157,7 @@ export default function ProfilePage() {
         adoptionTimeline: userData.adoption_timeline || '',
         preferredDogBreed: userData.preferred_dog_breed || '',
         preferredSpecies: userData.preferred_species || '',
+        desiredPetCount: userData.desired_pet_count || '1',
         preferredCatType: userData.preferred_cat_type || '',
         preferredAge: userData.preferred_age || '',
         preferredWeight: userData.preferred_weight || '',
@@ -940,6 +942,22 @@ export default function ProfilePage() {
                     <SelectItem value="cat">Cat</SelectItem>
                     <SelectItem value="both">Both Dogs & Cats</SelectItem>
                     <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="desiredPetCount">How many pets are you looking to adopt?</Label>
+                <Select
+                  value={formData.desiredPetCount || '1'}
+                  onValueChange={(v) => updateField('desiredPetCount', v)}
+                >
+                  <SelectTrigger id="desiredPetCount">
+                    <SelectValue placeholder="Select count" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">1</SelectItem>
+                    <SelectItem value="2">2 (e.g. open to bonded pairs)</SelectItem>
+                    <SelectItem value="3+">3 or more</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

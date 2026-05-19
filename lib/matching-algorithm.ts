@@ -96,7 +96,14 @@ function calculateBaseCompatibility(
   // Fenced yard requirement (high energy)
   // --------------------
   const highEnergy = pet.energy_level === 'high' || pet.energy_level === 'very high';
-  if (highEnergy || pet.requires_fenced_yard) {
+  const needsFencedYard =
+    pet.requires_fenced_yard === true ||
+    (pet.requires_fenced_yard !== null &&
+      pet.requires_fenced_yard !== undefined &&
+      highEnergy &&
+      pet.type !== 'cat');
+
+  if (needsFencedYard) {
     if (user.has_fenced_yard) {
       score += 20;
       reasons.push("Your fenced yard is perfect for this pet's energy level.");
@@ -185,6 +192,31 @@ function calculateBaseCompatibility(
     } else {
       score -= 10;
       negativeReasons.push('This pet may require more experience than you currently have.');
+    }
+  }
+
+  // --------------------
+  // Bonded Pairs compatibility
+  // --------------------
+  const descriptionText = pet.description?.toLowerCase() || '';
+  const isBondedPair =
+    descriptionText.includes('bonded pair') ||
+    descriptionText.includes('bonded sibling') ||
+    (pet.temperament &&
+      pet.temperament.some((t) => {
+        const trait = t.toLowerCase();
+        return trait.includes('bonded pair') || trait.includes('bonded');
+      }));
+
+  if (isBondedPair) {
+    if (user.desired_pet_count === '2' || user.desired_pet_count === '3+') {
+      score += 25;
+      reasons.push('This pet is part of a bonded pair, matching your goal to adopt multiple pets!');
+    } else if (user.desired_pet_count === '1') {
+      score -= 15;
+      negativeReasons.push(
+        'This pet is part of a bonded pair, but you prefer to adopt a single pet.'
+      );
     }
   }
 
