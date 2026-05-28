@@ -108,7 +108,7 @@ export default function PetDetailPage() {
               <div>
                 <h1 className="text-4xl font-bold mb-2">{pet.name}</h1>
                 <p className="text-xl text-muted-foreground">
-                  {pet.breed} • {pet.age_group.charAt(0).toUpperCase() + pet.age_group.slice(1)} •{' '}
+                  {pet.breed} • {pet.age_group === 'puppy' ? (pet.type === 'cat' ? 'Kitten' : 'Puppy') : pet.age_group.charAt(0).toUpperCase() + pet.age_group.slice(1)} •{' '}
                   {pet.type.charAt(0).toUpperCase() + pet.type.slice(1)}
                 </p>
 
@@ -143,7 +143,9 @@ export default function PetDetailPage() {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Age Group</p>
-                    <p className="font-medium capitalize">{pet.age_group}</p>
+                    <p className="font-medium capitalize">
+                      {pet.age_group === 'puppy' ? (pet.type === 'cat' ? 'kitten' : 'puppy') : pet.age_group}
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">

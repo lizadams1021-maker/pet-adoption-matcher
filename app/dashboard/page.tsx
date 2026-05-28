@@ -500,7 +500,7 @@ export default function DashboardPage() {
                   </div>
                   <div className="mb-4 text-sm text-muted-foreground">
                     <span className="font-medium">{selectedPet.breed}</span> •{' '}
-                    {selectedPet.age_group} •{' '}
+                    {selectedPet.age_group === 'puppy' ? (selectedPet.type === 'cat' ? 'Kitten' : 'Puppy') : selectedPet.age_group.charAt(0).toUpperCase() + selectedPet.age_group.slice(1)} •{' '}
                     <span className={getStatusVisuals(selectedPet.status).headerText}>
                       {selectedPet.status}
                     </span>{' '}

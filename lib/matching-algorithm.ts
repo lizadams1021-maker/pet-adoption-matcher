@@ -44,6 +44,41 @@ function calculateBaseCompatibility(
   // We will normalize this to 0-100 at the end.
 
   // --------------------
+  // Species compatibility
+  // --------------------
+  if (user.preferred_species) {
+    const prefSpecies = user.preferred_species.toLowerCase();
+    const petType = pet.type.toLowerCase();
+
+    if (prefSpecies === 'cat' && petType !== 'cat') {
+      return {
+        score: 0,
+        reasons: [],
+        negativeReasons: [`Mismatch: You are looking for a cat, but this is a ${pet.type || 'other'}.`],
+      };
+    }
+    if (prefSpecies === 'dog' && petType !== 'dog') {
+      return {
+        score: 0,
+        reasons: [],
+        negativeReasons: [`Mismatch: You are looking for a dog, but this is a ${pet.type || 'other'}.`],
+      };
+    }
+    if (prefSpecies === 'other' && petType !== 'other') {
+      return {
+        score: 0,
+        reasons: [],
+        negativeReasons: [`Mismatch: You are looking for another species, but this is a ${pet.type || 'other'}.`],
+      };
+    }
+    if (prefSpecies === petType || (prefSpecies === 'both' && (petType === 'cat' || petType === 'dog'))) {
+      score += 15;
+      reasons.push(`Matches your preferred species (${pet.type === 'cat' ? 'Cat' : pet.type === 'dog' ? 'Dog' : pet.type}).`);
+    }
+  }
+
+
+  // --------------------
   // Children compatibility
   // --------------------
   if (pet.good_with_children) {
@@ -133,15 +168,29 @@ function calculateBaseCompatibility(
   // Location & State compatibility
   // --------------------
   if (pet.state && user.state) {
-    if (pet.state === user.state) {
+    const petState = pet.state.toUpperCase();
+    const userState = user.state.toUpperCase();
+    if (petState === userState) {
       score += 15;
       reasons.push('Located in the same state, making adoption easier.');
-    } else if (pet.adoptable_out_of_state && user.willing_out_of_state) {
-      score += 5;
-      reasons.push('Out-of-state adoption is supported by both parties.');
-    } else if (!pet.adoptable_out_of_state && pet.state !== user.state) {
-      score -= 50;
-      negativeReasons.push('Rescue does not currently adopt to your state.');
+    } else {
+      // Different states
+      if (!user.willing_out_of_state) {
+        return {
+          score: 0,
+          reasons: [],
+          negativeReasons: [`Mismatch: Pet is in ${pet.state}, but you prefer to adopt locally.`],
+        };
+      } else if (!pet.adoptable_out_of_state) {
+        return {
+          score: 0,
+          reasons: [],
+          negativeReasons: [`Mismatch: Rescue in ${pet.state} does not adopt out of state.`],
+        };
+      } else {
+        score += 5;
+        reasons.push('Out-of-state adoption is supported by both parties.');
+      }
     }
   }
 
@@ -213,10 +262,13 @@ function calculateBaseCompatibility(
       score += 25;
       reasons.push('This pet is part of a bonded pair, matching your goal to adopt multiple pets!');
     } else if (user.desired_pet_count === '1') {
-      score -= 15;
-      negativeReasons.push(
-        'This pet is part of a bonded pair, but you prefer to adopt a single pet.'
-      );
+      return {
+        score: 0,
+        reasons: [],
+        negativeReasons: [
+          'Mismatch: This pet is part of a bonded pair, but you only want to adopt 1 pet.',
+        ],
+      };
     }
   }
 

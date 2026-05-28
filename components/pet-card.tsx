@@ -82,7 +82,7 @@ export function PetCard({
           <h3 className="text-xl font-bold mb-1 cursor-pointer hover:text-primary">{pet.name}</h3>
         </Link>
         <p className="text-sm text-muted-foreground mb-3">
-          {pet.breed} • {pet.age_group}
+          {pet.breed} • {pet.age_group === 'puppy' ? (pet.type === 'cat' ? 'Kitten' : 'Puppy') : pet.age_group.charAt(0).toUpperCase() + pet.age_group.slice(1)}
         </p>
 
         <div className="flex flex-wrap gap-1.5 mb-4">
