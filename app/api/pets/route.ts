@@ -94,7 +94,24 @@ export async function GET(request: NextRequest) {
         })
         .filter((pet: any) => pet.matchScore.score >= 0);
 
-      petsWithScores.sort((a: any, b: any) => b.matchScore.score - a.matchScore.score);
+      const sortPetsByScoreAndPreference = (a: any, b: any) => {
+        const scoreDiff = b.matchScore.score - a.matchScore.score;
+        if (scoreDiff !== 0) return scoreDiff;
+
+        // If scores are equal, prioritize preferred species
+        const prefSpecies = (user.preferred_species || '').toLowerCase();
+        if (prefSpecies && prefSpecies !== 'both') {
+          const typeA = (a.type || '').toLowerCase();
+          const typeB = (b.type || '').toLowerCase();
+          if (typeA === prefSpecies && typeB !== prefSpecies) return -1;
+          if (typeB === prefSpecies && typeA !== prefSpecies) return 1;
+        }
+
+        // Secondary stable sorting to prevent arbitrary jumps on same scores/types
+        return (a.id || '').localeCompare(b.id || '');
+      };
+
+      petsWithScores.sort(sortPetsByScoreAndPreference);
 
       // 4. Paginate
       const totalCount = petsWithScores.length;
@@ -120,7 +137,7 @@ export async function GET(request: NextRequest) {
       });
 
       // Sort again by matchScore.score to maintain the original order
-      paginatedPets.sort((a: any, b: any) => b.matchScore.score - a.matchScore.score);
+      paginatedPets.sort(sortPetsByScoreAndPreference);
 
       return NextResponse.json({ pets: paginatedPets, totalCount });
     } else {
