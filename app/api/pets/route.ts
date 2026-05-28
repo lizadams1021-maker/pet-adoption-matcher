@@ -78,7 +78,8 @@ export async function GET(request: NextRequest) {
           id, good_with_children, good_with_pets, house_trained, 
           energy_level, requires_fenced_yard, special_needs, state, 
           adoptable_out_of_state, age_group, breed, weight_range, 
-          comfortable_hours_alone, owner_experience_required
+          comfortable_hours_alone, owner_experience_required,
+          type, description, temperament
         FROM pets 
         WHERE owner_id != ${excludeOwnerId} AND status != 'adopted'
       `;
@@ -91,7 +92,7 @@ export async function GET(request: NextRequest) {
           const match = calculateCompatibility(user, pet as Pet);
           return { ...pet, matchScore: match };
         })
-        .filter((pet: any) => pet.matchScore.score > 0);
+        .filter((pet: any) => pet.matchScore.score >= 0);
 
       petsWithScores.sort((a: any, b: any) => b.matchScore.score - a.matchScore.score);
 

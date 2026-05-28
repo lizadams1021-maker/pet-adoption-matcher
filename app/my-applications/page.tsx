@@ -135,7 +135,7 @@ export default function MyApplicationsPage() {
                 </div>
                 <h2 className="text-lg font-medium">{app.pet_name}</h2>
                 <p className="text-sm text-muted-foreground capitalize">
-                  {app.pet_type} • {app.pet_breed} • {app.pet_age_group}
+                  {app.pet_type} • {app.pet_breed} • {app.pet_age_group === 'puppy' ? (app.pet_type === 'cat' ? 'kitten' : 'puppy') : app.pet_age_group}
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
                   Applied on {new Date(app.applied_at).toLocaleDateString()}

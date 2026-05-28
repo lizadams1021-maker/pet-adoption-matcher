@@ -783,7 +783,7 @@ export default function MyPetsPage() {
                         <div>
                           <h3 className="text-2xl font-bold mb-1">{pet.name}</h3>
                           <p className="text-muted-foreground">
-                            {pet.breed} • {pet.age_group} • {pet.type}
+                            {pet.breed} • {pet.age_group === 'puppy' ? (pet.type === 'cat' ? 'Kitten' : 'Puppy') : pet.age_group.charAt(0).toUpperCase() + pet.age_group.slice(1)} • {pet.type.charAt(0).toUpperCase() + pet.type.slice(1)}
                           </p>
                         </div>
                         <Badge
