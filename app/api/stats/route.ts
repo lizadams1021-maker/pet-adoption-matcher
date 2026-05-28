@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
           id, good_with_children, good_with_pets, house_trained, energy_level, 
           requires_fenced_yard, special_needs, state, adoptable_out_of_state, 
           age_group, breed, weight_range, comfortable_hours_alone, 
-          owner_experience_required
+          owner_experience_required, type, description, temperament
         FROM pets 
         WHERE owner_id != ${ownerId} AND status != 'adopted'
       `;
