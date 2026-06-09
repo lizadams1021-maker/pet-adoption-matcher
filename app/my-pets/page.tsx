@@ -83,6 +83,7 @@ export default function MyPetsPage() {
     needsCompany: false,
     comfortableHoursAlone: '',
     ownerExperienceRequired: '',
+    childrenMinAge: 0,
   });
   const [uploading, setUploading] = useState(false);
   const editBreedOptions =
@@ -243,6 +244,7 @@ export default function MyPetsPage() {
         needsCompany: fullPet.needs_company || false,
         comfortableHoursAlone: fullPet.comfortable_hours_alone || '',
         ownerExperienceRequired: fullPet.owner_experience_required || '',
+        childrenMinAge: fullPet.children_min_age || 0,
       });
     } catch (error) {
       console.error('Error:', error);
@@ -348,6 +350,7 @@ export default function MyPetsPage() {
       needs_company: editFormData.needsCompany || false,
       comfortable_hours_alone: editFormData.comfortableHoursAlone || null,
       owner_experience_required: editFormData.ownerExperienceRequired || null,
+      childrenMinAge: editFormData.childrenMinAge,
     };
 
     try {
@@ -694,12 +697,35 @@ export default function MyPetsPage() {
                             <Checkbox
                               id="edit-goodWithKids"
                               checked={editFormData.goodWithKids}
-                              onCheckedChange={(checked) => handleChange('goodWithKids', checked)}
+                              onCheckedChange={(checked) => {
+                                handleChange('goodWithKids', checked);
+                                if (!checked) handleChange('childrenMinAge', 0);
+                              }}
                             />
                             <Label htmlFor="edit-goodWithKids" className="text-sm cursor-pointer">
                               Good with kids
                             </Label>
                           </div>
+
+                          {editFormData.goodWithKids && (
+                            <div className="pl-6 space-y-2">
+                              <Label htmlFor="edit-childrenMinAge">Minimum Age for Kids (years)</Label>
+                              <Select
+                                value={String(editFormData.childrenMinAge || 0)}
+                                onValueChange={(val) => handleChange('childrenMinAge', Number(val))}
+                              >
+                                <SelectTrigger id="edit-childrenMinAge" className="w-[180px]">
+                                  <SelectValue placeholder="Select age" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="0">All ages (0+)</SelectItem>
+                                  <SelectItem value="5">5+ years</SelectItem>
+                                  <SelectItem value="10">10+ years</SelectItem>
+                                  <SelectItem value="13">13+ years (Teenagers)</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          )}
                           <div className="flex items-center space-x-2">
                             <Checkbox
                               id="edit-goodWithCats"

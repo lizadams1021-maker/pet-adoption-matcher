@@ -11,10 +11,13 @@ export interface User {
   password_hash: string;
   name: string;
   location: string | null;
+  city?: string | null;
   state?: string | null;
+  zip_code?: string | null;
   housing_type: string | null;
   has_children: boolean;
   children_count?: number | null;
+  children_ages?: string | null;
   has_pets?: boolean | null;
   pets_types?: string[] | null;
   has_fenced_yard?: boolean | null;
@@ -56,9 +59,12 @@ export interface Pet {
   status: string;
   state?: string | null;
   adoptable_out_of_state?: boolean | null;
+  only_pet?: boolean | null;
+  ok_with_animals?: string[] | null;
   requires_fenced_yard?: boolean | null;
   comfortable_hours_alone?: string | null;
   owner_experience_required?: string | null;
+  children_min_age?: number | null;
   created_at: Date;
   updated_at: Date;
 }
