@@ -30,8 +30,19 @@ async function ensureSpecialNeedsColumnSupportsText() {
   }
 }
 
+async function ensureChildrenMinAgeColumnExists() {
+  try {
+    await sql`
+      ALTER TABLE pets ADD COLUMN IF NOT EXISTS children_min_age INTEGER DEFAULT 0
+    `;
+  } catch (error) {
+    console.error('[DB] Failed to add children_min_age column:', error);
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
+    await ensureChildrenMinAgeColumnExists();
     const { searchParams } = new URL(request.url);
     const ownerId = searchParams.get('ownerId');
     const excludeOwnerId = searchParams.get('excludeOwnerId');
@@ -75,13 +86,15 @@ export async function GET(request: NextRequest) {
       // 2. Fetch only necessary columns for scoring to avoid "response too large" error
       const allPetsForScoring = await sql`
         SELECT 
-          id, good_with_children, good_with_pets, house_trained, 
-          energy_level, requires_fenced_yard, special_needs, state, 
-          adoptable_out_of_state, age_group, breed, weight_range, 
-          comfortable_hours_alone, owner_experience_required,
-          type, description, temperament
-        FROM pets 
-        WHERE owner_id != ${excludeOwnerId} AND status != 'adopted'
+          p.id, p.good_with_children, p.good_with_pets, p.house_trained, 
+          p.energy_level, p.requires_fenced_yard, p.special_needs, p.state, 
+          p.adoptable_out_of_state, p.age_group, p.breed, p.weight_range, 
+          p.comfortable_hours_alone, p.owner_experience_required,
+          p.type, p.description, p.temperament, p.created_at, p.only_pet, p.ok_with_animals, p.children_min_age,
+          u.city AS owner_city, u.zip_code AS owner_zip
+        FROM pets p
+        JOIN users u ON p.owner_id = u.id
+        WHERE p.owner_id != ${excludeOwnerId} AND p.status != 'adopted'
       `;
 
       // 3. Calculate scores, filter > 0, and sort
@@ -95,19 +108,56 @@ export async function GET(request: NextRequest) {
         .filter((pet: any) => pet.matchScore.score >= 0);
 
       const sortPetsByScoreAndPreference = (a: any, b: any) => {
+        // Rule 0: Compatibility Score (Descending)
         const scoreDiff = b.matchScore.score - a.matchScore.score;
         if (scoreDiff !== 0) return scoreDiff;
 
-        // If scores are equal, prioritize preferred species
+        // Rule 1: Preferred Species Match
         const prefSpecies = (user.preferred_species || '').toLowerCase();
         if (prefSpecies && prefSpecies !== 'both') {
           const typeA = (a.type || '').toLowerCase();
           const typeB = (b.type || '').toLowerCase();
-          if (typeA === prefSpecies && typeB !== prefSpecies) return -1;
-          if (typeB === prefSpecies && typeA !== prefSpecies) return 1;
+          const matchesA = typeA === prefSpecies ? 1 : 0;
+          const matchesB = typeB === prefSpecies ? 1 : 0;
+          if (matchesA !== matchesB) {
+            return matchesB - matchesA;
+          }
         }
 
-        // Secondary stable sorting to prevent arbitrary jumps on same scores/types
+        // Rule 2: Shelter Seniority (Oldest first - created_at ascending)
+        const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+        if (dateA !== dateB) {
+          return dateA - dateB;
+        }
+
+        // Rule 3: Vulnerability (Senior or Special Needs first)
+        const isVulnerable = (p: any) => {
+          const isSenior = p.age_group === 'senior';
+          const hasSpecialNeeds = p.special_needs && p.special_needs !== 'No' && p.special_needs !== 'none';
+          return isSenior || hasSpecialNeeds ? 1 : 0;
+        };
+        const vulnA = isVulnerable(a);
+        const vulnB = isVulnerable(b);
+        if (vulnA !== vulnB) {
+          return vulnB - vulnA;
+        }
+
+        // Rule 4: Proximity (City or Zip Match first)
+        const userCity = (user.city || '').toLowerCase();
+        const userZip = (user.zip_code || '').trim();
+        const cityA = (a.owner_city || '').toLowerCase();
+        const cityB = (b.owner_city || '').toLowerCase();
+        const zipA = (a.owner_zip || '').trim();
+        const zipB = (b.owner_zip || '').trim();
+
+        const proxA = (userCity && userCity === cityA) || (userZip && userZip === zipA) ? 1 : 0;
+        const proxB = (userCity && userCity === cityB) || (userZip && userZip === zipB) ? 1 : 0;
+        if (proxA !== proxB) {
+          return proxB - proxA;
+        }
+
+        // Rule 5: Stable Fallback
         return (a.id || '').localeCompare(b.id || '');
       };
 
@@ -124,7 +174,7 @@ export async function GET(request: NextRequest) {
       // 5. Fetch full details for the paginated subset
       const petIds = paginatedSubset.map((p) => p.id);
       const fullPets = await sql`
-        SELECT p.*, u.name AS owner_name
+        SELECT p.*, u.name AS owner_name, u.city AS owner_city, u.zip_code AS owner_zip
         FROM pets p
         JOIN users u ON p.owner_id = u.id
         WHERE p.id = ANY(${petIds})
@@ -172,8 +222,10 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     await ensureSpecialNeedsColumnSupportsText();
+    await ensureChildrenMinAgeColumnExists();
     const petData = await request.json();
     const petId = `pet-${Date.now()}`;
+    const childrenMinAge = petData.children_min_age !== undefined ? petData.children_min_age : (petData.childrenMinAge !== undefined ? petData.childrenMinAge : 0);
 
     await sql`
       INSERT INTO pets (
@@ -201,7 +253,8 @@ export async function POST(request: NextRequest) {
         requires_fenced_yard,
         needs_company,
         comfortable_hours_alone,
-        owner_experience_required
+        owner_experience_required,
+        children_min_age
       )
       VALUES (
         ${petId},
@@ -228,7 +281,8 @@ export async function POST(request: NextRequest) {
         ${petData.requires_fenced_yard === undefined ? false : petData.requires_fenced_yard},
         ${petData.needs_company || false},
         ${petData.comfortable_hours_alone || null},
-        ${petData.owner_experience_required || null}
+        ${petData.owner_experience_required || null},
+        ${childrenMinAge}
       )
     `;
 
@@ -242,7 +296,9 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     await ensureSpecialNeedsColumnSupportsText();
+    await ensureChildrenMinAgeColumnExists();
     const { petId, updates } = await request.json();
+    const childrenMinAge = updates.children_min_age !== undefined ? updates.children_min_age : (updates.childrenMinAge !== undefined ? updates.childrenMinAge : 0);
 
     await sql`
       UPDATE pets 
@@ -255,9 +311,9 @@ export async function PUT(request: NextRequest) {
         energy_level = ${updates.energyLevel},
         size = ${updates.size},
         temperament = ${updates.temperament},
-        good_with_children = ${updates.goodWithChildren},
-        good_with_pets = ${updates.goodWithPets},
-        house_trained = ${updates.houseTrained},
+        good_with_children = ${updates.good_with_children !== undefined ? updates.good_with_children : (updates.goodWithChildren || false)},
+        good_with_pets = ${updates.good_with_pets !== undefined ? updates.good_with_pets : (updates.goodWithPets || false)},
+        house_trained = ${updates.house_trained !== undefined ? updates.house_trained : (updates.houseTrained || false)},
         state = ${updates.state},
         adoptable_out_of_state = ${updates.adoptable_out_of_state},
         only_pet = ${updates.only_pet},
@@ -269,6 +325,7 @@ export async function PUT(request: NextRequest) {
         special_needs = ${updates.specialNeeds},
         description = ${updates.description},
         image_url = ${updates.imageUrl},
+        children_min_age = ${childrenMinAge},
         updated_at = NOW()
       WHERE id = ${petId}
     `;

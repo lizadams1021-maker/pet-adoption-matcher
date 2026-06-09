@@ -73,6 +73,7 @@ export default function AddPetPage() {
     needsCompany: boolean;
     comfortableHoursAlone: string;
     ownerExperienceRequired: string;
+    childrenMinAge: number;
   };
 
   type PetFormErrors = {
@@ -106,6 +107,7 @@ export default function AddPetPage() {
     needsCompany: false,
     comfortableHoursAlone: '',
     ownerExperienceRequired: '',
+    childrenMinAge: 0,
   });
   const [errors, setErrors] = useState<PetFormErrors>({
     name: '',
@@ -243,6 +245,7 @@ export default function AddPetPage() {
       description: formData.description || null,
       imageUrl: formData.imageUrl || null,
       ownerId: user.id,
+      childrenMinAge: formData.childrenMinAge,
     };
 
     try {
@@ -571,10 +574,33 @@ export default function AddPetPage() {
                 <Checkbox
                   id="goodWithKids"
                   checked={formData.goodWithKids}
-                  onCheckedChange={(checked) => handleChange('goodWithKids', checked)}
+                  onCheckedChange={(checked) => {
+                    handleChange('goodWithKids', checked);
+                    if (!checked) handleChange('childrenMinAge', 0);
+                  }}
                 />
-                <Label>Good with kids</Label>
+                <Label htmlFor="goodWithKids" className="cursor-pointer">Good with kids</Label>
               </div>
+
+              {formData.goodWithKids && (
+                <div className="pl-6 space-y-2">
+                  <Label htmlFor="childrenMinAge">Minimum Age for Kids (years)</Label>
+                  <Select
+                    value={String(formData.childrenMinAge || 0)}
+                    onValueChange={(val) => handleChange('childrenMinAge', Number(val))}
+                  >
+                    <SelectTrigger id="childrenMinAge" className="w-[180px]">
+                      <SelectValue placeholder="Select age" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0">All ages (0+)</SelectItem>
+                      <SelectItem value="5">5+ years</SelectItem>
+                      <SelectItem value="10">10+ years</SelectItem>
+                      <SelectItem value="13">13+ years (Teenagers)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="goodWithCats"
